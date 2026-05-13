@@ -14,14 +14,9 @@ router = APIRouter(prefix="/employees", tags=["employees"])
 def get_employee_by_barcode(
     barcode: str,
     db: Session = Depends(get_db),
-    current_device: Device = Depends(get_current_device),
+    _: Device = Depends(get_current_device),
 ) -> Employee:
     statement = select(Employee).where(Employee.barcode == barcode, Employee.is_active.is_(True))
-    if current_device.store_id is not None:
-        statement = statement.where(
-            (Employee.store_id == current_device.store_id) | (Employee.store_id.is_(None)),
-        )
-
     employee = db.scalar(statement)
     if employee is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")

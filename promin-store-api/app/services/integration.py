@@ -1,8 +1,8 @@
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import Employee, Store
+from app.models import Employee
 from app.schemas.integration import (
     OneCEmployeePayload,
     OneCEmployeesSyncError,
@@ -26,11 +26,12 @@ def _find_employee(db: Session, payload: OneCEmployeePayload) -> Employee | None
     barcode = _clean_required(payload.barcode)
     external_1c_id = _clean_optional(payload.external_1c_id)
 
-    conditions = [Employee.barcode == barcode]
     if external_1c_id is not None:
-        conditions.append(Employee.external_1c_id == external_1c_id)
+        employee = db.scalar(select(Employee).where(Employee.external_1c_id == external_1c_id))
+        if employee is not None:
+            return employee
 
-    return db.scalar(select(Employee).where(or_(*conditions)).order_by(Employee.id))
+    return db.scalar(select(Employee).where(Employee.barcode == barcode))
 
 
 def _barcode_belongs_to_another_employee(
@@ -47,7 +48,6 @@ def _barcode_belongs_to_another_employee(
 def _sync_one_employee(
     db: Session,
     payload: OneCEmployeePayload,
-    store: Store,
 ) -> str:
     barcode = _clean_required(payload.barcode)
     external_1c_id = _clean_optional(payload.external_1c_id)
@@ -58,7 +58,7 @@ def _sync_one_employee(
 
     if employee is None:
         employee = Employee(
-            store_id=store.id,
+            store_id=None,
             full_name=_clean_required(payload.full_name),
             barcode=barcode,
             position=_clean_required(payload.position),
@@ -68,7 +68,6 @@ def _sync_one_employee(
         db.add(employee)
         action = "created"
     else:
-        employee.store_id = store.id
         employee.full_name = _clean_required(payload.full_name)
         employee.barcode = barcode
         employee.position = _clean_required(payload.position)
@@ -111,30 +110,7 @@ def sync_one_c_employees(
             continue
         seen_barcodes.add(barcode)
 
-        if store_code is None:
-            errors.append(
-                OneCEmployeesSyncError(
-                    index=index,
-                    barcode=barcode,
-                    error="store_code_required",
-                    store_code=store_code,
-                ),
-            )
-            continue
-
-        store = db.scalar(select(Store).where(Store.code == store_code))
-        if store is None:
-            errors.append(
-                OneCEmployeesSyncError(
-                    index=index,
-                    barcode=barcode,
-                    error="store_not_found",
-                    store_code=store_code,
-                ),
-            )
-            continue
-
-        action = _sync_one_employee(db, employee_payload, store)
+        action = _sync_one_employee(db, employee_payload)
         if action == "created":
             created += 1
         elif action == "updated":

@@ -36,19 +36,20 @@ def resolve_employee(db: Session, employee_id: int | None, barcode: str | None) 
     return employee
 
 
-def resolve_store_id(employee: Employee, device: Device, store_id: int | None) -> int:
-    resolved_store_id = store_id or device.store_id or employee.store_id
+def resolve_store_id(device: Device, store_id: int | None) -> int:
+    _ = store_id
+    resolved_store_id = device.store_id
     if resolved_store_id is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="store_id is required",
+            detail="device store_id is required",
         )
     return resolved_store_id
 
 
 def check_in(db: Session, device: Device, payload: AttendanceCheckInRequest) -> tuple[AttendanceShift, AttendanceEvent]:
     employee = resolve_employee(db, payload.employee_id, payload.barcode)
-    store_id = resolve_store_id(employee, device, payload.store_id)
+    store_id = resolve_store_id(device, payload.store_id)
 
     existing_shift = db.scalar(
         select(AttendanceShift).where(
@@ -90,7 +91,7 @@ def check_in(db: Session, device: Device, payload: AttendanceCheckInRequest) -> 
 
 def check_out(db: Session, device: Device, payload: AttendanceCheckOutRequest) -> tuple[AttendanceShift, AttendanceEvent]:
     employee = resolve_employee(db, payload.employee_id, payload.barcode)
-    store_id = resolve_store_id(employee, device, payload.store_id)
+    store_id = resolve_store_id(device, payload.store_id)
 
     shift = db.scalar(
         select(AttendanceShift).where(

@@ -59,15 +59,17 @@ function LoginPage({
 
       <form className="panel login-form" onSubmit={handleSubmit}>
         <label>
-          <span>{t.auth.email}</span>
+          <span>{t.auth.deviceLogin}</span>
           <input
             autoComplete="username"
             inputMode="text"
             type="text"
+            placeholder={t.auth.deviceLoginPlaceholder}
             value={login}
             onChange={(event) => setLogin(event.target.value)}
             required
           />
+          <small>{t.auth.deviceLoginHelper}</small>
         </label>
 
         <label>

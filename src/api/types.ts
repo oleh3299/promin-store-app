@@ -2,19 +2,6 @@ export type ApiHealth = {
   status: string
 }
 
-export type LoginResponse = {
-  access_token: string
-  token_type: string
-}
-
-export type UserRead = {
-  id: number
-  email: string
-  full_name: string
-  role: string
-  is_active: boolean
-}
-
 export type DeviceRegisterResponse = {
   id: number
   device_uuid: string

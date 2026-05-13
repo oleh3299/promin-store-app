@@ -298,6 +298,12 @@ input {
   margin-top: 0;
 }
 
+.login-form small {
+  color: #66766c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .diagnostic-list {
   display: grid;
   gap: 10px;

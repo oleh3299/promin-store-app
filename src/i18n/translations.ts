@@ -24,11 +24,15 @@ export type Translation = {
   auth: {
     title: string
     subtitle: string
-    email: string
+    deviceLogin: string
+    deviceLoginPlaceholder: string
+    deviceLoginHelper: string
     password: string
     login: string
     logout: string
     error: string
+    invalidCredentials: string
+    disabledDevice: string
   }
   home: {
     title: string
@@ -73,8 +77,8 @@ export type Translation = {
     subtitle: string
     apiStatus: string
     checkApi: string
-    authState: string
-    signedInAs: string
+    terminalState: string
+    signedInAsDevice: string
     signedOut: string
     deviceState: string
     registered: string
@@ -163,11 +167,15 @@ export const translations: Record<Language, Translation> = {
     auth: {
       title: 'Вхід до Promin Store',
       subtitle: 'Увійдіть, щоб підключити пристрій до робочого API.',
-      email: 'Email',
-      password: 'Пароль',
+      deviceLogin: 'Логін пристрою',
+      deviceLoginPlaceholder: 'm28',
+      deviceLoginHelper: 'Використовуйте логін магазину (наприклад m28)',
+      password: 'Пароль пристрою',
       login: 'Увійти',
       logout: 'Вийти',
-      error: 'Не вдалося увійти. Перевірте email і пароль.',
+      error: 'Невірний логін або пароль',
+      invalidCredentials: 'Невірний логін або пароль',
+      disabledDevice: 'Пристрій відключено адміністратором',
     },
     home: {
       title: 'Робоче місце магазину',
@@ -212,9 +220,9 @@ export const translations: Record<Language, Translation> = {
       subtitle: 'Перевірка API, пристрою та локальної черги.',
       apiStatus: 'API',
       checkApi: 'Перевірити API',
-      authState: 'Авторизація',
-      signedInAs: 'Вхід виконано як',
-      signedOut: 'Не авторизовано',
+      terminalState: 'Термінал',
+      signedInAsDevice: 'Пристрій увійшов як',
+      signedOut: 'Пристрій не авторизовано',
       deviceState: 'Пристрій',
       registered: 'Зареєстровано',
       notRegistered: 'Не зареєстровано',
@@ -304,11 +312,15 @@ export const translations: Record<Language, Translation> = {
     auth: {
       title: 'Вход в Promin Store',
       subtitle: 'Войдите, чтобы подключить устройство к рабочему API.',
-      email: 'Email',
-      password: 'Пароль',
+      deviceLogin: 'Логін пристрою',
+      deviceLoginPlaceholder: 'm28',
+      deviceLoginHelper: 'Використовуйте логін магазину (наприклад m28)',
+      password: 'Пароль пристрою',
       login: 'Войти',
       logout: 'Выйти',
-      error: 'Не удалось войти. Проверьте email и пароль.',
+      error: 'Невірний логін або пароль',
+      invalidCredentials: 'Невірний логін або пароль',
+      disabledDevice: 'Пристрій відключено адміністратором',
     },
     home: {
       title: 'Рабочее место магазина',
@@ -353,9 +365,9 @@ export const translations: Record<Language, Translation> = {
       subtitle: 'Проверка API, устройства и локальной очереди.',
       apiStatus: 'API',
       checkApi: 'Проверить API',
-      authState: 'Авторизация',
-      signedInAs: 'Вход выполнен как',
-      signedOut: 'Не авторизовано',
+      terminalState: 'Термінал',
+      signedInAsDevice: 'Пристрій увійшов як',
+      signedOut: 'Пристрій не авторизовано',
       deviceState: 'Устройство',
       registered: 'Зарегистрировано',
       notRegistered: 'Не зарегистрировано',
@@ -445,11 +457,15 @@ export const translations: Record<Language, Translation> = {
     auth: {
       title: 'Sign in to Promin Store',
       subtitle: 'Sign in to connect this device to the live API.',
-      email: 'Email',
-      password: 'Password',
-      login: 'Sign in',
-      logout: 'Log out',
-      error: 'Could not sign in. Check your email and password.',
+      deviceLogin: 'Логін пристрою',
+      deviceLoginPlaceholder: 'm28',
+      deviceLoginHelper: 'Використовуйте логін магазину (наприклад m28)',
+      password: 'Пароль пристрою',
+      login: 'Увійти',
+      logout: 'Вийти',
+      error: 'Невірний логін або пароль',
+      invalidCredentials: 'Невірний логін або пароль',
+      disabledDevice: 'Пристрій відключено адміністратором',
     },
     home: {
       title: 'Store workspace',
@@ -494,9 +510,9 @@ export const translations: Record<Language, Translation> = {
       subtitle: 'API, device, and local queue checks.',
       apiStatus: 'API',
       checkApi: 'Check API',
-      authState: 'Auth',
-      signedInAs: 'Signed in as',
-      signedOut: 'Signed out',
+      terminalState: 'Термінал',
+      signedInAsDevice: 'Пристрій увійшов як',
+      signedOut: 'Пристрій не авторизовано',
       deviceState: 'Device',
       registered: 'Registered',
       notRegistered: 'Not registered',

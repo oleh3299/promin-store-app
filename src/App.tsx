@@ -138,7 +138,7 @@ function App() {
         }))
         setAuth({
           accessToken: null,
-          email: deviceLogin.trim().toLowerCase(),
+          deviceLogin: deviceLogin.trim().toLowerCase(),
           fullName: response.device.device_name,
         })
         setScreen('home')
@@ -151,8 +151,8 @@ function App() {
       } catch (error) {
         setLoginError(
           error instanceof ApiError && error.status === 403
-            ? 'Пристрій відключено адміністратором'
-            : t.auth.error,
+            ? t.auth.disabledDevice
+            : t.auth.invalidCredentials,
         )
       } finally {
         setLoginPending(false)
@@ -164,7 +164,7 @@ function App() {
   const handleLogout = useCallback(() => {
     setAuth({
       accessToken: null,
-      email: null,
+      deviceLogin: null,
       fullName: null,
     })
     setDevice((currentDevice) => ({

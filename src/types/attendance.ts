@@ -27,7 +27,7 @@ export type OfflineAttendanceEvent = {
 
 export type AuthState = {
   accessToken: string | null
-  email: string | null
+  deviceLogin: string | null
   fullName: string | null
 }
 

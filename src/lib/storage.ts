@@ -28,7 +28,7 @@ export const DEFAULT_ATTENDANCE_PAGE_STATE: AttendancePageState = {
 
 export const DEFAULT_AUTH_STATE: AuthState = {
   accessToken: null,
-  email: null,
+  deviceLogin: null,
   fullName: null,
 }
 
@@ -177,7 +177,10 @@ function normalizeAuthState(value: unknown): AuthState {
 
   return {
     accessToken: typeof value.accessToken === 'string' ? value.accessToken : null,
-    email: typeof value.email === 'string' ? value.email : null,
+    deviceLogin:
+      typeof value.deviceLogin === 'string'
+        ? value.deviceLogin
+        : null,
     fullName: typeof value.fullName === 'string' ? value.fullName : null,
   }
 }

@@ -56,10 +56,10 @@ function DiagnosticsPage({
 
       <section className="panel diagnostic-list">
         <div className="diagnostic-row">
-          <span>{t.diagnostics.authState}</span>
+          <span>{t.diagnostics.terminalState}</span>
           <strong>
-            {auth.email
-              ? `${t.diagnostics.signedInAs} ${auth.email}`
+            {auth.deviceLogin
+              ? `${t.diagnostics.signedInAsDevice} ${auth.deviceLogin}`
               : t.diagnostics.signedOut}
           </strong>
         </div>

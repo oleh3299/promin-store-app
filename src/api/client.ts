@@ -5,8 +5,6 @@ import type {
   DeviceLoginResponse,
   DeviceRegisterResponse,
   EmployeeRead,
-  LoginResponse,
-  UserRead,
 } from './types'
 
 export const API_BASE_URL =
@@ -99,22 +97,11 @@ export function getHealth() {
   return apiRequest<ApiHealth>('/health')
 }
 
-export function login(email: string, password: string) {
-  return apiRequest<LoginResponse>('/api/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  })
-}
-
 export function loginDevice(deviceLogin: string, password: string) {
   return apiRequest<DeviceLoginResponse>('/api/devices/login', {
     method: 'POST',
     body: JSON.stringify({ login: deviceLogin, password }),
   })
-}
-
-export function getMe(accessToken: string) {
-  return apiRequest<UserRead>('/api/auth/me', {}, { accessToken })
 }
 
 export function registerDevice(deviceUuid: string, storeCode: string) {

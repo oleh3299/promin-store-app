@@ -231,12 +231,6 @@ function AttendancePage({
     setMessage('')
   }
 
-  const testScan = () => {
-    const testCode = employees[0].code
-    setEmployeeCode(testCode)
-    void findEmployee(testCode)
-  }
-
   const sendOrQueueEvent = async (
     event: OfflineAttendanceEvent,
     sender: () => Promise<unknown>,
@@ -434,15 +428,9 @@ function AttendancePage({
           <h2>{t.attendance.identifyEmployee}</h2>
 
           {inputMethod === 'scan' && !scannerOpen && (
-            <>
-              <button className="wide-button" onClick={() => setScannerOpen(true)}>
-                {t.attendance.openCamera}
-              </button>
-
-              <button className="wide-button secondary" onClick={testScan}>
-                {t.attendance.testScan}
-              </button>
-            </>
+            <button className="wide-button" onClick={() => setScannerOpen(true)}>
+              {t.attendance.openCamera}
+            </button>
           )}
 
           {inputMethod === 'scan' && scannerOpen && (

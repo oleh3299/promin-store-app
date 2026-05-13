@@ -100,7 +100,6 @@ export type Translation = {
     cancel: string
     identifyEmployee: string
     openCamera: string
-    testScan: string
     employeeCodePlaceholder: string
     findEmployee: string
     employeeFound: string
@@ -241,7 +240,6 @@ export const translations: Record<Language, Translation> = {
       cancel: 'Скасувати',
       identifyEmployee: 'Ідентифікація співробітника',
       openCamera: 'Відкрити камеру',
-      testScan: 'Тестовий скан',
       employeeCodePlaceholder: 'Ідентифікаційний код',
       findEmployee: 'Знайти співробітника',
       employeeFound: 'Співробітника знайдено',
@@ -384,7 +382,6 @@ export const translations: Record<Language, Translation> = {
       cancel: 'Отмена',
       identifyEmployee: 'Идентификация сотрудника',
       openCamera: 'Открыть камеру',
-      testScan: 'Тестовый скан',
       employeeCodePlaceholder: 'Идентификационный код',
       findEmployee: 'Найти сотрудника',
       employeeFound: 'Сотрудник найден',
@@ -527,7 +524,6 @@ export const translations: Record<Language, Translation> = {
       cancel: 'Cancel',
       identifyEmployee: 'Employee identification',
       openCamera: 'Open camera',
-      testScan: 'Test scan',
       employeeCodePlaceholder: 'Identification code',
       findEmployee: 'Find employee',
       employeeFound: 'Employee found',

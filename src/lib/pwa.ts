@@ -32,7 +32,7 @@ export function showTestNotification() {
   }
 
   new Notification('Promin Store', {
-    body: 'Тестовое уведомление работает',
+    body: 'Тестовое уведомление сработает',
     icon: '/icons.svg',
   })
 }

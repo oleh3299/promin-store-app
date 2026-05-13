@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -60,7 +60,7 @@ def check_in(db: Session, device: Device, payload: AttendanceCheckInRequest) -> 
     if existing_shift is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Shift already open")
 
-    event_time = payload.event_time or datetime.now(UTC)
+    event_time = payload.event_time or datetime.now(timezone.utc)
     shift = AttendanceShift(
         employee_id=employee.id,
         store_id=store_id,
@@ -102,7 +102,7 @@ def check_out(db: Session, device: Device, payload: AttendanceCheckOutRequest) -
     if shift is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Open shift not found")
 
-    event_time = payload.event_time or datetime.now(UTC)
+    event_time = payload.event_time or datetime.now(timezone.utc)
     shift.checkout_at = event_time
     shift.status = ShiftStatus.closed
 

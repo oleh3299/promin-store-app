@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from secrets import token_urlsafe
 
 from fastapi import Depends, HTTPException, status
@@ -38,7 +38,7 @@ def create_device_token() -> str:
 
 def create_access_token(subject: str) -> str:
     settings = get_settings()
-    expires_at = datetime.now(UTC) + timedelta(
+    expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes,
     )
     payload = {"sub": subject, "exp": expires_at}
@@ -86,7 +86,7 @@ def get_current_device(
     ).all()
     for device in devices:
         if verify_token(credentials.credentials, device.token_hash):
-            device.last_seen_at = datetime.now(UTC)
+            device.last_seen_at = datetime.now(timezone.utc)
             db.add(device)
             db.commit()
             db.refresh(device)

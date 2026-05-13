@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -35,7 +35,7 @@ def register_device(
             platform=payload.platform,
             token_hash=hash_token(device_token),
             status=DeviceStatus.active,
-            last_seen_at=datetime.now(UTC),
+            last_seen_at=datetime.now(timezone.utc),
         )
     else:
         device.store_id = store_id
@@ -43,7 +43,7 @@ def register_device(
         device.platform = payload.platform
         device.token_hash = hash_token(device_token)
         device.status = DeviceStatus.active
-        device.last_seen_at = datetime.now(UTC)
+        device.last_seen_at = datetime.now(timezone.utc)
 
     db.add(device)
     db.commit()

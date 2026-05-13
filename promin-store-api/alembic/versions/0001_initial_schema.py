@@ -14,11 +14,39 @@ branch_labels = None
 depends_on = None
 
 
-user_role = sa.Enum("admin", "manager", "viewer", name="user_role")
-device_status = sa.Enum("pending", "active", "revoked", name="device_status")
-shift_status = sa.Enum("open", "closed", name="shift_status")
-attendance_event_type = sa.Enum("checkin", "checkout", name="attendance_event_type")
-attendance_event_source = sa.Enum("pwa", "admin", "import", name="attendance_event_source")
+user_role = postgresql.ENUM(
+    "admin",
+    "manager",
+    "viewer",
+    name="user_role",
+    create_type=False,
+)
+device_status = postgresql.ENUM(
+    "pending",
+    "active",
+    "revoked",
+    name="device_status",
+    create_type=False,
+)
+shift_status = postgresql.ENUM(
+    "open",
+    "closed",
+    name="shift_status",
+    create_type=False,
+)
+attendance_event_type = postgresql.ENUM(
+    "checkin",
+    "checkout",
+    name="attendance_event_type",
+    create_type=False,
+)
+attendance_event_source = postgresql.ENUM(
+    "pwa",
+    "admin",
+    "import",
+    name="attendance_event_source",
+    create_type=False,
+)
 
 
 def upgrade() -> None:

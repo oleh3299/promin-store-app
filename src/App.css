@@ -281,6 +281,50 @@ input {
   font-size: 18px;
 }
 
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 6px;
+  color: #405148;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.login-form input {
+  margin-top: 0;
+}
+
+.diagnostic-list {
+  display: grid;
+  gap: 10px;
+}
+
+.diagnostic-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #f4f7f3;
+}
+
+.diagnostic-row span {
+  color: #68736c;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.diagnostic-row strong {
+  max-width: 64%;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .employee-card {
   display: grid;
   gap: 4px;

@@ -1,17 +1,21 @@
+import { languageCodes, type Language } from '../i18n/translations'
 import type {
   AttendanceMode,
   AttendancePageState,
+  AuthState,
+  DeviceState,
   InputMethod,
+  OfflineAttendanceEvent,
   Position,
   Screen,
   Shift,
+  SyncState,
 } from '../types/attendance'
-import { languageCodes, type Language } from '../i18n/translations'
 
 const STORAGE_KEY = 'promin-store-attendance-state'
 const STORAGE_VERSION = 1
 
-export const DEFAULT_SELECTED_STORE = 'М37'
+export const DEFAULT_SELECTED_STORE = 'M37'
 export const DEFAULT_LANGUAGE: Language = 'uk'
 
 export const DEFAULT_ATTENDANCE_PAGE_STATE: AttendancePageState = {
@@ -22,12 +26,35 @@ export const DEFAULT_ATTENDANCE_PAGE_STATE: AttendancePageState = {
   selectedPosition: null,
 }
 
+export const DEFAULT_AUTH_STATE: AuthState = {
+  accessToken: null,
+  email: null,
+  fullName: null,
+}
+
+export const DEFAULT_DEVICE_STATE: DeviceState = {
+  id: null,
+  deviceUuid: '',
+  deviceToken: null,
+  status: null,
+}
+
+export const DEFAULT_SYNC_STATE: SyncState = {
+  apiStatus: 'unknown',
+  lastSyncAt: null,
+  lastSyncMessage: null,
+}
+
 export type AppPersistenceState = {
   selectedStore: string
   language: Language
   screen: Screen
   shifts: Shift[]
   attendancePage: AttendancePageState
+  auth: AuthState
+  device: DeviceState
+  offlineQueue: OfflineAttendanceEvent[]
+  sync: SyncState
 }
 
 type StoredAttendanceState = {
@@ -42,6 +69,10 @@ type StoredAttendanceState = {
     screen: Screen
     attendancePage: AttendancePageState
   }
+  auth?: AuthState
+  device?: DeviceState
+  offlineQueue?: OfflineAttendanceEvent[]
+  sync?: SyncState
 }
 
 const validModes: AttendanceMode[] = ['checkin', 'checkout', null]
@@ -52,20 +83,45 @@ const validPositions: Position[] = [
   'Продавець',
 ]
 
+const legacyPositionMap: Record<string, Position> = {
+  'Р РµРІС–Р·РѕСЂ': 'Ревізор',
+  'Р’РёРєР»Р°РґРєР° / РјРµСЂС‡РµРЅРґР°Р№Р·РµСЂ':
+    'Викладка / мерчендайзер',
+  'РџСЂРѕРґР°РІРµС†СЊ': 'Продавець',
+}
+
+const legacyStoreMap: Record<string, string> = {
+  'Рњ37': 'M37',
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
 function isScreen(value: unknown): value is Screen {
-  return value === 'home' || value === 'attendance' || value === 'settings'
+  return (
+    value === 'home' ||
+    value === 'attendance' ||
+    value === 'settings' ||
+    value === 'login' ||
+    value === 'diagnostics'
+  )
 }
 
 function isLanguage(value: unknown): value is Language {
   return languageCodes.includes(value as Language)
 }
 
-function isPosition(value: unknown): value is Position {
-  return validPositions.includes(value as Position)
+function normalizePosition(value: unknown): Position | null {
+  if (validPositions.includes(value as Position)) {
+    return value as Position
+  }
+
+  if (typeof value === 'string') {
+    return legacyPositionMap[value] ?? null
+  }
+
+  return null
 }
 
 function isAttendanceMode(value: unknown): value is AttendanceMode {
@@ -78,6 +134,14 @@ function isInputMethod(value: unknown): value is InputMethod {
 
 function normalizeNullableString(value: unknown) {
   return typeof value === 'string' ? value : null
+}
+
+function normalizeStoreCode(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return DEFAULT_SELECTED_STORE
+  }
+
+  return legacyStoreMap[value] ?? value
 }
 
 function normalizeAttendancePageState(value: unknown): AttendancePageState {
@@ -97,9 +161,84 @@ function normalizeAttendancePageState(value: unknown): AttendancePageState {
         ? value.employeeCode
         : DEFAULT_ATTENDANCE_PAGE_STATE.employeeCode,
     selectedEmployeeId: normalizeNullableString(value.selectedEmployeeId),
-    selectedPosition: isPosition(value.selectedPosition)
-      ? value.selectedPosition
-      : DEFAULT_ATTENDANCE_PAGE_STATE.selectedPosition,
+    selectedPosition: normalizePosition(value.selectedPosition),
+  }
+}
+
+function normalizeAuthState(value: unknown): AuthState {
+  if (!isObject(value)) {
+    return DEFAULT_AUTH_STATE
+  }
+
+  return {
+    accessToken: typeof value.accessToken === 'string' ? value.accessToken : null,
+    email: typeof value.email === 'string' ? value.email : null,
+    fullName: typeof value.fullName === 'string' ? value.fullName : null,
+  }
+}
+
+function createDeviceUuid() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+
+  return `device-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function normalizeDeviceState(value: unknown): DeviceState {
+  if (!isObject(value)) {
+    return { ...DEFAULT_DEVICE_STATE, deviceUuid: createDeviceUuid() }
+  }
+
+  return {
+    id: typeof value.id === 'number' ? value.id : null,
+    deviceUuid:
+      typeof value.deviceUuid === 'string' && value.deviceUuid
+        ? value.deviceUuid
+        : createDeviceUuid(),
+    deviceToken: typeof value.deviceToken === 'string' ? value.deviceToken : null,
+    status: typeof value.status === 'string' ? value.status : null,
+  }
+}
+
+function isOfflineAttendanceEvent(value: unknown): value is OfflineAttendanceEvent {
+  if (!isObject(value)) return false
+
+  return (
+    typeof value.id === 'string' &&
+    (value.type === 'checkin' || value.type === 'checkout') &&
+    typeof value.employeeId === 'string' &&
+    (value.employeeBackendId === undefined ||
+      typeof value.employeeBackendId === 'number') &&
+    typeof value.employeeCode === 'string' &&
+    typeof value.employeeName === 'string' &&
+    (value.position === undefined || normalizePosition(value.position) !== null) &&
+    typeof value.eventTime === 'string'
+  )
+}
+
+function normalizeOfflineQueue(value: unknown): OfflineAttendanceEvent[] {
+  if (!Array.isArray(value)) return []
+
+  return value.filter(isOfflineAttendanceEvent).map((event) => ({
+    ...event,
+    position: event.position ? normalizePosition(event.position) ?? undefined : undefined,
+  }))
+}
+
+function normalizeSyncState(value: unknown): SyncState {
+  if (!isObject(value)) {
+    return DEFAULT_SYNC_STATE
+  }
+
+  return {
+    apiStatus:
+      value.apiStatus === 'online' || value.apiStatus === 'offline'
+        ? value.apiStatus
+        : 'unknown',
+    lastSyncAt: typeof value.lastSyncAt === 'string' ? value.lastSyncAt : null,
+    lastSyncMessage:
+      typeof value.lastSyncMessage === 'string' ? value.lastSyncMessage : null,
   }
 }
 
@@ -109,14 +248,19 @@ function isShift(value: unknown): value is Shift {
   return (
     typeof value.employeeId === 'string' &&
     typeof value.employeeName === 'string' &&
-    isPosition(value.position) &&
+    normalizePosition(value.position) !== null &&
     typeof value.checkInTime === 'string' &&
     (value.checkOutTime === undefined || typeof value.checkOutTime === 'string')
   )
 }
 
 function normalizeShifts(value: unknown) {
-  return Array.isArray(value) ? value.filter(isShift) : []
+  if (!Array.isArray(value)) return []
+
+  return value.filter(isShift).map((shift) => ({
+    ...shift,
+    position: normalizePosition(shift.position) ?? 'Продавець',
+  }))
 }
 
 function getStorage() {
@@ -140,6 +284,10 @@ function toStoredState(state: AppPersistenceState): StoredAttendanceState {
       screen: state.screen,
       attendancePage: state.attendancePage,
     },
+    auth: state.auth,
+    device: state.device,
+    offlineQueue: state.offlineQueue,
+    sync: state.sync,
   }
 }
 
@@ -158,16 +306,31 @@ function fromStoredState(value: unknown): AppPersistenceState | null {
   )
 
   return {
-    selectedStore:
-      typeof value.selectedStore === 'string' && value.selectedStore.trim()
-        ? value.selectedStore
-        : DEFAULT_SELECTED_STORE,
+    selectedStore: normalizeStoreCode(value.selectedStore),
     language: isLanguage(value.selectedLanguage)
       ? value.selectedLanguage
       : DEFAULT_LANGUAGE,
     screen: isScreen(appState.screen) ? appState.screen : 'home',
     shifts: [...openShifts, ...history],
     attendancePage: normalizeAttendancePageState(appState.attendancePage),
+    auth: normalizeAuthState(value.auth),
+    device: normalizeDeviceState(value.device),
+    offlineQueue: normalizeOfflineQueue(value.offlineQueue),
+    sync: normalizeSyncState(value.sync),
+  }
+}
+
+function defaultPersistenceState(): AppPersistenceState {
+  return {
+    selectedStore: DEFAULT_SELECTED_STORE,
+    language: DEFAULT_LANGUAGE,
+    screen: 'home',
+    shifts: [],
+    attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
+    auth: DEFAULT_AUTH_STATE,
+    device: { ...DEFAULT_DEVICE_STATE, deviceUuid: createDeviceUuid() },
+    offlineQueue: [],
+    sync: DEFAULT_SYNC_STATE,
   }
 }
 
@@ -175,13 +338,7 @@ export function loadAppPersistence(): AppPersistenceState {
   const storage = getStorage()
 
   if (!storage) {
-    return {
-      selectedStore: DEFAULT_SELECTED_STORE,
-      language: DEFAULT_LANGUAGE,
-      screen: 'home',
-      shifts: [],
-      attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
-    }
+    return defaultPersistenceState()
   }
 
   try {
@@ -189,23 +346,9 @@ export function loadAppPersistence(): AppPersistenceState {
     const parsed = stored ? JSON.parse(stored) : null
     const restored = fromStoredState(parsed)
 
-    return (
-      restored ?? {
-        selectedStore: DEFAULT_SELECTED_STORE,
-        language: DEFAULT_LANGUAGE,
-        screen: 'home',
-        shifts: [],
-        attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
-      }
-    )
+    return restored ?? defaultPersistenceState()
   } catch {
-    return {
-      selectedStore: DEFAULT_SELECTED_STORE,
-      language: DEFAULT_LANGUAGE,
-      screen: 'home',
-      shifts: [],
-      attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
-    }
+    return defaultPersistenceState()
   }
 }
 

@@ -1,0 +1,143 @@
+import type {
+  ApiHealth,
+  AttendanceActionResponse,
+  DeviceRead,
+  DeviceRegisterResponse,
+  EmployeeRead,
+  LoginResponse,
+  UserRead,
+} from './types'
+
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'https://api-store.prominuz.org'
+
+type RequestOptions = {
+  accessToken?: string | null
+  deviceToken?: string | null
+}
+
+export class ApiError extends Error {
+  status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
+async function apiRequest<T>(
+  path: string,
+  init: RequestInit = {},
+  options: RequestOptions = {},
+): Promise<T> {
+  const headers = new Headers(init.headers)
+
+  if (!headers.has('Content-Type') && init.body) {
+    headers.set('Content-Type', 'application/json')
+  }
+
+  const token = options.accessToken ?? options.deviceToken
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers,
+  })
+
+  if (!response.ok) {
+    let detail = response.statusText
+    try {
+      const body = await response.json()
+      detail = body.detail ?? detail
+    } catch {
+      // Keep response status text when the body is not JSON.
+    }
+
+    throw new ApiError(response.status, detail)
+  }
+
+  if (response.status === 204) {
+    return undefined as T
+  }
+
+  return response.json() as Promise<T>
+}
+
+export function getHealth() {
+  return apiRequest<ApiHealth>('/health')
+}
+
+export function login(email: string, password: string) {
+  return apiRequest<LoginResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+}
+
+export function getMe(accessToken: string) {
+  return apiRequest<UserRead>('/api/auth/me', {}, { accessToken })
+}
+
+export function registerDevice(deviceUuid: string, storeCode: string) {
+  return apiRequest<DeviceRegisterResponse>('/api/devices/register', {
+    method: 'POST',
+    body: JSON.stringify({
+      device_uuid: deviceUuid,
+      device_name: navigator.userAgent,
+      platform: navigator.platform || 'pwa',
+      store_code: storeCode,
+    }),
+  })
+}
+
+export function getDeviceMe(deviceToken: string) {
+  return apiRequest<DeviceRead>('/api/devices/me', {}, { deviceToken })
+}
+
+export function getEmployeeByBarcode(barcode: string, deviceToken: string) {
+  return apiRequest<EmployeeRead>(
+    `/api/employees/by-barcode/${encodeURIComponent(barcode)}`,
+    {},
+    { deviceToken },
+  )
+}
+
+export function checkIn(
+  deviceToken: string,
+  payload: {
+    employee_id?: number
+    barcode?: string
+    event_time?: string
+    raw_payload?: Record<string, unknown>
+  },
+) {
+  return apiRequest<AttendanceActionResponse>(
+    '/api/attendance/checkin',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    { deviceToken },
+  )
+}
+
+export function checkOut(
+  deviceToken: string,
+  payload: {
+    employee_id?: number
+    barcode?: string
+    event_time?: string
+    raw_payload?: Record<string, unknown>
+  },
+) {
+  return apiRequest<AttendanceActionResponse>(
+    '/api/attendance/checkout',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    { deviceToken },
+  )
+}

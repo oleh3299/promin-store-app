@@ -1,4 +1,4 @@
-export type Screen = 'home' | 'attendance' | 'settings'
+export type Screen = 'home' | 'attendance' | 'settings' | 'login' | 'diagnostics'
 
 export type AttendanceMode = 'checkin' | 'checkout' | null
 
@@ -8,8 +8,39 @@ export type Position = 'Ревізор' | 'Викладка / мерчендай
 
 export type Employee = {
   id: string
+  backendId?: number
   code: string
   name: string
+}
+
+export type OfflineAttendanceEvent = {
+  id: string
+  type: 'checkin' | 'checkout'
+  employeeId: string
+  employeeBackendId?: number
+  employeeCode: string
+  employeeName: string
+  position?: Position
+  eventTime: string
+}
+
+export type AuthState = {
+  accessToken: string | null
+  email: string | null
+  fullName: string | null
+}
+
+export type DeviceState = {
+  id: number | null
+  deviceUuid: string
+  deviceToken: string | null
+  status: string | null
+}
+
+export type SyncState = {
+  apiStatus: 'unknown' | 'online' | 'offline'
+  lastSyncAt: string | null
+  lastSyncMessage: string | null
 }
 
 export type Shift = {

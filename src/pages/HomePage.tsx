@@ -12,12 +12,13 @@ type HomePageProps = {
   onLanguageChange: (language: Language) => void
   onOpenAttendance: () => void
   onOpenSettings: () => void
+  onOpenDiagnostics: () => void
 }
 
 type MenuItem = {
   title: string
   subtitle: string
-  action: 'attendance' | 'settings' | 'disabled'
+  action: 'attendance' | 'settings' | 'diagnostics' | 'disabled'
 }
 
 function getMenuItems(t: Translation): MenuItem[] {
@@ -31,6 +32,11 @@ function getMenuItems(t: Translation): MenuItem[] {
       title: t.home.menu.settings,
       subtitle: t.home.menu.settingsSubtitle,
       action: 'settings',
+    },
+    {
+      title: t.home.menu.diagnostics,
+      subtitle: t.home.menu.diagnosticsSubtitle,
+      action: 'diagnostics',
     },
     {
       title: t.home.menu.currentShift,
@@ -78,6 +84,7 @@ function HomePage({
   onLanguageChange,
   onOpenAttendance,
   onOpenSettings,
+  onOpenDiagnostics,
 }: HomePageProps) {
   const menuItems = getMenuItems(t)
 
@@ -130,6 +137,11 @@ function HomePage({
 
               if (item.action === 'settings') {
                 onOpenSettings()
+                return
+              }
+
+              if (item.action === 'diagnostics') {
+                onOpenDiagnostics()
                 return
               }
 

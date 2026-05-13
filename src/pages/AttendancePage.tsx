@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
+import { ApiError, checkIn, checkOut, getEmployeeByBarcode } from '../api/client'
 import BarcodeScanner from '../components/BarcodeScanner'
 import type { Translation } from '../i18n/translations'
 import { employees, positions } from '../mock/employees'
 import type {
   AttendanceMode,
   AttendancePageState,
+  DeviceState,
   Employee,
   InputMethod,
+  OfflineAttendanceEvent,
   Position,
   Shift,
+  SyncState,
 } from '../types/attendance'
 
 type AttendancePageProps = {
@@ -16,7 +20,10 @@ type AttendancePageProps = {
   openShifts: Shift[]
   shifts: Shift[]
   setShifts: (shifts: Shift[]) => void
+  device: DeviceState
   t: Translation
+  onQueueEvent: (event: OfflineAttendanceEvent) => void
+  onSyncStateChange: (sync: SyncState) => void
   onStateChange: (state: AttendancePageState) => void
   onBack: () => void
 }
@@ -28,12 +35,40 @@ function getCurrentTime() {
   })
 }
 
+function createEventId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+
+  return `attendance-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function mapApiEmployee(employee: {
+  id: number
+  barcode: string
+  full_name: string
+}): Employee {
+  return {
+    id: String(employee.id),
+    backendId: employee.id,
+    code: employee.barcode,
+    name: employee.full_name,
+  }
+}
+
+function shouldQueueError(error: unknown) {
+  return !(error instanceof ApiError) || error.status >= 500
+}
+
 function AttendancePage({
   initialState,
   openShifts,
   shifts,
   setShifts,
+  device,
   t,
+  onQueueEvent,
+  onSyncStateChange,
   onStateChange,
   onBack,
 }: AttendancePageProps) {
@@ -84,8 +119,21 @@ function AttendancePage({
     resetAttendanceFlow()
   }
 
-  const findEmployee = (code: string) => {
-    const employee = employees.find((item) => item.code === code.trim())
+  const findEmployee = async (code: string) => {
+    const trimmedCode = code.trim()
+
+    if (device.deviceToken && navigator.onLine) {
+      try {
+        const employee = await getEmployeeByBarcode(trimmedCode, device.deviceToken)
+        setSelectedEmployee(mapApiEmployee(employee))
+        setMessage('')
+        return
+      } catch {
+        // Keep local mock lookup as a safe fallback for offline-first MVP testing.
+      }
+    }
+
+    const employee = employees.find((item) => item.code === trimmedCode)
 
     if (!employee) {
       setMessage(t.attendance.messages.employeeNotFound)
@@ -100,10 +148,48 @@ function AttendancePage({
   const testScan = () => {
     const testCode = employees[0].code
     setEmployeeCode(testCode)
-    findEmployee(testCode)
+    void findEmployee(testCode)
   }
 
-  const confirmCheckIn = () => {
+  const sendOrQueueEvent = async (
+    event: OfflineAttendanceEvent,
+    sender: () => Promise<unknown>,
+  ) => {
+    if (!device.deviceToken || !navigator.onLine) {
+      onQueueEvent(event)
+      onSyncStateChange({
+        apiStatus: navigator.onLine ? 'online' : 'offline',
+        lastSyncAt: new Date().toISOString(),
+        lastSyncMessage: t.attendance.messages.queuedOffline,
+      })
+      return true
+    }
+
+    try {
+      await sender()
+      onSyncStateChange({
+        apiStatus: 'online',
+        lastSyncAt: new Date().toISOString(),
+        lastSyncMessage: t.attendance.messages.syncedOnline,
+      })
+      return true
+    } catch (error) {
+      if (!shouldQueueError(error)) {
+        setMessage(error instanceof Error ? error.message : t.attendance.messages.employeeNotFound)
+        return false
+      }
+
+      onQueueEvent(event)
+      onSyncStateChange({
+        apiStatus: 'offline',
+        lastSyncAt: new Date().toISOString(),
+        lastSyncMessage: t.attendance.messages.queuedOffline,
+      })
+      return true
+    }
+  }
+
+  const confirmCheckIn = async () => {
     if (!selectedEmployee || !selectedPosition) return
 
     const alreadyOpen = shifts.some(
@@ -115,6 +201,32 @@ function AttendancePage({
       setMessage(t.attendance.messages.alreadyOpenShift)
       return
     }
+
+    const eventTime = new Date().toISOString()
+    const event: OfflineAttendanceEvent = {
+      id: createEventId(),
+      type: 'checkin',
+      employeeId: selectedEmployee.id,
+      employeeBackendId: selectedEmployee.backendId,
+      employeeCode: selectedEmployee.code,
+      employeeName: selectedEmployee.name,
+      position: selectedPosition,
+      eventTime,
+    }
+
+    const accepted = await sendOrQueueEvent(event, () =>
+      checkIn(device.deviceToken as string, {
+        employee_id: selectedEmployee.backendId,
+        barcode: selectedEmployee.backendId ? undefined : selectedEmployee.code,
+        event_time: eventTime,
+        raw_payload: {
+          offline_event_id: event.id,
+          position: selectedPosition,
+        },
+      }),
+    )
+
+    if (!accepted) return
 
     const newShift: Shift = {
       employeeId: selectedEmployee.id,
@@ -128,7 +240,7 @@ function AttendancePage({
     resetAttendanceFlow()
   }
 
-  const confirmCheckOut = () => {
+  const confirmCheckOut = async () => {
     if (!selectedEmployee) return
 
     const openShift = shifts.find(
@@ -140,6 +252,32 @@ function AttendancePage({
       setMessage(t.attendance.messages.openShiftNotFound)
       return
     }
+
+    const eventTime = new Date().toISOString()
+    const event: OfflineAttendanceEvent = {
+      id: createEventId(),
+      type: 'checkout',
+      employeeId: selectedEmployee.id,
+      employeeBackendId: selectedEmployee.backendId,
+      employeeCode: selectedEmployee.code,
+      employeeName: selectedEmployee.name,
+      position: openShift.position,
+      eventTime,
+    }
+
+    const accepted = await sendOrQueueEvent(event, () =>
+      checkOut(device.deviceToken as string, {
+        employee_id: selectedEmployee.backendId,
+        barcode: selectedEmployee.backendId ? undefined : selectedEmployee.code,
+        event_time: eventTime,
+        raw_payload: {
+          offline_event_id: event.id,
+          position: openShift.position,
+        },
+      }),
+    )
+
+    if (!accepted) return
 
     setShifts(
       shifts.map((shift) =>
@@ -220,7 +358,7 @@ function AttendancePage({
               t={t.scanner}
               onScan={(code) => {
                 setEmployeeCode(code)
-                findEmployee(code)
+                void findEmployee(code)
                 setScannerOpen(false)
               }}
               onClose={() => setScannerOpen(false)}
@@ -234,7 +372,7 @@ function AttendancePage({
             inputMode="numeric"
           />
 
-          <button className="wide-button" onClick={() => findEmployee(employeeCode)}>
+          <button className="wide-button" onClick={() => void findEmployee(employeeCode)}>
             {t.attendance.findEmployee}
           </button>
 
@@ -277,7 +415,7 @@ function AttendancePage({
           <button
             className="confirm-button"
             disabled={!selectedPosition}
-            onClick={confirmCheckIn}
+            onClick={() => void confirmCheckIn()}
           >
             {t.attendance.confirmCheckIn}
           </button>
@@ -289,7 +427,7 @@ function AttendancePage({
           <h2>{t.attendance.confirmCheckOutTitle}</h2>
           <p>{t.attendance.confirmCheckOutPrompt}</p>
 
-          <button className="confirm-button" onClick={confirmCheckOut}>
+          <button className="confirm-button" onClick={() => void confirmCheckOut()}>
             {t.attendance.confirmCheckOut}
           </button>
         </section>

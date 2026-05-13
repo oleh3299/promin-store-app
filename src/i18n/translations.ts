@@ -14,26 +14,38 @@ export type Translation = {
     enableNotificationsFirst: string
     testNotificationBody: string
   }
-  home: {
+  common: {
+    yes: string
+    no: string
+    unknown: string
+    online: string
+    offline: string
+  }
+  auth: {
     title: string
     subtitle: string
-    storeLabel: string
+    email: string
+    password: string
+    login: string
+    logout: string
+    error: string
+  }
+  home: {
+    title: string
     today: string
     onShift: string
     activeDevice: string
-    appTitle: string
-    modeLabel: string
     standaloneMode: string
     browserMode: string
-    allowNotifications: string
-    testNotification: string
     inDevelopment: string
-      menu: {
-        attendance: string
-        attendanceSubtitle: string
-        settings: string
-        settingsSubtitle: string
-        currentShift: string
+    menu: {
+      attendance: string
+      attendanceSubtitle: string
+      settings: string
+      settingsSubtitle: string
+      diagnostics: string
+      diagnosticsSubtitle: string
+      currentShift: string
       tasks: string
       photoReports: string
       productScan: string
@@ -53,6 +65,25 @@ export type Translation = {
     pushLabel: string
     allowNotifications: string
     testNotification: string
+  }
+  diagnostics: {
+    back: string
+    kicker: string
+    title: string
+    subtitle: string
+    apiStatus: string
+    checkApi: string
+    authState: string
+    signedInAs: string
+    signedOut: string
+    deviceState: string
+    registered: string
+    notRegistered: string
+    registerDevice: string
+    queue: string
+    queueItems: (count: number) => string
+    lastSync: string
+    syncNow: string
   }
   attendance: {
     back: string
@@ -84,6 +115,8 @@ export type Translation = {
       employeeNotFound: string
       alreadyOpenShift: string
       openShiftNotFound: string
+      queuedOffline: string
+      syncedOnline: string
       shiftStarted: (name: string) => string
       shiftFinished: (name: string) => string
     }
@@ -108,26 +141,37 @@ export const translations: Record<Language, Translation> = {
       enableNotificationsFirst: 'Спочатку дозвольте сповіщення',
       testNotificationBody: 'Тестове сповіщення працює',
     },
+    common: {
+      yes: 'Так',
+      no: 'Ні',
+      unknown: 'Невідомо',
+      online: 'Онлайн',
+      offline: 'Офлайн',
+    },
+    auth: {
+      title: 'Вхід до Promin Store',
+      subtitle: 'Увійдіть, щоб підключити пристрій до робочого API.',
+      email: 'Email',
+      password: 'Пароль',
+      login: 'Увійти',
+      logout: 'Вийти',
+      error: 'Не вдалося увійти. Перевірте email і пароль.',
+    },
     home: {
       title: 'Робоче місце магазину',
-      subtitle:
-        'Перший контур: табель співробітників. Інші модулі підключимо поетапно.',
-      storeLabel: 'Магазин',
       today: 'Сьогодні',
       onShift: 'на зміні',
       activeDevice: 'Пристрій активний',
-      appTitle: 'Застосунок',
-      modeLabel: 'Режим',
       standaloneMode: 'Встановлено як застосунок',
       browserMode: 'Відкрито в браузері',
-      allowNotifications: 'Дозволити сповіщення',
-      testNotification: 'Тест сповіщення',
       inDevelopment: 'У розробці',
       menu: {
         attendance: 'Табель',
         attendanceSubtitle: 'Прихід / вихід співробітників',
         settings: 'Налаштування',
         settingsSubtitle: 'Застосунок і сповіщення',
+        diagnostics: 'Діагностика',
+        diagnosticsSubtitle: 'API, авторизація та синхронізація',
         currentShift: 'Хто на зміні',
         tasks: 'Завдання',
         photoReports: 'Фотозвіти',
@@ -149,11 +193,30 @@ export const translations: Record<Language, Translation> = {
       allowNotifications: 'Дозволити сповіщення',
       testNotification: 'Тест сповіщення',
     },
+    diagnostics: {
+      back: '← Назад',
+      kicker: 'Діагностика',
+      title: 'Стан підключення',
+      subtitle: 'Перевірка API, пристрою та локальної черги.',
+      apiStatus: 'API',
+      checkApi: 'Перевірити API',
+      authState: 'Авторизація',
+      signedInAs: 'Вхід виконано як',
+      signedOut: 'Не авторизовано',
+      deviceState: 'Пристрій',
+      registered: 'Зареєстровано',
+      notRegistered: 'Не зареєстровано',
+      registerDevice: 'Зареєструвати пристрій',
+      queue: 'Офлайн-черга',
+      queueItems: (count) => `${count} подій`,
+      lastSync: 'Остання синхронізація',
+      syncNow: 'Синхронізувати',
+    },
     attendance: {
       back: '← Назад',
       kicker: 'Табель',
       title: 'Прихід / вихід',
-      subtitle: 'Магазин уже авторизований. Співробітник відмічає тільки себе.',
+      subtitle: 'Співробітник відмічає тільки себе.',
       checkIn: 'Прихід',
       checkOut: 'Вихід',
       chooseMethod: 'Оберіть спосіб ідентифікації співробітника.',
@@ -179,6 +242,8 @@ export const translations: Record<Language, Translation> = {
         employeeNotFound: 'Співробітника не знайдено',
         alreadyOpenShift: 'У співробітника вже відкрита зміна',
         openShiftNotFound: 'Відкрита зміна не знайдена',
+        queuedOffline: 'Дію збережено локально і буде синхронізовано',
+        syncedOnline: 'Дію синхронізовано з API',
         shiftStarted: (name) => `Зміну розпочато: ${name}`,
         shiftFinished: (name) => `Зміну завершено: ${name}`,
       },
@@ -203,31 +268,42 @@ export const translations: Record<Language, Translation> = {
     pwa: {
       unsupportedNotifications: 'Уведомления не поддерживаются на этом устройстве',
       enableNotificationsFirst: 'Сначала разрешите уведомления',
-      testNotificationBody: 'Тестовое уведомление сработает',
+      testNotificationBody: 'Тестовое уведомление работает',
+    },
+    common: {
+      yes: 'Да',
+      no: 'Нет',
+      unknown: 'Неизвестно',
+      online: 'Онлайн',
+      offline: 'Офлайн',
+    },
+    auth: {
+      title: 'Вход в Promin Store',
+      subtitle: 'Войдите, чтобы подключить устройство к рабочему API.',
+      email: 'Email',
+      password: 'Пароль',
+      login: 'Войти',
+      logout: 'Выйти',
+      error: 'Не удалось войти. Проверьте email и пароль.',
     },
     home: {
       title: 'Рабочее место магазина',
-      subtitle:
-        'Первый контур: табель сотрудников. Остальные модули подключим поэтапно.',
-      storeLabel: 'Магазин',
       today: 'Сегодня',
       onShift: 'на смене',
       activeDevice: 'Устройство активно',
-      appTitle: 'Приложение',
-      modeLabel: 'Режим',
       standaloneMode: 'Установлено как приложение',
       browserMode: 'Открыто в браузере',
-      allowNotifications: 'Разрешить уведомления',
-      testNotification: 'Тест уведомления',
       inDevelopment: 'В разработке',
       menu: {
         attendance: 'Табель',
         attendanceSubtitle: 'Приход / уход сотрудников',
         settings: 'Настройки',
         settingsSubtitle: 'Приложение и уведомления',
+        diagnostics: 'Диагностика',
+        diagnosticsSubtitle: 'API, авторизация и синхронизация',
         currentShift: 'Кто на смене',
         tasks: 'Задания',
-        photoReports: 'Фотоотчёты',
+        photoReports: 'Фотоотчеты',
         productScan: 'Скан товара',
         priceTags: 'Печать ценников',
         openingControl: 'Контроль открытия',
@@ -246,11 +322,30 @@ export const translations: Record<Language, Translation> = {
       allowNotifications: 'Разрешить уведомления',
       testNotification: 'Тест уведомления',
     },
+    diagnostics: {
+      back: '← Назад',
+      kicker: 'Диагностика',
+      title: 'Состояние подключения',
+      subtitle: 'Проверка API, устройства и локальной очереди.',
+      apiStatus: 'API',
+      checkApi: 'Проверить API',
+      authState: 'Авторизация',
+      signedInAs: 'Вход выполнен как',
+      signedOut: 'Не авторизовано',
+      deviceState: 'Устройство',
+      registered: 'Зарегистрировано',
+      notRegistered: 'Не зарегистрировано',
+      registerDevice: 'Зарегистрировать устройство',
+      queue: 'Офлайн-очередь',
+      queueItems: (count) => `${count} событий`,
+      lastSync: 'Последняя синхронизация',
+      syncNow: 'Синхронизировать',
+    },
     attendance: {
       back: '← Назад',
       kicker: 'Табель',
       title: 'Приход / уход',
-      subtitle: 'Магазин уже авторизован. Сотрудник отмечает только себя.',
+      subtitle: 'Сотрудник отмечает только себя.',
       checkIn: 'Приход',
       checkOut: 'Уход',
       chooseMethod: 'Выберите способ идентификации сотрудника.',
@@ -276,6 +371,8 @@ export const translations: Record<Language, Translation> = {
         employeeNotFound: 'Сотрудник не найден',
         alreadyOpenShift: 'У сотрудника уже открыта смена',
         openShiftNotFound: 'Открытая смена не найдена',
+        queuedOffline: 'Действие сохранено локально и будет синхронизировано',
+        syncedOnline: 'Действие синхронизировано с API',
         shiftStarted: (name) => `Смена начата: ${name}`,
         shiftFinished: (name) => `Смена завершена: ${name}`,
       },
@@ -302,26 +399,37 @@ export const translations: Record<Language, Translation> = {
       enableNotificationsFirst: 'Allow notifications first',
       testNotificationBody: 'The test notification works',
     },
+    common: {
+      yes: 'Yes',
+      no: 'No',
+      unknown: 'Unknown',
+      online: 'Online',
+      offline: 'Offline',
+    },
+    auth: {
+      title: 'Sign in to Promin Store',
+      subtitle: 'Sign in to connect this device to the live API.',
+      email: 'Email',
+      password: 'Password',
+      login: 'Sign in',
+      logout: 'Log out',
+      error: 'Could not sign in. Check your email and password.',
+    },
     home: {
       title: 'Store workspace',
-      subtitle:
-        'First module: employee attendance. The remaining modules will be added step by step.',
-      storeLabel: 'Store',
       today: 'Today',
       onShift: 'on shift',
       activeDevice: 'Device active',
-      appTitle: 'App',
-      modeLabel: 'Mode',
       standaloneMode: 'Installed as an app',
       browserMode: 'Opened in browser',
-      allowNotifications: 'Allow notifications',
-      testNotification: 'Test notification',
       inDevelopment: 'In development',
       menu: {
         attendance: 'Attendance',
         attendanceSubtitle: 'Employee check-in / check-out',
         settings: 'Settings',
         settingsSubtitle: 'App and notifications',
+        diagnostics: 'Diagnostics',
+        diagnosticsSubtitle: 'API, auth, and sync',
         currentShift: 'Current shift',
         tasks: 'Tasks',
         photoReports: 'Photo reports',
@@ -343,11 +451,30 @@ export const translations: Record<Language, Translation> = {
       allowNotifications: 'Allow notifications',
       testNotification: 'Test notification',
     },
+    diagnostics: {
+      back: '← Back',
+      kicker: 'Diagnostics',
+      title: 'Connection status',
+      subtitle: 'API, device, and local queue checks.',
+      apiStatus: 'API',
+      checkApi: 'Check API',
+      authState: 'Auth',
+      signedInAs: 'Signed in as',
+      signedOut: 'Signed out',
+      deviceState: 'Device',
+      registered: 'Registered',
+      notRegistered: 'Not registered',
+      registerDevice: 'Register device',
+      queue: 'Offline queue',
+      queueItems: (count) => `${count} events`,
+      lastSync: 'Last sync',
+      syncNow: 'Sync now',
+    },
     attendance: {
       back: '← Back',
       kicker: 'Attendance',
       title: 'Check-in / check-out',
-      subtitle: 'The store is already authorized. Employees only mark themselves.',
+      subtitle: 'Employees only mark themselves.',
       checkIn: 'Check in',
       checkOut: 'Check out',
       chooseMethod: 'Choose how to identify the employee.',
@@ -373,6 +500,8 @@ export const translations: Record<Language, Translation> = {
         employeeNotFound: 'Employee not found',
         alreadyOpenShift: 'This employee already has an open shift',
         openShiftNotFound: 'Open shift not found',
+        queuedOffline: 'Action saved locally and will be synced',
+        syncedOnline: 'Action synced with API',
         shiftStarted: (name) => `Shift started: ${name}`,
         shiftFinished: (name) => `Shift finished: ${name}`,
       },

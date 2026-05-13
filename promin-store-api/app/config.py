@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 1440
 
     frontend_origin: str = "https://store.prominuz.org"
+    one_c_integration_api_key: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -57,7 +57,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function isScreen(value: unknown): value is Screen {
-  return value === 'home' || value === 'attendance'
+  return value === 'home' || value === 'attendance' || value === 'settings'
 }
 
 function isLanguage(value: unknown): value is Language {

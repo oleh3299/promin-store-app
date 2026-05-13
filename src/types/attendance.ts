@@ -1,4 +1,4 @@
-export type Screen = 'home' | 'attendance'
+export type Screen = 'home' | 'attendance' | 'settings'
 
 export type AttendanceMode = 'checkin' | 'checkout' | null
 

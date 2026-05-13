@@ -8,6 +8,7 @@ import {
 import { useI18n } from './i18n/useI18n'
 import AttendancePage from './pages/AttendancePage'
 import HomePage from './pages/HomePage'
+import SettingsPage from './pages/SettingsPage'
 import type { AttendancePageState, Screen, Shift } from './types/attendance'
 
 function App() {
@@ -55,16 +56,25 @@ function App() {
     )
   }
 
+  if (screen === 'settings') {
+    return (
+      <SettingsPage
+        notificationStatus={notificationStatus}
+        t={t}
+        onNotificationStatusChange={setNotificationStatus}
+        onBack={() => setScreen('home')}
+      />
+    )
+  }
+
   return (
     <HomePage
       openShiftCount={openShifts.length}
-      notificationStatus={notificationStatus}
-      selectedStore={selectedStore}
       language={language}
       t={t}
       onLanguageChange={setLanguage}
-      onNotificationStatusChange={setNotificationStatus}
       onOpenAttendance={() => setScreen('attendance')}
+      onOpenSettings={() => setScreen('settings')}
     />
   )
 }

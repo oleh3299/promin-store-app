@@ -28,10 +28,12 @@ export type Translation = {
     allowNotifications: string
     testNotification: string
     inDevelopment: string
-    menu: {
-      attendance: string
-      attendanceSubtitle: string
-      currentShift: string
+      menu: {
+        attendance: string
+        attendanceSubtitle: string
+        settings: string
+        settingsSubtitle: string
+        currentShift: string
       tasks: string
       photoReports: string
       productScan: string
@@ -40,6 +42,17 @@ export type Translation = {
       itPanicButton: string
       shiftMetrics: string
     }
+  }
+  settings: {
+    back: string
+    kicker: string
+    title: string
+    subtitle: string
+    appModeTitle: string
+    modeLabel: string
+    pushLabel: string
+    allowNotifications: string
+    testNotification: string
   }
   attendance: {
     back: string
@@ -113,6 +126,8 @@ export const translations: Record<Language, Translation> = {
       menu: {
         attendance: 'Табель',
         attendanceSubtitle: 'Прихід / вихід співробітників',
+        settings: 'Налаштування',
+        settingsSubtitle: 'Застосунок і сповіщення',
         currentShift: 'Хто на зміні',
         tasks: 'Завдання',
         photoReports: 'Фотозвіти',
@@ -122,6 +137,17 @@ export const translations: Record<Language, Translation> = {
         itPanicButton: 'Тривожна кнопка IT',
         shiftMetrics: 'Показники зміни',
       },
+    },
+    settings: {
+      back: '← Назад',
+      kicker: 'Налаштування',
+      title: 'Налаштування',
+      subtitle: 'Стан застосунку та сповіщень.',
+      appModeTitle: 'Застосунок',
+      modeLabel: 'Режим',
+      pushLabel: 'Push',
+      allowNotifications: 'Дозволити сповіщення',
+      testNotification: 'Тест сповіщення',
     },
     attendance: {
       back: '← Назад',
@@ -197,6 +223,8 @@ export const translations: Record<Language, Translation> = {
       menu: {
         attendance: 'Табель',
         attendanceSubtitle: 'Приход / уход сотрудников',
+        settings: 'Настройки',
+        settingsSubtitle: 'Приложение и уведомления',
         currentShift: 'Кто на смене',
         tasks: 'Задания',
         photoReports: 'Фотоотчёты',
@@ -206,6 +234,17 @@ export const translations: Record<Language, Translation> = {
         itPanicButton: 'Тревожная кнопка IT',
         shiftMetrics: 'Показатели смены',
       },
+    },
+    settings: {
+      back: '← Назад',
+      kicker: 'Настройки',
+      title: 'Настройки',
+      subtitle: 'Состояние приложения и уведомлений.',
+      appModeTitle: 'Приложение',
+      modeLabel: 'Режим',
+      pushLabel: 'Push',
+      allowNotifications: 'Разрешить уведомления',
+      testNotification: 'Тест уведомления',
     },
     attendance: {
       back: '← Назад',
@@ -281,6 +320,8 @@ export const translations: Record<Language, Translation> = {
       menu: {
         attendance: 'Attendance',
         attendanceSubtitle: 'Employee check-in / check-out',
+        settings: 'Settings',
+        settingsSubtitle: 'App and notifications',
         currentShift: 'Current shift',
         tasks: 'Tasks',
         photoReports: 'Photo reports',
@@ -290,6 +331,17 @@ export const translations: Record<Language, Translation> = {
         itPanicButton: 'IT panic button',
         shiftMetrics: 'Shift metrics',
       },
+    },
+    settings: {
+      back: '← Back',
+      kicker: 'Settings',
+      title: 'Settings',
+      subtitle: 'App status and notifications.',
+      appModeTitle: 'App',
+      modeLabel: 'Mode',
+      pushLabel: 'Push',
+      allowNotifications: 'Allow notifications',
+      testNotification: 'Test notification',
     },
     attendance: {
       back: '← Back',

@@ -316,3 +316,41 @@ input {
 .barcode-reader video {
   border-radius: 18px;
 }
+
+#barcode-reader {
+  border: 0 !important;
+}
+
+#barcode-reader__dashboard_section_csr {
+  display: none !important;
+}
+
+#barcode-reader__dashboard_section_swaplink {
+  display: none !important;
+}
+
+#barcode-reader__camera_selection {
+  display: none !important;
+}
+
+#barcode-reader__dashboard_section {
+  padding: 0 !important;
+}
+
+#barcode-reader__scan_region {
+  border-radius: 18px !important;
+  overflow: hidden !important;
+}
+
+#barcode-reader__scan_region video {
+  width: 100% !important;
+  border-radius: 18px !important;
+}
+
+#barcode-reader__scan_region img {
+  display: none !important;
+}
+
+#barcode-reader button {
+  display: none !important;
+}

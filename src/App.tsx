@@ -60,19 +60,24 @@ function BarcodeScanner({
   onScan: (code: string) => void
   onClose: () => void
 }) {
-  useEffect(() => {
-    const scanner = new Html5QrcodeScanner(
-      'barcode-reader',
-      {
-        fps: 10,
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
+ 
+useEffect(() => {
+  const scanner = new Html5QrcodeScanner(
+    'barcode-reader',
+    {
+      fps: 10,
+      rememberLastUsedCamera: true,
+      supportedScanTypes: [],
+      videoConstraints: {
+        facingMode: { ideal: 'environment' },
       },
-      false,
-    )
-
+      qrbox: {
+        width: 260,
+        height: 260,
+      },
+    },
+    false,
+  )
     scanner.render(
       (decodedText) => {
         onScan(decodedText)

@@ -15,7 +15,9 @@ from app.models import (
     Device,
     Employee,
     PushSubscription,
+    RocketRoute,
     Store,
+    StoreRequestLog,
     User,
 )
 from app.models.enums import DeviceStatus, ShiftStatus, UserRole
@@ -179,6 +181,50 @@ class PushSubscriptionAdmin(ModelView, model=PushSubscription):
         PushSubscription.user_agent,
         PushSubscription.created_at,
     ]
+
+
+class RocketRouteAdmin(ModelView, model=RocketRoute):
+    column_list = [
+        RocketRoute.id,
+        RocketRoute.route_key,
+        RocketRoute.scope,
+        RocketRoute.store_id,
+        RocketRoute.room_name,
+        RocketRoute.is_active,
+        RocketRoute.created_at,
+        RocketRoute.updated_at,
+    ]
+    column_searchable_list = [RocketRoute.route_key, RocketRoute.room_id, RocketRoute.room_name]
+    column_sortable_list = [RocketRoute.id, RocketRoute.route_key, RocketRoute.created_at]
+    form_excluded_columns = [RocketRoute.created_at, RocketRoute.updated_at]
+
+
+class StoreRequestLogAdmin(ModelView, model=StoreRequestLog):
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        StoreRequestLog.id,
+        StoreRequestLog.store_id,
+        StoreRequestLog.device_id,
+        StoreRequestLog.employee_id,
+        StoreRequestLog.route_key,
+        StoreRequestLog.request_type,
+        StoreRequestLog.rocket_room_id,
+        StoreRequestLog.rocket_message_id,
+        StoreRequestLog.status,
+        StoreRequestLog.error_text,
+        StoreRequestLog.created_at,
+        StoreRequestLog.sent_at,
+    ]
+    column_searchable_list = [
+        StoreRequestLog.route_key,
+        StoreRequestLog.request_type,
+        StoreRequestLog.rocket_room_id,
+        StoreRequestLog.rocket_message_id,
+        StoreRequestLog.status,
+    ]
+    column_sortable_list = [StoreRequestLog.id, StoreRequestLog.created_at, StoreRequestLog.sent_at]
 
 
 class AuditLogAdmin(ModelView, model=AuditLog):
@@ -349,5 +395,7 @@ def setup_admin(app) -> None:
     admin.add_view(AttendanceShiftAdmin)
     admin.add_view(AttendanceEventAdmin)
     admin.add_view(PushSubscriptionAdmin)
+    admin.add_view(RocketRouteAdmin)
+    admin.add_view(StoreRequestLogAdmin)
     admin.add_view(AuditLogAdmin)
     admin.add_view(DashboardAdmin)

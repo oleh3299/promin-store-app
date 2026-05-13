@@ -18,3 +18,5 @@ class Store(TimestampMixin, Base):
     devices = relationship("Device", back_populates="store")
     shifts = relationship("AttendanceShift", back_populates="store")
     events = relationship("AttendanceEvent", back_populates="store")
+    rocket_routes = relationship("RocketRoute", back_populates="store")
+    store_request_logs = relationship("StoreRequestLog", back_populates="store")

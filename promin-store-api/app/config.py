@@ -16,6 +16,11 @@ class Settings(BaseSettings):
 
     frontend_origin: str = "https://store.prominuz.org"
     one_c_integration_api_key: str | None = None
+    rocket_chat_base_url: str = "https://chat.prominuz.org"
+    rocket_chat_user_id: str | None = None
+    rocket_chat_auth_token: str | None = None
+    rocket_chat_bot_username: str = "promin-store-bot"
+    rocket_chat_timeout_seconds: float = 8.0
 
     model_config = SettingsConfigDict(
         env_file=".env",

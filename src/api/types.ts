@@ -52,3 +52,32 @@ export type AttendanceActionResponse = {
   shift: AttendanceShiftRead
   event_id: number
 }
+
+export type StoreRequestRouteKey =
+  | 'purchase'
+  | 'accounting'
+  | 'it'
+  | 'manager'
+  | 'security'
+  | 'repair'
+  | 'cash'
+  | 'other'
+
+export type ActiveStoreEmployee = {
+  employee_id: number
+  full_name: string
+  position: string
+  checkin_at: string
+}
+
+export type ActiveStoreEmployeesResponse = {
+  items: ActiveStoreEmployee[]
+}
+
+export type StoreRequestResponse = {
+  ok: boolean
+  status: string | null
+  route_key: string | null
+  error: string | null
+  message: string | null
+}

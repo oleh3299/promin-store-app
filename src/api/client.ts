@@ -1,9 +1,12 @@
 import type {
   ApiHealth,
+  ActiveStoreEmployeesResponse,
   AttendanceActionResponse,
   DeviceRead,
   DeviceLoginResponse,
   EmployeeRead,
+  StoreRequestResponse,
+  StoreRequestRouteKey,
 } from './types'
 
 export const API_BASE_URL =
@@ -145,6 +148,33 @@ export function checkOut(
 ) {
   return apiRequest<AttendanceActionResponse>(
     '/api/attendance/checkout',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    { deviceToken },
+  )
+}
+
+export function getStoreRequestActiveEmployees(deviceToken: string) {
+  return apiRequest<ActiveStoreEmployeesResponse>(
+    '/api/store-requests/active-employees',
+    {},
+    { deviceToken },
+  )
+}
+
+export function createStoreRequest(
+  deviceToken: string,
+  payload: {
+    route_key: StoreRequestRouteKey
+    request_type?: string | null
+    employee_id?: number | null
+    message: string
+  },
+) {
+  return apiRequest<StoreRequestResponse>(
+    '/api/store-requests',
     {
       method: 'POST',
       body: JSON.stringify(payload),

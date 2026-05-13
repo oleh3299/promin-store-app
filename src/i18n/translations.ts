@@ -49,6 +49,8 @@ export type Translation = {
       settingsSubtitle: string
       diagnostics: string
       diagnosticsSubtitle: string
+      storeRequests: string
+      storeRequestsSubtitle: string
       currentShift: string
       tasks: string
       photoReports: string
@@ -127,6 +129,34 @@ export type Translation = {
       shiftFinished: (name: string) => string
     }
   }
+  storeRequests: {
+    back: string
+    kicker: string
+    title: string
+    subtitle: string
+    purchase: string
+    accounting: string
+    it: string
+    requestType: string
+    messageLabel: string
+    messagePlaceholder: string
+    employeeLabel: string
+    employeeUnknown: string
+    employeeSelect: string
+    send: string
+    sending: string
+    sent: string
+    routeNotConfigured: string
+    employeeRequired: string
+    genericError: string
+    accountingTypes: {
+      receipt: string
+      return: string
+      writeoff: string
+      completion: string
+      other: string
+    }
+  }
   scanner: {
     title: string
     prompt: string
@@ -189,6 +219,8 @@ export const translations: Record<Language, Translation> = {
         settingsSubtitle: 'Застосунок і сповіщення',
         diagnostics: 'Діагностика',
         diagnosticsSubtitle: 'API, авторизація та синхронізація',
+        storeRequests: 'Заявки',
+        storeRequestsSubtitle: 'Повідомлення для служб магазину',
         currentShift: 'Хто на зміні',
         tasks: 'Завдання',
         photoReports: 'Фотозвіти',
@@ -267,6 +299,34 @@ export const translations: Record<Language, Translation> = {
         shiftFinished: (name) => `Зміну завершено: ${name}`,
       },
     },
+    storeRequests: {
+      back: 'Назад',
+      kicker: 'Заявки',
+      title: 'Заявки',
+      subtitle: 'Надішліть повідомлення відповідальній службі.',
+      purchase: 'Замовлення товару',
+      accounting: 'Бухгалтерія',
+      it: 'IT проблема',
+      requestType: 'Тип заявки',
+      messageLabel: 'Повідомлення',
+      messagePlaceholder: 'Опишіть проблему або заявку',
+      employeeLabel: 'Співробітник',
+      employeeUnknown: 'Співробітник не вказаний',
+      employeeSelect: 'Хто відправляє заявку?',
+      send: 'Надіслати',
+      sending: 'Надсилання',
+      sent: 'Заявку надіслано',
+      routeNotConfigured: 'Маршрут для цього типу заявки не налаштований',
+      employeeRequired: 'Оберіть співробітника, який відправляє заявку',
+      genericError: 'Не вдалося надіслати заявку',
+      accountingTypes: {
+        receipt: 'Поступлення',
+        return: 'Повернення',
+        writeoff: 'Списання',
+        completion: 'Комплектація',
+        other: 'Інше',
+      },
+    },
     scanner: {
       title: 'Сканування штрихкоду',
       prompt: 'Наведіть камеру на бейдж співробітника.',
@@ -331,6 +391,8 @@ export const translations: Record<Language, Translation> = {
         settingsSubtitle: 'Приложение и уведомления',
         diagnostics: 'Диагностика',
         diagnosticsSubtitle: 'API, авторизация и синхронизация',
+        storeRequests: 'Заявки',
+        storeRequestsSubtitle: 'Повідомлення для служб магазину',
         currentShift: 'Кто на смене',
         tasks: 'Задания',
         photoReports: 'Фотоотчеты',
@@ -409,6 +471,34 @@ export const translations: Record<Language, Translation> = {
         shiftFinished: (name) => `Смена завершена: ${name}`,
       },
     },
+    storeRequests: {
+      back: 'Назад',
+      kicker: 'Заявки',
+      title: 'Заявки',
+      subtitle: 'Надішліть повідомлення відповідальній службі.',
+      purchase: 'Замовлення товару',
+      accounting: 'Бухгалтерія',
+      it: 'IT проблема',
+      requestType: 'Тип заявки',
+      messageLabel: 'Повідомлення',
+      messagePlaceholder: 'Опишіть проблему або заявку',
+      employeeLabel: 'Співробітник',
+      employeeUnknown: 'Співробітник не вказаний',
+      employeeSelect: 'Хто відправляє заявку?',
+      send: 'Надіслати',
+      sending: 'Надсилання',
+      sent: 'Заявку надіслано',
+      routeNotConfigured: 'Маршрут для цього типу заявки не налаштований',
+      employeeRequired: 'Оберіть співробітника, який відправляє заявку',
+      genericError: 'Не вдалося надіслати заявку',
+      accountingTypes: {
+        receipt: 'Поступлення',
+        return: 'Повернення',
+        writeoff: 'Списання',
+        completion: 'Комплектація',
+        other: 'Інше',
+      },
+    },
     scanner: {
       title: 'Сканирование штрихкода',
       prompt: 'Наведите камеру на бейдж сотрудника.',
@@ -473,6 +563,8 @@ export const translations: Record<Language, Translation> = {
         settingsSubtitle: 'App and notifications',
         diagnostics: 'Diagnostics',
         diagnosticsSubtitle: 'API, auth, and sync',
+        storeRequests: 'Заявки',
+        storeRequestsSubtitle: 'Повідомлення для служб магазину',
         currentShift: 'Current shift',
         tasks: 'Tasks',
         photoReports: 'Photo reports',
@@ -549,6 +641,34 @@ export const translations: Record<Language, Translation> = {
         networkLookupFailed: 'Could not reach the API. Try again.',
         shiftStarted: (name) => `Shift started: ${name}`,
         shiftFinished: (name) => `Shift finished: ${name}`,
+      },
+    },
+    storeRequests: {
+      back: 'Назад',
+      kicker: 'Заявки',
+      title: 'Заявки',
+      subtitle: 'Надішліть повідомлення відповідальній службі.',
+      purchase: 'Замовлення товару',
+      accounting: 'Бухгалтерія',
+      it: 'IT проблема',
+      requestType: 'Тип заявки',
+      messageLabel: 'Повідомлення',
+      messagePlaceholder: 'Опишіть проблему або заявку',
+      employeeLabel: 'Співробітник',
+      employeeUnknown: 'Співробітник не вказаний',
+      employeeSelect: 'Хто відправляє заявку?',
+      send: 'Надіслати',
+      sending: 'Надсилання',
+      sent: 'Заявку надіслано',
+      routeNotConfigured: 'Маршрут для цього типу заявки не налаштований',
+      employeeRequired: 'Оберіть співробітника, який відправляє заявку',
+      genericError: 'Не вдалося надіслати заявку',
+      accountingTypes: {
+        receipt: 'Поступлення',
+        return: 'Повернення',
+        writeoff: 'Списання',
+        completion: 'Комплектація',
+        other: 'Інше',
       },
     },
     scanner: {

@@ -17,6 +17,7 @@ import DiagnosticsPage from './pages/DiagnosticsPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SettingsPage from './pages/SettingsPage'
+import StoreRequestsPage from './pages/StoreRequestsPage'
 import type {
   AttendancePageState,
   AuthState,
@@ -241,6 +242,16 @@ function App() {
     )
   }
 
+  if (screen === 'storeRequests') {
+    return (
+      <StoreRequestsPage
+        device={device}
+        t={t}
+        onBack={() => setScreen('home')}
+      />
+    )
+  }
+
   if (screen === 'diagnostics') {
     return (
       <DiagnosticsPage
@@ -264,6 +275,7 @@ function App() {
       t={t}
       onLanguageChange={setLanguage}
       onOpenAttendance={() => setScreen('attendance')}
+      onOpenStoreRequests={() => setScreen('storeRequests')}
       onOpenSettings={() => setScreen('settings')}
       onOpenDiagnostics={() => setScreen('diagnostics')}
     />

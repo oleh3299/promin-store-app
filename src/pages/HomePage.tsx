@@ -11,6 +11,7 @@ type HomePageProps = {
   t: Translation
   onLanguageChange: (language: Language) => void
   onOpenAttendance: () => void
+  onOpenStoreRequests: () => void
   onOpenSettings: () => void
   onOpenDiagnostics: () => void
 }
@@ -18,7 +19,7 @@ type HomePageProps = {
 type MenuItem = {
   title: string
   subtitle: string
-  action: 'attendance' | 'settings' | 'diagnostics' | 'disabled'
+  action: 'attendance' | 'storeRequests' | 'settings' | 'diagnostics' | 'disabled'
 }
 
 function getMenuItems(t: Translation): MenuItem[] {
@@ -27,6 +28,11 @@ function getMenuItems(t: Translation): MenuItem[] {
       title: t.home.menu.attendance,
       subtitle: t.home.menu.attendanceSubtitle,
       action: 'attendance',
+    },
+    {
+      title: t.home.menu.storeRequests,
+      subtitle: t.home.menu.storeRequestsSubtitle,
+      action: 'storeRequests',
     },
     {
       title: t.home.menu.settings,
@@ -83,6 +89,7 @@ function HomePage({
   t,
   onLanguageChange,
   onOpenAttendance,
+  onOpenStoreRequests,
   onOpenSettings,
   onOpenDiagnostics,
 }: HomePageProps) {
@@ -132,6 +139,11 @@ function HomePage({
             onClick={() => {
               if (item.action === 'attendance') {
                 onOpenAttendance()
+                return
+              }
+
+              if (item.action === 'storeRequests') {
+                onOpenStoreRequests()
                 return
               }
 

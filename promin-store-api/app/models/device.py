@@ -34,3 +34,4 @@ class Device(TimestampMixin, Base):
     events = relationship("AttendanceEvent", back_populates="device")
     push_subscriptions = relationship("PushSubscription", back_populates="device")
     audit_logs = relationship("AuditLog", back_populates="actor_device")
+    store_request_logs = relationship("StoreRequestLog", back_populates="device")

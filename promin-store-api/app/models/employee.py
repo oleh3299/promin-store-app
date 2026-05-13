@@ -19,3 +19,4 @@ class Employee(TimestampMixin, Base):
     store = relationship("Store", back_populates="employees")
     shifts = relationship("AttendanceShift", back_populates="employee")
     events = relationship("AttendanceEvent", back_populates="employee")
+    store_request_logs = relationship("StoreRequestLog", back_populates="employee")

@@ -272,13 +272,20 @@ h1 {
   opacity: 0.45;
 }
 
-input {
+input,
+select,
+textarea {
   width: 100%;
   margin-top: 10px;
   padding: 16px;
   border: 1px solid rgba(16, 32, 24, 0.14);
   border-radius: 18px;
   font-size: 18px;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
 }
 
 .login-form {
@@ -371,6 +378,41 @@ input {
 }
 
 .position-button.selected {
+  border-color: #2c7a43;
+  background: #e4f4e8;
+  color: #1f7a42;
+}
+
+.store-request-form {
+  display: grid;
+  gap: 14px;
+}
+
+.store-request-form label {
+  display: grid;
+  gap: 6px;
+  color: #405148;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.request-route-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.route-button {
+  border: 1px solid rgba(16, 32, 24, 0.1);
+  border-radius: 18px;
+  padding: 15px;
+  background: #f4f7f3;
+  color: #102018;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.route-button.selected {
   border-color: #2c7a43;
   background: #e4f4e8;
   color: #1f7a42;

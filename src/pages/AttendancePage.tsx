@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   API_BASE_URL,
   ApiError,
@@ -8,6 +8,10 @@ import {
 } from '../api/client'
 import BarcodeScanner from '../components/BarcodeScanner'
 import type { Translation } from '../i18n/translations'
+import {
+  isValidEmployeeBarcode,
+  normalizeEmployeeBarcode,
+} from '../lib/barcode'
 import { employees, positions } from '../mock/employees'
 import type {
   AttendanceMode,
@@ -107,7 +111,6 @@ function AttendancePage({
   )
   const [message, setMessage] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
-  const lastScanRef = useRef<string | null>(null)
 
   useEffect(() => {
     onStateChange({
@@ -136,18 +139,18 @@ function AttendancePage({
 
   const cancelAttendanceFlow = () => {
     setScannerOpen(false)
-    lastScanRef.current = null
     setMessage('')
     resetAttendanceFlow()
   }
 
   const findEmployee = async (code: string) => {
-    const trimmedCode = code.trim()
+    const trimmedCode = normalizeEmployeeBarcode(code)
     let fallbackNotFoundMessage = t.attendance.messages.employeeNotFound
 
-    if (!trimmedCode) {
+    if (!isValidEmployeeBarcode(trimmedCode)) {
       console.debug('Employee lookup rejected: empty barcode', {
         scannedBarcode: code,
+        normalizedBarcode: trimmedCode,
       })
       setMessage(t.attendance.messages.invalidBarcode)
       setSelectedEmployee(null)
@@ -432,19 +435,14 @@ function AttendancePage({
             <BarcodeScanner
               t={t.scanner}
               onScan={async (code) => {
-                const trimmedCode = code.trim()
-                if (!trimmedCode || lastScanRef.current === trimmedCode) {
-                  console.debug('Scanner result ignored', {
-                    scannedBarcode: trimmedCode,
-                    reason: trimmedCode ? 'duplicate' : 'empty',
-                  })
-                  return
-                }
-
-                lastScanRef.current = trimmedCode
+                const trimmedCode = normalizeEmployeeBarcode(code)
                 setEmployeeCode(trimmedCode)
                 setScannerOpen(false)
                 await findEmployee(trimmedCode)
+              }}
+              onManualEntry={() => {
+                setScannerOpen(false)
+                setInputMethod('manual')
               }}
               onClose={() => setScannerOpen(false)}
             />
@@ -452,7 +450,9 @@ function AttendancePage({
 
           <input
             value={employeeCode}
-            onChange={(event) => setEmployeeCode(event.target.value)}
+            onChange={(event) =>
+              setEmployeeCode(normalizeEmployeeBarcode(event.target.value))
+            }
             placeholder={t.attendance.employeeCodePlaceholder}
             inputMode="numeric"
           />

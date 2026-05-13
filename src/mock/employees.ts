@@ -1,9 +1,9 @@
 import type { Employee, Position } from '../types/attendance'
 
 export const employees: Employee[] = [
-  { id: '1', code: '4052509707', name: 'Жулканич Крістіна' },
-  { id: '2', code: '2767412928', name: 'Торинець Лариса' },
-  { id: '3', code: '3973506888', name: 'Тобак Анастасія' },
+  { id: '1', code: '2333000002834', name: 'Тестовий Працівник' },
+  { id: '2', code: '2333000002841', name: 'Торинець Лариса' },
+  { id: '3', code: '2333000002858', name: 'Тобак Анастасія' },
 ]
 
 export const positions: Position[] = [

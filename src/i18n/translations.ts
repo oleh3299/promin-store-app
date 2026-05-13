@@ -131,6 +131,13 @@ export type Translation = {
     prompt: string
     close: string
     cameraError: string
+    holdHint: string
+    frameLabel: string
+    confirmCode: string
+    confirm: string
+    scanAgain: string
+    manualEntry: string
+    invalidCode: string
   }
   positions: Record<Position, string>
 }
@@ -263,6 +270,13 @@ export const translations: Record<Language, Translation> = {
       prompt: 'Наведіть камеру на бейдж співробітника.',
       close: 'Закрити сканер',
       cameraError: 'Не вдалося запустити камеру. Перевірте дозвіл камери.',
+      holdHint: 'Тримайте бейдж рівно, 10–20 см від камери',
+      frameLabel: 'Наведіть штрихкод сюди',
+      confirmCode: 'Розпізнаний код',
+      confirm: 'Підтвердити',
+      scanAgain: 'Сканувати ще раз',
+      manualEntry: 'Ввести код вручну',
+      invalidCode: 'Код не схожий на штрихкод співробітника',
     },
     positions: {
       Ревізор: 'Ревізор',
@@ -397,6 +411,13 @@ export const translations: Record<Language, Translation> = {
       prompt: 'Наведите камеру на бейдж сотрудника.',
       close: 'Закрыть сканер',
       cameraError: 'Не удалось запустить камеру. Проверьте разрешение камеры.',
+      holdHint: 'Держите бейдж ровно, 10–20 см от камеры',
+      frameLabel: 'Наведите штрихкод сюда',
+      confirmCode: 'Распознанный код',
+      confirm: 'Подтвердить',
+      scanAgain: 'Сканировать еще раз',
+      manualEntry: 'Ввести код вручную',
+      invalidCode: 'Код не похож на штрихкод сотрудника',
     },
     positions: {
       Ревізор: 'Ревизор',
@@ -531,6 +552,13 @@ export const translations: Record<Language, Translation> = {
       prompt: 'Point the camera at the employee badge.',
       close: 'Close scanner',
       cameraError: 'Could not start the camera. Check camera permission.',
+      holdHint: 'Keep the badge straight, 10–20 cm from the camera',
+      frameLabel: 'Place the barcode here',
+      confirmCode: 'Recognized code',
+      confirm: 'Confirm',
+      scanAgain: 'Scan again',
+      manualEntry: 'Enter code manually',
+      invalidCode: 'This does not look like an employee barcode',
     },
     positions: {
       Ревізор: 'Auditor',

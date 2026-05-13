@@ -409,10 +409,21 @@ input {
   overflow: hidden;
 }
 
+.scanner-hint {
+  margin: 8px 0 0;
+  color: #405148;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.barcode-reader-wrapper {
+  position: relative;
+  margin-top: 14px;
+}
+
 .barcode-reader {
   width: 100%;
   min-height: 320px;
-  margin-top: 14px;
   border-radius: 18px;
   overflow: hidden;
   background: #102018;
@@ -423,4 +434,43 @@ input {
   min-height: 320px;
   object-fit: cover;
   border-radius: 18px;
+}
+
+.scanner-guide {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(86%, 360px);
+  height: 96px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  border: 3px solid rgba(215, 183, 95, 0.95);
+  border-radius: 14px;
+  color: #fff7dc;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: 0 1px 8px rgba(16, 32, 24, 0.8);
+  pointer-events: none;
+}
+
+.scan-confirmation {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #eef8f0;
+}
+
+.scan-confirmation span {
+  color: #405148;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.scan-confirmation strong {
+  font-size: 24px;
+  letter-spacing: 0.04em;
 }

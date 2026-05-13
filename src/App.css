@@ -325,6 +325,20 @@ input {
   overflow-wrap: anywhere;
 }
 
+.error-panel {
+  margin-top: 20vh;
+}
+
+.error-details {
+  max-height: 120px;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 14px;
+  background: #fff7dc;
+  color: #4a3712;
+  white-space: pre-wrap;
+}
+
 .employee-card {
   display: grid;
   gap: 4px;

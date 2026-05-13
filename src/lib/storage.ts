@@ -361,3 +361,34 @@ export function saveAppPersistence(state: AppPersistenceState) {
 
   storage.setItem(STORAGE_KEY, JSON.stringify(toStoredState(state)))
 }
+
+export function resetStoredScreen(screen: Screen = 'home') {
+  const storage = getStorage()
+
+  if (!storage) {
+    return
+  }
+
+  try {
+    const stored = storage.getItem(STORAGE_KEY)
+    if (!stored) return
+
+    const parsed = JSON.parse(stored)
+    if (!isObject(parsed)) return
+
+    const appState = isObject(parsed.appState) ? parsed.appState : {}
+    storage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        ...parsed,
+        appState: {
+          ...appState,
+          screen,
+          attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
+        },
+      }),
+    )
+  } catch (error) {
+    console.error('Failed to reset stored screen after app crash', { error })
+  }
+}

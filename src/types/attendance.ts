@@ -11,6 +11,7 @@ export type Employee = {
   backendId?: number
   code: string
   name: string
+  position?: Position
 }
 
 export type OfflineAttendanceEvent = {

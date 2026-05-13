@@ -117,6 +117,11 @@ export type Translation = {
       openShiftNotFound: string
       queuedOffline: string
       syncedOnline: string
+      invalidBarcode: string
+      deviceRequired: string
+      authRequired: string
+      malformedEmployee: string
+      networkLookupFailed: string
       shiftStarted: (name: string) => string
       shiftFinished: (name: string) => string
     }
@@ -244,6 +249,11 @@ export const translations: Record<Language, Translation> = {
         openShiftNotFound: 'Відкрита зміна не знайдена',
         queuedOffline: 'Дію збережено локально і буде синхронізовано',
         syncedOnline: 'Дію синхронізовано з API',
+        invalidBarcode: 'Штрихкод порожній або некоректний',
+        deviceRequired: 'Пристрій не зареєстровано. Перевірте діагностику.',
+        authRequired: 'Сесія або пристрій не авторизовані. Увійдіть ще раз.',
+        malformedEmployee: 'API повернув некоректні дані співробітника',
+        networkLookupFailed: 'Не вдалося підключитися до API. Спробуйте ще раз.',
         shiftStarted: (name) => `Зміну розпочато: ${name}`,
         shiftFinished: (name) => `Зміну завершено: ${name}`,
       },
@@ -373,6 +383,11 @@ export const translations: Record<Language, Translation> = {
         openShiftNotFound: 'Открытая смена не найдена',
         queuedOffline: 'Действие сохранено локально и будет синхронизировано',
         syncedOnline: 'Действие синхронизировано с API',
+        invalidBarcode: 'Штрихкод пустой или некорректный',
+        deviceRequired: 'Устройство не зарегистрировано. Проверьте диагностику.',
+        authRequired: 'Сессия или устройство не авторизованы. Войдите еще раз.',
+        malformedEmployee: 'API вернул некорректные данные сотрудника',
+        networkLookupFailed: 'Не удалось подключиться к API. Попробуйте еще раз.',
         shiftStarted: (name) => `Смена начата: ${name}`,
         shiftFinished: (name) => `Смена завершена: ${name}`,
       },
@@ -502,6 +517,11 @@ export const translations: Record<Language, Translation> = {
         openShiftNotFound: 'Open shift not found',
         queuedOffline: 'Action saved locally and will be synced',
         syncedOnline: 'Action synced with API',
+        invalidBarcode: 'The barcode is empty or invalid',
+        deviceRequired: 'Device is not registered. Check diagnostics.',
+        authRequired: 'Session or device is not authorized. Sign in again.',
+        malformedEmployee: 'API returned malformed employee data',
+        networkLookupFailed: 'Could not reach the API. Try again.',
         shiftStarted: (name) => `Shift started: ${name}`,
         shiftFinished: (name) => `Shift finished: ${name}`,
       },

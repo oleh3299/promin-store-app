@@ -4,7 +4,7 @@ import type { Translation } from '../i18n/translations'
 
 type BarcodeScannerProps = {
   t: Translation['scanner']
-  onScan: (code: string) => void
+  onScan: (code: string) => void | Promise<void>
   onClose: () => void
 }
 
@@ -17,7 +17,25 @@ function BarcodeScanner({ t, onScan, onClose }: BarcodeScannerProps) {
 
   useEffect(() => {
     let scanner: Html5Qrcode | null = null
-    let isStopped = false
+    let isStopping = false
+
+    const stopScanner = async () => {
+      if (!scanner || isStopping) return
+
+      isStopping = true
+
+      try {
+        await scanner.stop()
+      } catch (error) {
+        console.debug('Scanner stop skipped or failed', { error })
+      }
+
+      try {
+        await scanner.clear()
+      } catch (error) {
+        console.debug('Scanner clear skipped or failed', { error })
+      }
+    }
 
     const startScanner = async () => {
       try {
@@ -33,17 +51,17 @@ function BarcodeScanner({ t, onScan, onClose }: BarcodeScannerProps) {
             },
           },
           async (decodedText) => {
-            if (isStopped) return
+            if (isStopping) return
 
-            isStopped = true
-            onScan(decodedText)
+            const barcode = decodedText.trim()
+            console.debug('Scanner result', { barcode })
 
-            try {
-              await scanner?.stop()
-              await scanner?.clear()
-            } catch {
-              // ignore
+            if (!barcode) {
+              return
             }
+
+            await stopScanner()
+            await onScan(barcode)
           },
           () => {
             // scan errors are normal while camera is searching
@@ -58,16 +76,7 @@ function BarcodeScanner({ t, onScan, onClose }: BarcodeScannerProps) {
     startScanner()
 
     return () => {
-      isStopped = true
-
-      if (scanner) {
-        scanner
-          .stop()
-          .then(() => scanner?.clear())
-          .catch(() => {
-            // already stopped
-          })
-      }
+      void stopScanner()
     }
   }, [onScan])
 

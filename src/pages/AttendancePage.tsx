@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react'
-import { ApiError, checkIn, checkOut, getEmployeeByBarcode } from '../api/client'
+import { useEffect, useRef, useState } from 'react'
+import {
+  API_BASE_URL,
+  ApiError,
+  checkIn,
+  checkOut,
+  getEmployeeByBarcode,
+} from '../api/client'
 import BarcodeScanner from '../components/BarcodeScanner'
 import type { Translation } from '../i18n/translations'
 import { employees, positions } from '../mock/employees'
@@ -44,15 +50,29 @@ function createEventId() {
 }
 
 function mapApiEmployee(employee: {
-  id: number
-  barcode: string
-  full_name: string
+  id?: unknown
+  barcode?: unknown
+  full_name?: unknown
+  position?: unknown
 }): Employee {
+  if (
+    typeof employee.id !== 'number' ||
+    typeof employee.barcode !== 'string' ||
+    typeof employee.full_name !== 'string'
+  ) {
+    throw new Error('Malformed employee response')
+  }
+
+  const position = positions.includes(employee.position as Position)
+    ? (employee.position as Position)
+    : undefined
+
   return {
     id: String(employee.id),
     backendId: employee.id,
-    code: employee.barcode,
+    code: employee.barcode.trim(),
     name: employee.full_name,
+    position,
   }
 }
 
@@ -87,6 +107,7 @@ function AttendancePage({
   )
   const [message, setMessage] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
+  const lastScanRef = useRef<string | null>(null)
 
   useEffect(() => {
     onStateChange({
@@ -115,33 +136,87 @@ function AttendancePage({
 
   const cancelAttendanceFlow = () => {
     setScannerOpen(false)
+    lastScanRef.current = null
     setMessage('')
     resetAttendanceFlow()
   }
 
   const findEmployee = async (code: string) => {
     const trimmedCode = code.trim()
+    let fallbackNotFoundMessage = t.attendance.messages.employeeNotFound
+
+    if (!trimmedCode) {
+      console.debug('Employee lookup rejected: empty barcode', {
+        scannedBarcode: code,
+      })
+      setMessage(t.attendance.messages.invalidBarcode)
+      setSelectedEmployee(null)
+      return
+    }
+
+    if (!device.deviceToken) {
+      console.error('Employee lookup skipped: missing device token', {
+        scannedBarcode: trimmedCode,
+        endpoint: `${API_BASE_URL}/api/employees/by-barcode/${trimmedCode}`,
+      })
+      setMessage(t.attendance.messages.deviceRequired)
+      setSelectedEmployee(null)
+      return
+    }
 
     if (device.deviceToken && navigator.onLine) {
       try {
+        console.debug('Employee lookup start', {
+          scannedBarcode: trimmedCode,
+          endpoint: `${API_BASE_URL}/api/employees/by-barcode/${trimmedCode}`,
+        })
         const employee = await getEmployeeByBarcode(trimmedCode, device.deviceToken)
-        setSelectedEmployee(mapApiEmployee(employee))
+        const mappedEmployee = mapApiEmployee(employee)
+        setSelectedEmployee(mappedEmployee)
+        setSelectedPosition(mappedEmployee.position ?? null)
         setMessage('')
         return
-      } catch {
-        // Keep local mock lookup as a safe fallback for offline-first MVP testing.
+      } catch (error) {
+        console.error('Employee lookup failed', {
+          scannedBarcode: trimmedCode,
+          endpoint: `${API_BASE_URL}/api/employees/by-barcode/${trimmedCode}`,
+          status: error instanceof ApiError ? error.status : undefined,
+          responseBody: error instanceof ApiError ? error.responseBody : undefined,
+          error,
+        })
+
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+          setMessage(t.attendance.messages.authRequired)
+          setSelectedEmployee(null)
+          return
+        }
+
+        if (error instanceof ApiError && error.status === 404) {
+          setMessage(t.attendance.messages.employeeNotFound)
+          setSelectedEmployee(null)
+          return
+        }
+
+        if (error instanceof Error && error.message === 'Malformed employee response') {
+          setMessage(t.attendance.messages.malformedEmployee)
+          setSelectedEmployee(null)
+          return
+        }
+
+        fallbackNotFoundMessage = t.attendance.messages.networkLookupFailed
       }
     }
 
     const employee = employees.find((item) => item.code === trimmedCode)
 
     if (!employee) {
-      setMessage(t.attendance.messages.employeeNotFound)
+      setMessage(fallbackNotFoundMessage)
       setSelectedEmployee(null)
       return
     }
 
     setSelectedEmployee(employee)
+    setSelectedPosition(null)
     setMessage('')
   }
 
@@ -356,10 +431,20 @@ function AttendancePage({
           {inputMethod === 'scan' && scannerOpen && (
             <BarcodeScanner
               t={t.scanner}
-              onScan={(code) => {
-                setEmployeeCode(code)
-                void findEmployee(code)
+              onScan={async (code) => {
+                const trimmedCode = code.trim()
+                if (!trimmedCode || lastScanRef.current === trimmedCode) {
+                  console.debug('Scanner result ignored', {
+                    scannedBarcode: trimmedCode,
+                    reason: trimmedCode ? 'duplicate' : 'empty',
+                  })
+                  return
+                }
+
+                lastScanRef.current = trimmedCode
+                setEmployeeCode(trimmedCode)
                 setScannerOpen(false)
+                await findEmployee(trimmedCode)
               }}
               onClose={() => setScannerOpen(false)}
             />

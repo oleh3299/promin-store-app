@@ -18,10 +18,14 @@ type RequestOptions = {
 
 export class ApiError extends Error {
   status: number
+  path: string
+  responseBody: unknown
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, path: string, responseBody: unknown) {
     super(message)
     this.status = status
+    this.path = path
+    this.responseBody = responseBody
   }
 }
 
@@ -41,21 +45,43 @@ async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers,
-  })
+  let response: Response
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers,
+    })
+  } catch (error) {
+    console.error('API network error', {
+      endpoint: `${API_BASE_URL}${path}`,
+      error,
+    })
+    throw error
+  }
 
   if (!response.ok) {
     let detail = response.statusText
+    let responseBody: unknown = null
     try {
-      const body = await response.json()
-      detail = body.detail ?? detail
+      responseBody = await response.json()
+      if (
+        responseBody &&
+        typeof responseBody === 'object' &&
+        'detail' in responseBody
+      ) {
+        detail = String(responseBody.detail)
+      }
     } catch {
       // Keep response status text when the body is not JSON.
     }
 
-    throw new ApiError(response.status, detail)
+    console.error('API response error', {
+      endpoint: `${API_BASE_URL}${path}`,
+      status: response.status,
+      responseBody,
+    })
+
+    throw new ApiError(response.status, detail, path, responseBody)
   }
 
   if (response.status === 204) {

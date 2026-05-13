@@ -305,3 +305,14 @@ input {
     width: 100%;
   }
 }
+
+.barcode-reader {
+  overflow: hidden;
+  margin-top: 14px;
+  border-radius: 18px;
+  background: #102018;
+}
+
+.barcode-reader video {
+  border-radius: 18px;
+}

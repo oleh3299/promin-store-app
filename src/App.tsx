@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Html5QrcodeScanner } from 'html5-qrcode'
 import './App.css'
+
 
 type Screen = 'home' | 'attendance'
 type AttendanceMode = 'checkin' | 'checkout' | null
@@ -51,6 +53,57 @@ function getCurrentTime() {
   })
 }
 
+function BarcodeScanner({
+  onScan,
+  onClose,
+}: {
+  onScan: (code: string) => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const scanner = new Html5QrcodeScanner(
+      'barcode-reader',
+      {
+        fps: 10,
+        qrbox: {
+          width: 250,
+          height: 250,
+        },
+      },
+      false,
+    )
+
+    scanner.render(
+      (decodedText) => {
+        onScan(decodedText)
+        scanner.clear()
+      },
+      () => {
+        // ошибки сканирования игнорируем, камера просто ищет код
+      },
+    )
+
+    return () => {
+      scanner.clear().catch(() => {
+        // если уже очищен — ничего страшного
+      })
+    }
+  }, [onScan])
+
+  return (
+    <section className="panel">
+      <h2>Сканування штрихкоду</h2>
+      <p>Наведіть камеру на бейдж співробітника.</p>
+
+      <div id="barcode-reader" className="barcode-reader" />
+
+      <button className="wide-button secondary" onClick={onClose}>
+        Закрити сканер
+      </button>
+    </section>
+  )
+}
+
 function App() {
   const [screen, setScreen] = useState<Screen>('home')
   const [mode, setMode] = useState<AttendanceMode>(null)
@@ -60,6 +113,7 @@ function App() {
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
   const [shifts, setShifts] = useState<Shift[]>([])
   const [message, setMessage] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   const openShifts = shifts.filter((shift) => !shift.checkOutTime)
 
@@ -187,11 +241,28 @@ function App() {
           <section className="panel">
             <h2>Идентификация сотрудника</h2>
 
-            {inputMethod === 'scan' && (
-              <button className="wide-button" onClick={testScan}>
-                Тестовый скан
-              </button>
-            )}
+            {inputMethod === 'scan' && !scannerOpen && (
+  <>
+    <button className="wide-button" onClick={() => setScannerOpen(true)}>
+      Открыть камеру
+    </button>
+
+    <button className="wide-button secondary" onClick={testScan}>
+      Тестовый скан
+    </button>
+  </>
+)}
+
+{inputMethod === 'scan' && scannerOpen && (
+  <BarcodeScanner
+    onScan={(code) => {
+      setEmployeeCode(code)
+      findEmployee(code)
+      setScannerOpen(false)
+    }}
+    onClose={() => setScannerOpen(false)}
+  />
+)}
 
             <input
               value={employeeCode}

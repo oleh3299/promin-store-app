@@ -7,6 +7,7 @@ import {
 type HomePageProps = {
   openShiftCount: number
   notificationStatus: string
+  selectedStore: string
   onNotificationStatusChange: (status: string) => void
   onOpenAttendance: () => void
 }
@@ -26,6 +27,7 @@ const menuItems = [
 function HomePage({
   openShiftCount,
   notificationStatus,
+  selectedStore,
   onNotificationStatusChange,
   onOpenAttendance,
 }: HomePageProps) {
@@ -42,7 +44,7 @@ function HomePage({
 
         <div className="store-badge">
           <span>Магазин</span>
-          <strong>М37</strong>
+          <strong>{selectedStore}</strong>
         </div>
       </section>
 

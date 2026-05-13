@@ -19,3 +19,11 @@ export type Shift = {
   checkInTime: string
   checkOutTime?: string
 }
+
+export type AttendancePageState = {
+  mode: AttendanceMode
+  inputMethod: InputMethod
+  employeeCode: string
+  selectedEmployeeId: string | null
+  selectedPosition: Position | null
+}

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import BarcodeScanner from '../components/BarcodeScanner'
 import { employees, positions } from '../mock/employees'
 import type {
   AttendanceMode,
+  AttendancePageState,
   Employee,
   InputMethod,
   Position,
@@ -10,9 +11,11 @@ import type {
 } from '../types/attendance'
 
 type AttendancePageProps = {
+  initialState: AttendancePageState
   openShifts: Shift[]
   shifts: Shift[]
   setShifts: (shifts: Shift[]) => void
+  onStateChange: (state: AttendancePageState) => void
   onBack: () => void
 }
 
@@ -23,14 +26,46 @@ function getCurrentTime() {
   })
 }
 
-function AttendancePage({ openShifts, shifts, setShifts, onBack }: AttendancePageProps) {
-  const [mode, setMode] = useState<AttendanceMode>(null)
-  const [inputMethod, setInputMethod] = useState<InputMethod>(null)
-  const [employeeCode, setEmployeeCode] = useState('')
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
-  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
+function AttendancePage({
+  initialState,
+  openShifts,
+  shifts,
+  setShifts,
+  onStateChange,
+  onBack,
+}: AttendancePageProps) {
+  const [mode, setMode] = useState<AttendanceMode>(initialState.mode)
+  const [inputMethod, setInputMethod] = useState<InputMethod>(
+    initialState.inputMethod,
+  )
+  const [employeeCode, setEmployeeCode] = useState(initialState.employeeCode)
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    () =>
+      employees.find((employee) => employee.id === initialState.selectedEmployeeId) ??
+      null,
+  )
+  const [selectedPosition, setSelectedPosition] = useState<Position | null>(
+    initialState.selectedPosition,
+  )
   const [message, setMessage] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
+
+  useEffect(() => {
+    onStateChange({
+      mode,
+      inputMethod,
+      employeeCode,
+      selectedEmployeeId: selectedEmployee?.id ?? null,
+      selectedPosition,
+    })
+  }, [
+    employeeCode,
+    inputMethod,
+    mode,
+    onStateChange,
+    selectedEmployee,
+    selectedPosition,
+  ])
 
   const resetAttendanceFlow = () => {
     setMode(null)

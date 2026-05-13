@@ -75,6 +75,12 @@ function AttendancePage({
     setSelectedPosition(null)
   }
 
+  const cancelAttendanceFlow = () => {
+    setScannerOpen(false)
+    setMessage('')
+    resetAttendanceFlow()
+  }
+
   const findEmployee = (code: string) => {
     const employee = employees.find((item) => item.code === code.trim())
 
@@ -183,6 +189,10 @@ function AttendancePage({
           <button className="wide-button secondary" onClick={() => setInputMethod('manual')}>
             Ввести код вручную
           </button>
+
+          <button className="wide-button secondary" onClick={cancelAttendanceFlow}>
+            Отмена
+          </button>
         </section>
       )}
 
@@ -222,6 +232,10 @@ function AttendancePage({
 
           <button className="wide-button" onClick={() => findEmployee(employeeCode)}>
             Найти сотрудника
+          </button>
+
+          <button className="wide-button secondary" onClick={cancelAttendanceFlow}>
+            Отмена
           </button>
 
           {selectedEmployee && (

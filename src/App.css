@@ -13,6 +13,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: #eef3ed;
 }
 
 button {
@@ -35,6 +36,10 @@ button {
   justify-content: space-between;
   gap: 16px;
   padding: 18px 0 12px;
+}
+
+.app-header.vertical {
+  display: block;
 }
 
 .app-kicker {
@@ -112,7 +117,6 @@ h1 {
   background: #d7b75f;
   color: #102018;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .menu-grid {
@@ -147,12 +151,141 @@ h1 {
 
 .menu-card.active {
   border-color: rgba(44, 122, 67, 0.35);
-  background: #ffffff;
 }
 
-.menu-card.active small {
+.back-button {
+  border: 0;
+  background: transparent;
   color: #2c7a43;
-  font-weight: 700;
+  font-weight: 800;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.message-box {
+  margin: 12px 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff7dc;
+  color: #4a3712;
+  font-weight: 800;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.big-action {
+  min-height: 110px;
+  border: 0;
+  border-radius: 26px;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.big-action.success {
+  background: #1f7a42;
+}
+
+.big-action.danger {
+  background: #9b2c2c;
+}
+
+.panel {
+  margin: 14px 0;
+  padding: 18px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(16, 32, 24, 0.07);
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+}
+
+.wide-button,
+.confirm-button {
+  width: 100%;
+  border: 0;
+  border-radius: 18px;
+  padding: 15px 16px;
+  margin-top: 10px;
+  background: #183c27;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.wide-button.secondary {
+  background: #e8eee8;
+  color: #183c27;
+}
+
+.confirm-button {
+  background: #d7b75f;
+  color: #102018;
+}
+
+.confirm-button:disabled {
+  opacity: 0.45;
+}
+
+input {
+  width: 100%;
+  margin-top: 10px;
+  padding: 16px;
+  border: 1px solid rgba(16, 32, 24, 0.14);
+  border-radius: 18px;
+  font-size: 18px;
+}
+
+.employee-card {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #eef8f0;
+}
+
+.position-list {
+  display: grid;
+  gap: 10px;
+}
+
+.position-button {
+  border: 1px solid rgba(16, 32, 24, 0.1);
+  border-radius: 18px;
+  padding: 15px;
+  background: #f4f7f3;
+  color: #102018;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.position-button.selected {
+  border-color: #2c7a43;
+  background: #e4f4e8;
+  color: #1f7a42;
+}
+
+.shift-list {
+  display: grid;
+  gap: 10px;
+}
+
+.shift-row {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f4f7f3;
 }
 
 @media (max-width: 420px) {

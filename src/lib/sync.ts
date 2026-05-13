@@ -24,7 +24,7 @@ export async function syncOfflineQueue(
       sync: {
         apiStatus: 'online',
         lastSyncAt: new Date().toISOString(),
-        lastSyncMessage: 'Device is not registered',
+        lastSyncMessage: 'Пристрій не авторизовано',
       },
     }
   }

@@ -77,16 +77,14 @@ export type Translation = {
     subtitle: string
     apiStatus: string
     checkApi: string
-    terminalState: string
-    signedInAsDevice: string
+    deviceLogin: string
+    devicePrefix: string
+    store: string
     signedOut: string
-    deviceState: string
-    registered: string
-    notRegistered: string
-    registerDevice: string
     queue: string
     queueItems: (count: number) => string
     lastSync: string
+    appVersion: string
     syncNow: string
   }
   attendance: {
@@ -220,16 +218,14 @@ export const translations: Record<Language, Translation> = {
       subtitle: 'Перевірка API, пристрою та локальної черги.',
       apiStatus: 'API',
       checkApi: 'Перевірити API',
-      terminalState: 'Термінал',
-      signedInAsDevice: 'Пристрій увійшов як',
+      deviceLogin: 'Логін пристрою',
+      devicePrefix: 'Пристрій',
+      store: 'Магазин',
       signedOut: 'Пристрій не авторизовано',
-      deviceState: 'Пристрій',
-      registered: 'Зареєстровано',
-      notRegistered: 'Не зареєстровано',
-      registerDevice: 'Зареєструвати пристрій',
       queue: 'Офлайн-черга',
       queueItems: (count) => `${count} подій`,
       lastSync: 'Остання синхронізація',
+      appVersion: 'Версія застосунку',
       syncNow: 'Синхронізувати',
     },
     attendance: {
@@ -265,7 +261,7 @@ export const translations: Record<Language, Translation> = {
         queuedOffline: 'Дію збережено локально і буде синхронізовано',
         syncedOnline: 'Дію синхронізовано з API',
         invalidBarcode: 'Штрихкод порожній або некоректний',
-        deviceRequired: 'Пристрій не зареєстровано. Перевірте діагностику.',
+        deviceRequired: 'Пристрій не авторизовано. Увійдіть як магазинний термінал.',
         authRequired: 'Сесія або пристрій не авторизовані. Увійдіть ще раз.',
         malformedEmployee: 'API повернув некоректні дані співробітника',
         networkLookupFailed: 'Не вдалося підключитися до API. Спробуйте ще раз.',
@@ -365,16 +361,14 @@ export const translations: Record<Language, Translation> = {
       subtitle: 'Проверка API, устройства и локальной очереди.',
       apiStatus: 'API',
       checkApi: 'Проверить API',
-      terminalState: 'Термінал',
-      signedInAsDevice: 'Пристрій увійшов як',
+      deviceLogin: 'Логін пристрою',
+      devicePrefix: 'Пристрій',
+      store: 'Магазин',
       signedOut: 'Пристрій не авторизовано',
-      deviceState: 'Устройство',
-      registered: 'Зарегистрировано',
-      notRegistered: 'Не зарегистрировано',
-      registerDevice: 'Зарегистрировать устройство',
       queue: 'Офлайн-очередь',
       queueItems: (count) => `${count} событий`,
       lastSync: 'Последняя синхронизация',
+      appVersion: 'Версія застосунку',
       syncNow: 'Синхронизировать',
     },
     attendance: {
@@ -410,7 +404,7 @@ export const translations: Record<Language, Translation> = {
         queuedOffline: 'Действие сохранено локально и будет синхронизировано',
         syncedOnline: 'Действие синхронизировано с API',
         invalidBarcode: 'Штрихкод пустой или некорректный',
-        deviceRequired: 'Устройство не зарегистрировано. Проверьте диагностику.',
+        deviceRequired: 'Пристрій не авторизовано. Увійдіть як магазинний термінал.',
         authRequired: 'Сессия или устройство не авторизованы. Войдите еще раз.',
         malformedEmployee: 'API вернул некорректные данные сотрудника',
         networkLookupFailed: 'Не удалось подключиться к API. Попробуйте еще раз.',
@@ -510,16 +504,14 @@ export const translations: Record<Language, Translation> = {
       subtitle: 'API, device, and local queue checks.',
       apiStatus: 'API',
       checkApi: 'Check API',
-      terminalState: 'Термінал',
-      signedInAsDevice: 'Пристрій увійшов як',
+      deviceLogin: 'Логін пристрою',
+      devicePrefix: 'Пристрій',
+      store: 'Магазин',
       signedOut: 'Пристрій не авторизовано',
-      deviceState: 'Device',
-      registered: 'Registered',
-      notRegistered: 'Not registered',
-      registerDevice: 'Register device',
       queue: 'Offline queue',
       queueItems: (count) => `${count} events`,
       lastSync: 'Last sync',
+      appVersion: 'Версія застосунку',
       syncNow: 'Sync now',
     },
     attendance: {
@@ -555,7 +547,7 @@ export const translations: Record<Language, Translation> = {
         queuedOffline: 'Action saved locally and will be synced',
         syncedOnline: 'Action synced with API',
         invalidBarcode: 'The barcode is empty or invalid',
-        deviceRequired: 'Device is not registered. Check diagnostics.',
+        deviceRequired: 'Пристрій не авторизовано. Увійдіть як магазинний термінал.',
         authRequired: 'Session or device is not authorized. Sign in again.',
         malformedEmployee: 'API returned malformed employee data',
         networkLookupFailed: 'Could not reach the API. Try again.',

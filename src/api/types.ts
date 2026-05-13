@@ -2,13 +2,6 @@ export type ApiHealth = {
   status: string
 }
 
-export type DeviceRegisterResponse = {
-  id: number
-  device_uuid: string
-  status: string
-  device_token: string
-}
-
 export type DeviceLoginResponse = {
   ok: boolean
   device_token: string

@@ -9,10 +9,11 @@ type DiagnosticsPageProps = {
   t: Translation
   onBack: () => void
   onCheckApi: () => Promise<void>
-  onRegisterDevice: () => Promise<void>
   onSync: () => Promise<void>
   onLogout: () => void
 }
+
+const APP_VERSION = import.meta.env.VITE_APP_VERSION ?? '0.0.0'
 
 function getApiStatusLabel(t: Translation, status: SyncState['apiStatus']) {
   if (status === 'online') return t.common.online
@@ -28,7 +29,6 @@ function DiagnosticsPage({
   t,
   onBack,
   onCheckApi,
-  onRegisterDevice,
   onSync,
   onLogout,
 }: DiagnosticsPageProps) {
@@ -56,29 +56,19 @@ function DiagnosticsPage({
 
       <section className="panel diagnostic-list">
         <div className="diagnostic-row">
-          <span>{t.diagnostics.terminalState}</span>
+          <span>{t.diagnostics.deviceLogin}</span>
           <strong>
             {auth.deviceLogin
-              ? `${t.diagnostics.signedInAsDevice} ${auth.deviceLogin}`
+              ? `${t.diagnostics.devicePrefix}: ${auth.deviceLogin}`
               : t.diagnostics.signedOut}
           </strong>
         </div>
+        <div className="diagnostic-row">
+          <span>{t.diagnostics.store}</span>
+          <strong>{device.storeName ?? device.storeCode ?? t.common.unknown}</strong>
+        </div>
         <button className="wide-button secondary" onClick={onLogout}>
           {t.auth.logout}
-        </button>
-      </section>
-
-      <section className="panel diagnostic-list">
-        <div className="diagnostic-row">
-          <span>{t.diagnostics.deviceState}</span>
-          <strong>
-            {device.deviceToken
-              ? `${t.diagnostics.registered} #${device.id ?? '-'}`
-              : t.diagnostics.notRegistered}
-          </strong>
-        </div>
-        <button className="wide-button secondary" onClick={onRegisterDevice}>
-          {t.diagnostics.registerDevice}
         </button>
       </section>
 
@@ -89,7 +79,11 @@ function DiagnosticsPage({
         </div>
         <div className="diagnostic-row">
           <span>{t.diagnostics.lastSync}</span>
-          <strong>{sync.lastSyncMessage ?? t.common.unknown}</strong>
+          <strong>{sync.lastSyncAt ?? t.common.unknown}</strong>
+        </div>
+        <div className="diagnostic-row">
+          <span>{t.diagnostics.appVersion}</span>
+          <strong>{APP_VERSION}</strong>
         </div>
         <button className="wide-button" onClick={onSync}>
           {t.diagnostics.syncNow}

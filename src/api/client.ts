@@ -3,7 +3,6 @@ import type {
   AttendanceActionResponse,
   DeviceRead,
   DeviceLoginResponse,
-  DeviceRegisterResponse,
   EmployeeRead,
 } from './types'
 
@@ -101,18 +100,6 @@ export function loginDevice(deviceLogin: string, password: string) {
   return apiRequest<DeviceLoginResponse>('/api/devices/login', {
     method: 'POST',
     body: JSON.stringify({ login: deviceLogin, password }),
-  })
-}
-
-export function registerDevice(deviceUuid: string, storeCode: string) {
-  return apiRequest<DeviceRegisterResponse>('/api/devices/register', {
-    method: 'POST',
-    body: JSON.stringify({
-      device_uuid: deviceUuid,
-      device_name: navigator.userAgent,
-      platform: navigator.platform || 'pwa',
-      store_code: storeCode,
-    }),
   })
 }
 

@@ -4,7 +4,6 @@ import {
   ApiError,
   getHealth,
   loginDevice,
-  registerDevice,
 } from './api/client'
 import { useI18n } from './i18n/useI18n'
 import { canUseNotifications } from './lib/pwa'
@@ -87,31 +86,6 @@ function App() {
     }
   }, [])
 
-  const ensureDeviceRegistered = useCallback(async () => {
-    if (device.deviceToken) {
-      return
-    }
-
-    const registeredDevice = await registerDevice(device.deviceUuid, selectedStore)
-    setDevice({
-      id: registeredDevice.id,
-      deviceUuid: registeredDevice.device_uuid,
-      deviceToken: registeredDevice.device_token,
-      status: registeredDevice.status,
-      login: null,
-      storeId: null,
-      storeCode: selectedStore,
-      storeName: null,
-      deviceName: navigator.userAgent,
-    })
-    setSync((currentSync) => ({
-      ...currentSync,
-      apiStatus: 'online',
-      lastSyncAt: new Date().toISOString(),
-      lastSyncMessage: 'Device registered',
-    }))
-  }, [device.deviceToken, device.deviceUuid, selectedStore])
-
   const runQueueSync = useCallback(async () => {
     const result = await syncOfflineQueue(offlineQueue, device)
     setOfflineQueue(result.queue)
@@ -146,7 +120,7 @@ function App() {
           ...currentSync,
           apiStatus: 'online',
           lastSyncAt: new Date().toISOString(),
-          lastSyncMessage: 'Device signed in',
+          lastSyncMessage: 'Термінал активний',
         }))
       } catch (error) {
         setLoginError(
@@ -158,7 +132,7 @@ function App() {
         setLoginPending(false)
       }
     },
-    [ensureDeviceRegistered, t.auth.error],
+    [t.auth.disabledDevice, t.auth.invalidCredentials],
   )
 
   const handleLogout = useCallback(() => {
@@ -277,7 +251,6 @@ function App() {
         t={t}
         onBack={() => setScreen('home')}
         onCheckApi={checkApiStatus}
-        onRegisterDevice={ensureDeviceRegistered}
         onSync={runQueueSync}
         onLogout={handleLogout}
       />

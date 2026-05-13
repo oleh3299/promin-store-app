@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Html5QrcodeScanner } from 'html5-qrcode'
 import './App.css'
-
+import {
+  canUseNotifications,
+  isStandaloneMode,
+  requestNotificationPermission,
+  showTestNotification,
+} from './pwa'
 
 type Screen = 'home' | 'attendance'
 type AttendanceMode = 'checkin' | 'checkout' | null
@@ -119,6 +124,9 @@ function App() {
   const [shifts, setShifts] = useState<Shift[]>([])
   const [message, setMessage] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [notificationStatus, setNotificationStatus] = useState(
+  canUseNotifications() ? Notification.permission : 'unsupported',
+)
 
   const openShifts = shifts.filter((shift) => !shift.checkOutTime)
 
@@ -376,6 +384,36 @@ function App() {
         </div>
         <button type="button">Устройство активно</button>
       </section>
+      
+      <section className="panel">
+  <h2>Приложение</h2>
+
+  <div className="pwa-status">
+    <span>Режим</span>
+    <strong>
+      {isStandaloneMode() ? 'Установлено как приложение' : 'Открыто в браузере'}
+    </strong>
+  </div>
+
+  <div className="pwa-status">
+    <span>Push</span>
+    <strong>{notificationStatus}</strong>
+  </div>
+
+  <button
+    className="wide-button"
+    onClick={async () => {
+      const result = await requestNotificationPermission()
+      setNotificationStatus(result)
+    }}
+  >
+    Разрешить уведомления
+  </button>
+
+  <button className="wide-button secondary" onClick={showTestNotification}>
+    Тест уведомления
+  </button>
+</section>
 
       <section className="menu-grid">
         {menuItems.map((item) => (

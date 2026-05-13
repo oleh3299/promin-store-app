@@ -61,6 +61,22 @@ Admin UI:
 http://127.0.0.1:8000/admin
 ```
 
+Operational dashboard:
+
+```text
+http://127.0.0.1:8000/admin/dashboard
+```
+
+The dashboard is a lightweight SQLAdmin page for current store operations. It
+shows open shifts, employees currently on shift, worked time for today's shifts,
+device status, and per-store totals. Employee records are global; dashboard
+store metrics come from `attendance_shifts.store_id`, `attendance_events.store_id`,
+and `devices.store_id`.
+
+Device online status currently uses `devices.last_seen_at` with a 10 minute
+window. A future device heartbeat endpoint should refresh `last_seen_at` more
+frequently than registration-only flows.
+
 ## Auth
 
 JWT endpoints use:

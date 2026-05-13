@@ -1,4 +1,7 @@
-from sqladmin import Admin, ModelView
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
+
+from sqladmin import Admin, BaseView, ModelView, expose
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy import select
 from starlette.requests import Request
@@ -15,8 +18,53 @@ from app.models import (
     Store,
     User,
 )
-from app.models.enums import UserRole
+from app.models.enums import DeviceStatus, ShiftStatus, UserRole
 from app.security import verify_password
+
+LOCAL_TZ = ZoneInfo("Europe/Uzhgorod")
+ONLINE_DEVICE_WINDOW = timedelta(minutes=10)
+
+
+def to_local(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=ZoneInfo("UTC"))
+
+    return value.astimezone(LOCAL_TZ)
+
+
+def format_datetime(value: datetime | None) -> str:
+    local_value = to_local(value)
+    if local_value is None:
+        return "-"
+
+    return local_value.strftime("%d.%m.%Y %H:%M")
+
+
+def format_duration(minutes: int) -> str:
+    hours, remaining_minutes = divmod(max(minutes, 0), 60)
+    return f"{hours} год {remaining_minutes:02d} хв"
+
+
+def duration_minutes(start: datetime, end: datetime) -> int:
+    start_local = to_local(start)
+    end_local = to_local(end)
+    if start_local is None or end_local is None:
+        return 0
+
+    return int((end_local - start_local).total_seconds() // 60)
+
+
+def today_bounds() -> tuple[datetime, datetime]:
+    now_local = datetime.now(LOCAL_TZ)
+    start = datetime.combine(now_local.date(), time.min, tzinfo=LOCAL_TZ)
+    return start, start + timedelta(days=1)
+
+
+def enum_value(value) -> str:
+    return getattr(value, "value", str(value))
 
 
 class AdminAuth(AuthenticationBackend):
@@ -136,6 +184,145 @@ class AuditLogAdmin(ModelView, model=AuditLog):
     column_searchable_list = [AuditLog.action, AuditLog.entity_type, AuditLog.entity_id]
 
 
+class DashboardAdmin(BaseView):
+    name = "Операційний дашборд"
+    icon = "fa-solid fa-chart-line"
+
+    @expose("/dashboard", methods=["GET"], identity="dashboard")
+    async def dashboard(self, request: Request):
+        now_local = datetime.now(LOCAL_TZ)
+        today_start, today_end = today_bounds()
+        online_since = now_local - ONLINE_DEVICE_WINDOW
+
+        with SessionLocal() as db:
+            open_shift_rows = db.execute(
+                select(AttendanceShift, Employee, Store)
+                .join(Employee, Employee.id == AttendanceShift.employee_id)
+                .join(Store, Store.id == AttendanceShift.store_id)
+                .where(AttendanceShift.status == ShiftStatus.open)
+                .order_by(AttendanceShift.checkin_at.asc()),
+            ).all()
+
+            today_shift_rows = db.execute(
+                select(AttendanceShift, Employee, Store)
+                .join(Employee, Employee.id == AttendanceShift.employee_id)
+                .join(Store, Store.id == AttendanceShift.store_id)
+                .where(
+                    AttendanceShift.checkin_at >= today_start,
+                    AttendanceShift.checkin_at < today_end,
+                )
+                .order_by(AttendanceShift.checkin_at.asc()),
+            ).all()
+
+            device_rows = db.execute(
+                select(Device, Store)
+                .outerjoin(Store, Store.id == Device.store_id)
+                .order_by(Device.id.asc()),
+            ).all()
+
+            stores = list(db.scalars(select(Store).order_by(Store.code.asc())))
+
+        open_shift_count = len(open_shift_rows)
+        employees_on_shift_count = len({shift.employee_id for shift, _, _ in open_shift_rows})
+        stores_with_open_shifts_count = len({shift.store_id for shift, _, _ in open_shift_rows})
+
+        devices = []
+        online_device_count = 0
+        for device, store in device_rows:
+            last_seen_at = to_local(device.last_seen_at)
+            is_online = (
+                device.status == DeviceStatus.active
+                and last_seen_at is not None
+                and last_seen_at >= online_since
+            )
+            if is_online:
+                online_device_count += 1
+
+            devices.append(
+                {
+                    "id": device.id,
+                    "name": device.device_name,
+                    "store": store.name if store else "-",
+                    "status": enum_value(device.status),
+                    "last_seen_at": format_datetime(device.last_seen_at),
+                    "is_online": is_online,
+                    "uuid_tail": device.device_uuid[-6:] if device.device_uuid else "",
+                },
+            )
+
+        open_shifts = [
+            {
+                "store": store.name,
+                "employee": employee.full_name,
+                "barcode": employee.barcode,
+                "checkin_at": format_datetime(shift.checkin_at),
+                "worked": format_duration(duration_minutes(shift.checkin_at, now_local)),
+                "status": enum_value(shift.status),
+            }
+            for shift, employee, store in open_shift_rows
+        ]
+
+        today_shifts = [
+            {
+                "store": store.name,
+                "employee": employee.full_name,
+                "first_checkin": format_datetime(shift.checkin_at),
+                "last_checkout": format_datetime(shift.checkout_at),
+                "worked": format_duration(
+                    duration_minutes(shift.checkin_at, shift.checkout_at or now_local),
+                ),
+                "status": enum_value(shift.status),
+            }
+            for shift, employee, store in today_shift_rows
+        ]
+
+        store_stats = []
+        for store in stores:
+            store_open_shifts = [
+                shift for shift, _, _ in open_shift_rows if shift.store_id == store.id
+            ]
+            store_today_shifts = [
+                shift for shift, _, _ in today_shift_rows if shift.store_id == store.id
+            ]
+            worked_minutes = sum(
+                duration_minutes(shift.checkin_at, shift.checkout_at or now_local)
+                for shift in store_today_shifts
+            )
+
+            store_stats.append(
+                {
+                    "store": store.name,
+                    "code": store.code,
+                    "current_on_shift": len({shift.employee_id for shift in store_open_shifts}),
+                    "shifts_today": len(store_today_shifts),
+                    "hours_today": format_duration(worked_minutes),
+                },
+            )
+
+        context = {
+            "title": "Операційний дашборд",
+            "subtitle": "Поточна робота магазинів",
+            "now_label": now_local.strftime("%d.%m.%Y %H:%M"),
+            "timezone": str(LOCAL_TZ),
+            "summary": {
+                "open_shifts": open_shift_count,
+                "employees_on_shift": employees_on_shift_count,
+                "stores_with_open_shifts": stores_with_open_shifts_count,
+                "devices_total": len(device_rows),
+                "devices_online": online_device_count,
+            },
+            "open_shifts": open_shifts,
+            "today_shifts": today_shifts,
+            "devices": devices,
+            "store_stats": store_stats,
+        }
+        return await self.templates.TemplateResponse(
+            request,
+            "admin/dashboard.html",
+            context,
+        )
+
+
 def setup_admin(app) -> None:
     settings = get_settings()
     admin = Admin(
@@ -152,3 +339,4 @@ def setup_admin(app) -> None:
     admin.add_view(AttendanceEventAdmin)
     admin.add_view(PushSubscriptionAdmin)
     admin.add_view(AuditLogAdmin)
+    admin.add_view(DashboardAdmin)

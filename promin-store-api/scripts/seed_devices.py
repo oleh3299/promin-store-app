@@ -15,17 +15,17 @@ from app.security import hash_password  # noqa: E402
 
 
 DEFAULT_DEVICE_ACCOUNTS = [
-    {"store_code": "M22", "login": "m22", "device_name": "Телефон М22"},
-    {"store_code": "M52", "login": "m52", "device_name": "Телефон М52"},
-    {"store_code": "M33", "login": "m33", "device_name": "Телефон М33"},
-    {"store_code": "M18", "login": "m18", "device_name": "Телефон М18"},
-    {"store_code": "M58", "login": "m58", "device_name": "Телефон М58"},
-    {"store_code": "M28", "login": "m28", "device_name": "Телефон М28"},
-    {"store_code": "M48", "login": "m48", "device_name": "Телефон М48"},
-    {"store_code": "M38", "login": "m38", "device_name": "Телефон М38"},
-    {"store_code": "M60", "login": "m60", "device_name": "Телефон М60"},
-    {"store_code": "M26", "login": "m26", "device_name": "Телефон М26"},
-    {"store_code": "M61", "login": "m61", "device_name": "Телефон М61"},
+    {"store_code": "000000022", "login": "m22", "device_name": "Телефон М22"},
+    {"store_code": "000000052", "login": "m52", "device_name": "Телефон М52"},
+    {"store_code": "000000033", "login": "m33", "device_name": "Телефон М33"},
+    {"store_code": "000000018", "login": "m18", "device_name": "Телефон М18"},
+    {"store_code": "000000058", "login": "m58", "device_name": "Телефон М58"},
+    {"store_code": "000000028", "login": "m28", "device_name": "Телефон М28"},
+    {"store_code": "000000048", "login": "m48", "device_name": "Телефон М48"},
+    {"store_code": "000000038", "login": "m38", "device_name": "Телефон М38"},
+    {"store_code": "000000060", "login": "m60", "device_name": "Телефон М60"},
+    {"store_code": "000000026", "login": "m26", "device_name": "Телефон М26"},
+    {"store_code": "000000061", "login": "m61", "device_name": "Телефон М61"},
 ]
 
 

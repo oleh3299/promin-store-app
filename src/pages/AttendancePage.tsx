@@ -84,6 +84,14 @@ function shouldQueueError(error: unknown) {
   return !(error instanceof ApiError) || error.status >= 500
 }
 
+function getDeviceAuthMessage(error: ApiError, t: Translation) {
+  if (error.status === 403) {
+    return 'Пристрій відключено адміністратором'
+  }
+
+  return t.attendance.messages.authRequired
+}
+
 function AttendancePage({
   initialState,
   openShifts,
@@ -189,7 +197,7 @@ function AttendancePage({
         })
 
         if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-          setMessage(t.attendance.messages.authRequired)
+          setMessage(getDeviceAuthMessage(error, t))
           setSelectedEmployee(null)
           return
         }
@@ -253,7 +261,13 @@ function AttendancePage({
       return true
     } catch (error) {
       if (!shouldQueueError(error)) {
-        setMessage(error instanceof Error ? error.message : t.attendance.messages.employeeNotFound)
+        setMessage(
+          error instanceof ApiError && (error.status === 401 || error.status === 403)
+            ? getDeviceAuthMessage(error, t)
+            : error instanceof Error
+              ? error.message
+              : t.attendance.messages.employeeNotFound,
+        )
         return false
       }
 

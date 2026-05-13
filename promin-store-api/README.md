@@ -85,13 +85,18 @@ JWT endpoints use:
 Authorization: Bearer <access_token>
 ```
 
-PWA device endpoints use the device token returned by `/api/devices/register`:
+PWA device endpoints use the persistent device token returned by
+`/api/devices/login`. The legacy `/api/devices/register` endpoint remains as a
+fallback for older clients:
 
 ```text
-Authorization: Bearer <device_token>
+X-Device-Token: <device_token>
 ```
 
-Only the hash of the device token is stored in the database.
+`Authorization: Bearer <device_token>` is also accepted for backward
+compatibility. Only the hash of the device token is stored in the database.
+Setting `devices.is_active=false` is the device kill switch and blocks existing
+tokens immediately.
 
 ## Ubuntu Deployment Notes
 
@@ -110,6 +115,11 @@ nano .env
 alembic upgrade head
 python scripts/seed.py
 ```
+
+Production must run `alembic upgrade head` after deploying this branch. The
+current migration head is `0003_device_accounts`, which adds persistent device
+account fields. This migration was not executed locally because the local
+PostgreSQL server was unavailable in the development environment.
 
 Example systemd unit:
 

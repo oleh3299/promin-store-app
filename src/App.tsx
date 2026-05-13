@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
-import { getHealth, getMe, login as loginRequest, registerDevice } from './api/client'
+import {
+  ApiError,
+  getHealth,
+  loginDevice,
+  registerDevice,
+} from './api/client'
 import { useI18n } from './i18n/useI18n'
 import { canUseNotifications } from './lib/pwa'
 import {
@@ -93,6 +98,11 @@ function App() {
       deviceUuid: registeredDevice.device_uuid,
       deviceToken: registeredDevice.device_token,
       status: registeredDevice.status,
+      login: null,
+      storeId: null,
+      storeCode: selectedStore,
+      storeName: null,
+      deviceName: navigator.userAgent,
     })
     setSync((currentSync) => ({
       ...currentSync,
@@ -109,32 +119,41 @@ function App() {
   }, [device, offlineQueue])
 
   const handleLogin = useCallback(
-    async (email: string, password: string) => {
+    async (deviceLogin: string, password: string) => {
       setLoginPending(true)
       setLoginError('')
 
       try {
-        const token = await loginRequest(email, password)
-        const user = await getMe(token.access_token)
-
+        const response = await loginDevice(deviceLogin, password)
+        setDevice((currentDevice) => ({
+          ...currentDevice,
+          id: response.device.id,
+          deviceToken: response.device_token,
+          status: 'active',
+          login: deviceLogin.trim().toLowerCase(),
+          storeId: response.device.store_id,
+          storeCode: response.device.store_code,
+          storeName: response.device.store_name,
+          deviceName: response.device.device_name,
+        }))
         setAuth({
-          accessToken: token.access_token,
-          email: user.email,
-          fullName: user.full_name,
+          accessToken: null,
+          email: deviceLogin.trim().toLowerCase(),
+          fullName: response.device.device_name,
         })
         setScreen('home')
-        try {
-          await ensureDeviceRegistered()
-        } catch {
-          setSync((currentSync) => ({
-            ...currentSync,
-            apiStatus: 'offline',
-            lastSyncAt: new Date().toISOString(),
-            lastSyncMessage: 'Device registration failed',
-          }))
-        }
-      } catch {
-        setLoginError(t.auth.error)
+        setSync((currentSync) => ({
+          ...currentSync,
+          apiStatus: 'online',
+          lastSyncAt: new Date().toISOString(),
+          lastSyncMessage: 'Device signed in',
+        }))
+      } catch (error) {
+        setLoginError(
+          error instanceof ApiError && error.status === 403
+            ? 'Пристрій відключено адміністратором'
+            : t.auth.error,
+        )
       } finally {
         setLoginPending(false)
       }
@@ -148,6 +167,17 @@ function App() {
       email: null,
       fullName: null,
     })
+    setDevice((currentDevice) => ({
+      ...currentDevice,
+      id: null,
+      deviceToken: null,
+      status: null,
+      login: null,
+      storeId: null,
+      storeCode: null,
+      storeName: null,
+      deviceName: null,
+    }))
     setScreen('login')
   }, [])
 
@@ -196,7 +226,7 @@ function App() {
     return () => window.removeEventListener('online', handleOnline)
   }, [runQueueSync])
 
-  if (!auth.accessToken || screen === 'login') {
+  if (!device.deviceToken || screen === 'login') {
     return (
       <LoginPage
         error={loginError}

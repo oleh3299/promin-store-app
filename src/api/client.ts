@@ -2,6 +2,7 @@ import type {
   ApiHealth,
   AttendanceActionResponse,
   DeviceRead,
+  DeviceLoginResponse,
   DeviceRegisterResponse,
   EmployeeRead,
   LoginResponse,
@@ -40,9 +41,12 @@ async function apiRequest<T>(
     headers.set('Content-Type', 'application/json')
   }
 
-  const token = options.accessToken ?? options.deviceToken
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`)
+  if (options.accessToken) {
+    headers.set('Authorization', `Bearer ${options.accessToken}`)
+  }
+
+  if (options.deviceToken) {
+    headers.set('X-Device-Token', options.deviceToken)
   }
 
   let response: Response
@@ -99,6 +103,13 @@ export function login(email: string, password: string) {
   return apiRequest<LoginResponse>('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  })
+}
+
+export function loginDevice(deviceLogin: string, password: string) {
+  return apiRequest<DeviceLoginResponse>('/api/devices/login', {
+    method: 'POST',
+    body: JSON.stringify({ login: deviceLogin, password }),
   })
 }
 

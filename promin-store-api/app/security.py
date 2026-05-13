@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from secrets import token_urlsafe
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -76,16 +76,21 @@ def get_current_user(
 
 def get_current_device(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    x_device_token: str | None = Header(default=None, alias="X-Device-Token"),
     db: Session = Depends(get_db),
 ) -> Device:
-    if credentials is None:
+    device_token = x_device_token or (credentials.credentials if credentials else None)
+    if not device_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing device token")
 
-    devices = db.scalars(
-        select(Device).where(Device.status == DeviceStatus.active),
-    ).all()
+    devices = db.scalars(select(Device).where(Device.token_hash.is_not(None))).all()
     for device in devices:
-        if verify_token(credentials.credentials, device.token_hash):
+        if device.token_hash and verify_token(device_token, device.token_hash):
+            if not device.is_active or device.status != DeviceStatus.active:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Device disabled",
+                )
             device.last_seen_at = datetime.now(timezone.utc)
             db.add(device)
             db.commit()

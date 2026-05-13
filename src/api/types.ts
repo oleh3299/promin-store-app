@@ -22,14 +22,30 @@ export type DeviceRegisterResponse = {
   device_token: string
 }
 
+export type DeviceLoginResponse = {
+  ok: boolean
+  device_token: string
+  device: {
+    id: number
+    store_id: number | null
+    store_code: string | null
+    store_name: string | null
+    device_name: string
+  }
+}
+
 export type DeviceRead = {
   id: number
   store_id: number | null
+  login: string | null
   device_uuid: string
   device_name: string
   platform: string
+  is_active: boolean
   status: string
   last_seen_at: string | null
+  disabled_at: string | null
+  disabled_reason: string | null
 }
 
 export type EmployeeRead = {

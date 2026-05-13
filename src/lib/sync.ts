@@ -1,4 +1,4 @@
-import { checkIn, checkOut, getHealth } from '../api/client'
+import { ApiError, checkIn, checkOut, getHealth } from '../api/client'
 import type { DeviceState, OfflineAttendanceEvent, SyncState } from '../types/attendance'
 
 export async function syncOfflineQueue(
@@ -56,7 +56,11 @@ export async function syncOfflineQueue(
           apiStatus: 'online',
           lastSyncAt: new Date().toISOString(),
           lastSyncMessage:
-            error instanceof Error ? error.message : 'Sync failed',
+            error instanceof ApiError && error.status === 403
+              ? 'Пристрій відключено адміністратором'
+              : error instanceof Error
+                ? error.message
+                : 'Sync failed',
         },
       }
     }

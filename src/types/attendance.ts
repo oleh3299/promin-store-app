@@ -36,6 +36,11 @@ export type DeviceState = {
   deviceUuid: string
   deviceToken: string | null
   status: string | null
+  login: string | null
+  storeId: number | null
+  storeCode: string | null
+  storeName: string | null
+  deviceName: string | null
 }
 
 export type SyncState = {

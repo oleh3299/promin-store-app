@@ -12,7 +12,7 @@ type LoginPageProps = {
   isSubmitting: boolean
   error: string
   onLanguageChange: (language: Language) => void
-  onLogin: (email: string, password: string) => Promise<void>
+  onLogin: (login: string, password: string) => Promise<void>
 }
 
 function LoginPage({
@@ -23,12 +23,12 @@ function LoginPage({
   onLanguageChange,
   onLogin,
 }: LoginPageProps) {
-  const [email, setEmail] = useState('')
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    await onLogin(email.trim(), password)
+    await onLogin(login.trim(), password)
   }
 
   return (
@@ -61,11 +61,11 @@ function LoginPage({
         <label>
           <span>{t.auth.email}</span>
           <input
-            autoComplete="email"
-            inputMode="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="username"
+            inputMode="text"
+            type="text"
+            value={login}
+            onChange={(event) => setLogin(event.target.value)}
             required
           />
         </label>

@@ -37,6 +37,11 @@ export const DEFAULT_DEVICE_STATE: DeviceState = {
   deviceUuid: '',
   deviceToken: null,
   status: null,
+  login: null,
+  storeId: null,
+  storeCode: null,
+  storeName: null,
+  deviceName: null,
 }
 
 export const DEFAULT_SYNC_STATE: SyncState = {
@@ -198,6 +203,11 @@ function normalizeDeviceState(value: unknown): DeviceState {
         : createDeviceUuid(),
     deviceToken: typeof value.deviceToken === 'string' ? value.deviceToken : null,
     status: typeof value.status === 'string' ? value.status : null,
+    login: typeof value.login === 'string' ? value.login : null,
+    storeId: typeof value.storeId === 'number' ? value.storeId : null,
+    storeCode: typeof value.storeCode === 'string' ? value.storeCode : null,
+    storeName: typeof value.storeName === 'string' ? value.storeName : null,
+    deviceName: typeof value.deviceName === 'string' ? value.deviceName : null,
   }
 }
 

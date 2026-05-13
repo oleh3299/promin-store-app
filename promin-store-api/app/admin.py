@@ -19,7 +19,7 @@ from app.models import (
     User,
 )
 from app.models.enums import DeviceStatus, ShiftStatus, UserRole
-from app.security import verify_password
+from app.security import hash_password, verify_password
 
 LOCAL_TZ = ZoneInfo("Europe/Uzhgorod")
 ONLINE_DEVICE_WINDOW = timedelta(minutes=10)
@@ -119,15 +119,20 @@ class EmployeeAdmin(ModelView, model=Employee):
 class DeviceAdmin(ModelView, model=Device):
     column_list = [
         Device.id,
-        Device.device_uuid,
+        Device.store,
         Device.device_name,
-        Device.platform,
-        Device.status,
-        Device.store_id,
+        Device.login,
+        Device.is_active,
         Device.last_seen_at,
+        Device.disabled_at,
+        Device.disabled_reason,
+        Device.created_at,
+        Device.updated_at,
     ]
-    column_searchable_list = [Device.device_uuid, Device.device_name]
+    column_searchable_list = [Device.device_uuid, Device.device_name, Device.login]
+    column_sortable_list = [Device.id, Device.login, Device.last_seen_at, Device.created_at]
     form_excluded_columns = [
+        Device.token_hash,
         Device.shifts,
         Device.events,
         Device.push_subscriptions,
@@ -135,6 +140,11 @@ class DeviceAdmin(ModelView, model=Device):
         Device.created_at,
         Device.updated_at,
     ]
+
+    async def on_model_change(self, data, model: Device, is_created: bool, request: Request) -> None:
+        password_hash = data.get("password_hash")
+        if password_hash and not str(password_hash).startswith("$2"):
+            model.password_hash = hash_password(str(password_hash))
 
 
 class AttendanceShiftAdmin(ModelView, model=AttendanceShift):
@@ -231,7 +241,8 @@ class DashboardAdmin(BaseView):
         for device, store in device_rows:
             last_seen_at = to_local(device.last_seen_at)
             is_online = (
-                device.status == DeviceStatus.active
+                device.is_active
+                and device.status == DeviceStatus.active
                 and last_seen_at is not None
                 and last_seen_at >= online_since
             )

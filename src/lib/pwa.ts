@@ -1,3 +1,5 @@
+import type { Translation } from '../i18n/translations'
+
 export function isStandaloneMode() {
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -20,19 +22,19 @@ export async function requestNotificationPermission() {
   return permission
 }
 
-export function showTestNotification() {
+export function showTestNotification(messages: Translation['pwa']) {
   if (!canUseNotifications()) {
-    alert('Уведомления не поддерживаются на этом устройстве')
+    alert(messages.unsupportedNotifications)
     return
   }
 
   if (Notification.permission !== 'granted') {
-    alert('Сначала разрешите уведомления')
+    alert(messages.enableNotificationsFirst)
     return
   }
 
   new Notification('Promin Store', {
-    body: 'Тестовое уведомление сработает',
+    body: messages.testNotificationBody,
     icon: '/icons.svg',
   })
 }

@@ -5,6 +5,7 @@ import {
   loadAppPersistence,
   saveAppPersistence,
 } from './lib/storage'
+import { useI18n } from './i18n/useI18n'
 import AttendancePage from './pages/AttendancePage'
 import HomePage from './pages/HomePage'
 import type { AttendancePageState, Screen, Shift } from './types/attendance'
@@ -13,6 +14,7 @@ function App() {
   const [initialState] = useState(loadAppPersistence)
   const [screen, setScreen] = useState<Screen>(initialState.screen)
   const [selectedStore] = useState(initialState.selectedStore)
+  const [language, setLanguage] = useState(initialState.language)
   const [shifts, setShifts] = useState<Shift[]>(initialState.shifts)
   const [attendancePageState, setAttendancePageState] =
     useState<AttendancePageState>(initialState.attendancePage)
@@ -20,6 +22,7 @@ function App() {
     canUseNotifications() ? Notification.permission : 'unsupported',
   )
 
+  const t = useI18n(language)
   const openShifts = shifts.filter((shift) => !shift.checkOutTime)
   const handleAttendancePageStateChange = useCallback(
     (state: AttendancePageState) => {
@@ -31,11 +34,12 @@ function App() {
   useEffect(() => {
     saveAppPersistence({
       selectedStore,
+      language,
       screen,
       shifts,
       attendancePage: attendancePageState,
     })
-  }, [attendancePageState, screen, selectedStore, shifts])
+  }, [attendancePageState, language, screen, selectedStore, shifts])
 
   if (screen === 'attendance') {
     return (
@@ -44,6 +48,7 @@ function App() {
         openShifts={openShifts}
         shifts={shifts}
         setShifts={setShifts}
+        t={t}
         onStateChange={handleAttendancePageStateChange}
         onBack={() => setScreen('home')}
       />
@@ -55,6 +60,9 @@ function App() {
       openShiftCount={openShifts.length}
       notificationStatus={notificationStatus}
       selectedStore={selectedStore}
+      language={language}
+      t={t}
+      onLanguageChange={setLanguage}
       onNotificationStatusChange={setNotificationStatus}
       onOpenAttendance={() => setScreen('attendance')}
     />

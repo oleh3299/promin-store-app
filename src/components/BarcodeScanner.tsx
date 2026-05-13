@@ -1,12 +1,20 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
+import type { Translation } from '../i18n/translations'
 
 type BarcodeScannerProps = {
+  t: Translation['scanner']
   onScan: (code: string) => void
   onClose: () => void
 }
 
-function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
+function BarcodeScanner({ t, onScan, onClose }: BarcodeScannerProps) {
+  const cameraErrorRef = useRef(t.cameraError)
+
+  useEffect(() => {
+    cameraErrorRef.current = t.cameraError
+  }, [t.cameraError])
+
   useEffect(() => {
     let scanner: Html5Qrcode | null = null
     let isStopped = false
@@ -43,7 +51,7 @@ function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
         )
       } catch (error) {
         console.error('Camera start error:', error)
-        alert('Не удалось запустить камеру. Проверьте разрешение камеры.')
+        alert(cameraErrorRef.current)
       }
     }
 
@@ -65,13 +73,13 @@ function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
 
   return (
     <section className="panel scanner-panel">
-      <h2>Сканування штрихкоду</h2>
-      <p>Наведіть камеру на бейдж співробітника.</p>
+      <h2>{t.title}</h2>
+      <p>{t.prompt}</p>
 
       <div id="barcode-reader" className="barcode-reader" />
 
       <button className="wide-button secondary" onClick={onClose}>
-        Закрити сканер
+        {t.close}
       </button>
     </section>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import BarcodeScanner from '../components/BarcodeScanner'
+import type { Translation } from '../i18n/translations'
 import { employees, positions } from '../mock/employees'
 import type {
   AttendanceMode,
@@ -15,6 +16,7 @@ type AttendancePageProps = {
   openShifts: Shift[]
   shifts: Shift[]
   setShifts: (shifts: Shift[]) => void
+  t: Translation
   onStateChange: (state: AttendancePageState) => void
   onBack: () => void
 }
@@ -31,6 +33,7 @@ function AttendancePage({
   openShifts,
   shifts,
   setShifts,
+  t,
   onStateChange,
   onBack,
 }: AttendancePageProps) {
@@ -85,7 +88,7 @@ function AttendancePage({
     const employee = employees.find((item) => item.code === code.trim())
 
     if (!employee) {
-      setMessage('Співробітника не знайдено')
+      setMessage(t.attendance.messages.employeeNotFound)
       setSelectedEmployee(null)
       return
     }
@@ -109,7 +112,7 @@ function AttendancePage({
     )
 
     if (alreadyOpen) {
-      setMessage('У співробітника вже відкрита зміна')
+      setMessage(t.attendance.messages.alreadyOpenShift)
       return
     }
 
@@ -121,7 +124,7 @@ function AttendancePage({
     }
 
     setShifts([newShift, ...shifts])
-    setMessage(`Зміну розпочато: ${selectedEmployee.name}`)
+    setMessage(t.attendance.messages.shiftStarted(selectedEmployee.name))
     resetAttendanceFlow()
   }
 
@@ -134,7 +137,7 @@ function AttendancePage({
     )
 
     if (!openShift) {
-      setMessage('Відкрита зміна не знайдена')
+      setMessage(t.attendance.messages.openShiftNotFound)
       return
     }
 
@@ -146,22 +149,20 @@ function AttendancePage({
       ),
     )
 
-    setMessage(`Зміну завершено: ${selectedEmployee.name}`)
+    setMessage(t.attendance.messages.shiftFinished(selectedEmployee.name))
     resetAttendanceFlow()
   }
 
   return (
     <main className="app-shell">
       <button className="back-button" onClick={onBack}>
-        ← Назад
+        {t.attendance.back}
       </button>
 
       <section className="app-header vertical">
-        <p className="app-kicker">Табель</p>
-        <h1>Приход / уход</h1>
-        <p className="app-subtitle">
-          Магазин уже авторизован. Сотрудник отмечает только себя.
-        </p>
+        <p className="app-kicker">{t.attendance.kicker}</p>
+        <h1>{t.attendance.title}</h1>
+        <p className="app-subtitle">{t.attendance.subtitle}</p>
       </section>
 
       {message && <div className="message-box">{message}</div>}
@@ -169,51 +170,54 @@ function AttendancePage({
       {!mode && (
         <section className="action-grid">
           <button className="big-action success" onClick={() => setMode('checkin')}>
-            Приход
+            {t.attendance.checkIn}
           </button>
           <button className="big-action danger" onClick={() => setMode('checkout')}>
-            Уход
+            {t.attendance.checkOut}
           </button>
         </section>
       )}
 
       {mode && !inputMethod && (
         <section className="panel">
-          <h2>{mode === 'checkin' ? 'Приход' : 'Уход'}</h2>
-          <p>Выберите способ идентификации сотрудника.</p>
+          <h2>
+            {mode === 'checkin' ? t.attendance.checkIn : t.attendance.checkOut}
+          </h2>
+          <p>{t.attendance.chooseMethod}</p>
 
           <button className="wide-button" onClick={() => setInputMethod('scan')}>
-            Сканировать штрихкод
+            {t.attendance.scanBarcode}
           </button>
 
           <button className="wide-button secondary" onClick={() => setInputMethod('manual')}>
-            Ввести код вручную
+            {t.attendance.enterCodeManually}
           </button>
 
           <button className="wide-button secondary" onClick={cancelAttendanceFlow}>
-            Отмена
+            {t.attendance.cancel}
           </button>
         </section>
       )}
 
       {mode && inputMethod && (
         <section className="panel">
-          <h2>Идентификация сотрудника</h2>
+          <h2>{t.attendance.identifyEmployee}</h2>
 
           {inputMethod === 'scan' && !scannerOpen && (
             <>
               <button className="wide-button" onClick={() => setScannerOpen(true)}>
-                Открыть камеру
+                {t.attendance.openCamera}
               </button>
 
               <button className="wide-button secondary" onClick={testScan}>
-                Тестовый скан
+                {t.attendance.testScan}
               </button>
             </>
           )}
 
           {inputMethod === 'scan' && scannerOpen && (
             <BarcodeScanner
+              t={t.scanner}
               onScan={(code) => {
                 setEmployeeCode(code)
                 findEmployee(code)
@@ -226,23 +230,25 @@ function AttendancePage({
           <input
             value={employeeCode}
             onChange={(event) => setEmployeeCode(event.target.value)}
-            placeholder="Ідентифікаційний код"
+            placeholder={t.attendance.employeeCodePlaceholder}
             inputMode="numeric"
           />
 
           <button className="wide-button" onClick={() => findEmployee(employeeCode)}>
-            Найти сотрудника
+            {t.attendance.findEmployee}
           </button>
 
           <button className="wide-button secondary" onClick={cancelAttendanceFlow}>
-            Отмена
+            {t.attendance.cancel}
           </button>
 
           {selectedEmployee && (
             <div className="employee-card">
-              <span>Сотрудник найден</span>
+              <span>{t.attendance.employeeFound}</span>
               <strong>{selectedEmployee.name}</strong>
-              <small>Код: {selectedEmployee.code}</small>
+              <small>
+                {t.attendance.codeLabel}: {selectedEmployee.code}
+              </small>
             </div>
           )}
         </section>
@@ -250,7 +256,7 @@ function AttendancePage({
 
       {mode === 'checkin' && selectedEmployee && (
         <section className="panel">
-          <h2>Выберите должность</h2>
+          <h2>{t.attendance.choosePosition}</h2>
 
           <div className="position-list">
             {positions.map((position) => (
@@ -263,7 +269,7 @@ function AttendancePage({
                 }
                 onClick={() => setSelectedPosition(position)}
               >
-                {position}
+                {t.positions[position]}
               </button>
             ))}
           </div>
@@ -273,34 +279,36 @@ function AttendancePage({
             disabled={!selectedPosition}
             onClick={confirmCheckIn}
           >
-            Подтвердить приход
+            {t.attendance.confirmCheckIn}
           </button>
         </section>
       )}
 
       {mode === 'checkout' && selectedEmployee && (
         <section className="panel">
-          <h2>Подтверждение ухода</h2>
-          <p>Закрыть смену сотрудника?</p>
+          <h2>{t.attendance.confirmCheckOutTitle}</h2>
+          <p>{t.attendance.confirmCheckOutPrompt}</p>
 
           <button className="confirm-button" onClick={confirmCheckOut}>
-            Подтвердить уход
+            {t.attendance.confirmCheckOut}
           </button>
         </section>
       )}
 
       <section className="panel">
-        <h2>Сегодня на смене</h2>
+        <h2>{t.attendance.todayOnShift}</h2>
 
         {openShifts.length === 0 ? (
-          <p>Открытых смен нет</p>
+          <p>{t.attendance.noOpenShifts}</p>
         ) : (
           <div className="shift-list">
             {openShifts.map((shift) => (
               <div className="shift-row" key={shift.employeeId}>
                 <strong>{shift.employeeName}</strong>
-                <span>{shift.position}</span>
-                <small>Приход: {shift.checkInTime}</small>
+                <span>{t.positions[shift.position]}</span>
+                <small>
+                  {t.attendance.checkInLabel}: {shift.checkInTime}
+                </small>
               </div>
             ))}
           </div>

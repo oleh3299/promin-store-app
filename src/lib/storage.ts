@@ -6,11 +6,13 @@ import type {
   Screen,
   Shift,
 } from '../types/attendance'
+import { languageCodes, type Language } from '../i18n/translations'
 
 const STORAGE_KEY = 'promin-store-attendance-state'
 const STORAGE_VERSION = 1
 
 export const DEFAULT_SELECTED_STORE = 'М37'
+export const DEFAULT_LANGUAGE: Language = 'uk'
 
 export const DEFAULT_ATTENDANCE_PAGE_STATE: AttendancePageState = {
   mode: null,
@@ -22,6 +24,7 @@ export const DEFAULT_ATTENDANCE_PAGE_STATE: AttendancePageState = {
 
 export type AppPersistenceState = {
   selectedStore: string
+  language: Language
   screen: Screen
   shifts: Shift[]
   attendancePage: AttendancePageState
@@ -30,6 +33,7 @@ export type AppPersistenceState = {
 type StoredAttendanceState = {
   version: typeof STORAGE_VERSION
   selectedStore: string
+  selectedLanguage: Language
   attendance: {
     openShifts: Shift[]
     history: Shift[]
@@ -54,6 +58,10 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function isScreen(value: unknown): value is Screen {
   return value === 'home' || value === 'attendance'
+}
+
+function isLanguage(value: unknown): value is Language {
+  return languageCodes.includes(value as Language)
 }
 
 function isPosition(value: unknown): value is Position {
@@ -123,6 +131,7 @@ function toStoredState(state: AppPersistenceState): StoredAttendanceState {
   return {
     version: STORAGE_VERSION,
     selectedStore: state.selectedStore,
+    selectedLanguage: state.language,
     attendance: {
       openShifts: state.shifts.filter((shift) => !shift.checkOutTime),
       history: state.shifts.filter((shift) => Boolean(shift.checkOutTime)),
@@ -153,6 +162,9 @@ function fromStoredState(value: unknown): AppPersistenceState | null {
       typeof value.selectedStore === 'string' && value.selectedStore.trim()
         ? value.selectedStore
         : DEFAULT_SELECTED_STORE,
+    language: isLanguage(value.selectedLanguage)
+      ? value.selectedLanguage
+      : DEFAULT_LANGUAGE,
     screen: isScreen(appState.screen) ? appState.screen : 'home',
     shifts: [...openShifts, ...history],
     attendancePage: normalizeAttendancePageState(appState.attendancePage),
@@ -165,6 +177,7 @@ export function loadAppPersistence(): AppPersistenceState {
   if (!storage) {
     return {
       selectedStore: DEFAULT_SELECTED_STORE,
+      language: DEFAULT_LANGUAGE,
       screen: 'home',
       shifts: [],
       attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
@@ -179,6 +192,7 @@ export function loadAppPersistence(): AppPersistenceState {
     return (
       restored ?? {
         selectedStore: DEFAULT_SELECTED_STORE,
+        language: DEFAULT_LANGUAGE,
         screen: 'home',
         shifts: [],
         attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
@@ -187,6 +201,7 @@ export function loadAppPersistence(): AppPersistenceState {
   } catch {
     return {
       selectedStore: DEFAULT_SELECTED_STORE,
+      language: DEFAULT_LANGUAGE,
       screen: 'home',
       shifts: [],
       attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,

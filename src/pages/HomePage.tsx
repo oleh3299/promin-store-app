@@ -1,4 +1,10 @@
 import {
+  languageCodes,
+  translations,
+  type Language,
+  type Translation,
+} from '../i18n/translations'
+import {
   isStandaloneMode,
   requestNotificationPermission,
   showTestNotification,
@@ -8,63 +14,95 @@ type HomePageProps = {
   openShiftCount: number
   notificationStatus: string
   selectedStore: string
+  language: Language
+  t: Translation
+  onLanguageChange: (language: Language) => void
   onNotificationStatusChange: (status: string) => void
   onOpenAttendance: () => void
 }
 
-const menuItems = [
-  { title: 'Табель', subtitle: 'Приход / уход сотрудников', active: true },
-  { title: 'Кто на смене', subtitle: 'В разработке' },
-  { title: 'Задания', subtitle: 'В разработке' },
-  { title: 'Фотоотчёты', subtitle: 'В разработке' },
-  { title: 'Скан товара', subtitle: 'В разработке' },
-  { title: 'Печать ценников', subtitle: 'В разработке' },
-  { title: 'Контроль открытия', subtitle: 'В разработке' },
-  { title: 'Тревожная кнопка IT', subtitle: 'В разработке' },
-  { title: 'Показатели смены', subtitle: 'В разработке' },
-]
+type MenuItem = {
+  title: string
+  subtitle: string
+  active?: boolean
+}
+
+function getMenuItems(t: Translation): MenuItem[] {
+  return [
+    {
+      title: t.home.menu.attendance,
+      subtitle: t.home.menu.attendanceSubtitle,
+      active: true,
+    },
+    { title: t.home.menu.currentShift, subtitle: t.home.inDevelopment },
+    { title: t.home.menu.tasks, subtitle: t.home.inDevelopment },
+    { title: t.home.menu.photoReports, subtitle: t.home.inDevelopment },
+    { title: t.home.menu.productScan, subtitle: t.home.inDevelopment },
+    { title: t.home.menu.priceTags, subtitle: t.home.inDevelopment },
+    { title: t.home.menu.openingControl, subtitle: t.home.inDevelopment },
+    { title: t.home.menu.itPanicButton, subtitle: t.home.inDevelopment },
+    { title: t.home.menu.shiftMetrics, subtitle: t.home.inDevelopment },
+  ]
+}
 
 function HomePage({
   openShiftCount,
   notificationStatus,
   selectedStore,
+  language,
+  t,
+  onLanguageChange,
   onNotificationStatusChange,
   onOpenAttendance,
 }: HomePageProps) {
+  const menuItems = getMenuItems(t)
+
   return (
     <main className="app-shell">
       <section className="app-header">
         <div>
           <p className="app-kicker">Promin Store</p>
-          <h1>Рабочее место магазина</h1>
-          <p className="app-subtitle">
-            Первый контур: табель сотрудников. Остальные модули подключим поэтапно.
-          </p>
+          <h1>{t.home.title}</h1>
+          <p className="app-subtitle">{t.home.subtitle}</p>
         </div>
 
         <div className="store-badge">
-          <span>Магазин</span>
+          <span>{t.home.storeLabel}</span>
           <strong>{selectedStore}</strong>
+
+          <div className="language-switcher" aria-label="Language">
+            {languageCodes.map((code) => (
+              <button
+                key={code}
+                type="button"
+                className={language === code ? 'selected' : undefined}
+                onClick={() => onLanguageChange(code)}
+                aria-label={translations[code].language.name}
+              >
+                {code.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="status-card">
         <div>
-          <p>Сегодня</p>
-          <strong>{openShiftCount} на смене</strong>
+          <p>{t.home.today}</p>
+          <strong>
+            {openShiftCount} {t.home.onShift}
+          </strong>
         </div>
-        <button type="button">Устройство активно</button>
+        <button type="button">{t.home.activeDevice}</button>
       </section>
 
       <section className="panel">
-        <h2>Приложение</h2>
+        <h2>{t.home.appTitle}</h2>
 
         <div className="pwa-status">
-          <span>Режим</span>
+          <span>{t.home.modeLabel}</span>
           <strong>
-            {isStandaloneMode()
-              ? 'Установлено как приложение'
-              : 'Открыто в браузере'}
+            {isStandaloneMode() ? t.home.standaloneMode : t.home.browserMode}
           </strong>
         </div>
 
@@ -80,11 +118,14 @@ function HomePage({
             onNotificationStatusChange(result)
           }}
         >
-          Разрешить уведомления
+          {t.home.allowNotifications}
         </button>
 
-        <button className="wide-button secondary" onClick={showTestNotification}>
-          Тест уведомления
+        <button
+          className="wide-button secondary"
+          onClick={() => showTestNotification(t.pwa)}
+        >
+          {t.home.testNotification}
         </button>
       </section>
 
@@ -98,7 +139,7 @@ function HomePage({
               if (item.active) {
                 onOpenAttendance()
               } else {
-                alert('Раздел в разработке')
+                alert(t.home.inDevelopment)
               }
             }}
           >

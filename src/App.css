@@ -306,68 +306,22 @@ input {
   }
 }
 
-.barcode-reader {
+.scanner-panel {
   overflow: hidden;
+}
+
+.barcode-reader {
+  width: 100%;
+  min-height: 320px;
   margin-top: 14px;
   border-radius: 18px;
+  overflow: hidden;
   background: #102018;
 }
 
 .barcode-reader video {
-  border-radius: 18px;
-}
-
-#barcode-reader {
-  border: 0 !important;
-}
-
-#barcode-reader__dashboard_section_csr {
-  display: none !important;
-}
-
-#barcode-reader__dashboard_section_swaplink {
-  display: none !important;
-}
-
-#barcode-reader__camera_selection {
-  display: none !important;
-}
-
-#barcode-reader__dashboard_section {
-  padding: 0 !important;
-}
-
-#barcode-reader__scan_region {
-  border-radius: 18px !important;
-  overflow: hidden !important;
-}
-
-#barcode-reader__scan_region video {
   width: 100% !important;
-  border-radius: 18px !important;
-}
-
-#barcode-reader__scan_region img {
-  display: none !important;
-}
-
-#barcode-reader button {
-  display: none !important;
-}
-
-.pwa-status {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(16, 32, 24, 0.08);
-}
-
-.pwa-status span {
-  color: #68736c;
-  font-weight: 700;
-}
-
-.pwa-status strong {
-  text-align: right;
+  min-height: 320px;
+  object-fit: cover;
+  border-radius: 18px;
 }

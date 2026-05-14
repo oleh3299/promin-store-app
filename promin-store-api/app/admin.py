@@ -1,10 +1,16 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
+from html import escape
+from pathlib import Path
+import re
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from markupsafe import Markup
 from sqladmin import Admin, BaseView, ModelView, expose
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy import select
 from starlette.requests import Request
+from starlette.responses import HTMLResponse
 
 from app.config import get_settings
 from app.db import engine, SessionLocal
@@ -18,6 +24,7 @@ from app.models import (
     PhotoReport,
     PhotoReportItem,
     PhotoReportTemplate,
+    Planogram,
     PlanogramZone,
     PushSubscription,
     RocketRoute,
@@ -30,6 +37,12 @@ from app.security import hash_password, verify_password
 
 LOCAL_TZ = ZoneInfo("Europe/Uzhgorod")
 ONLINE_DEVICE_WINDOW = timedelta(minutes=10)
+PLANOGRAM_STORAGE_ROOT = Path("storage") / "planograms"
+PLANOGRAM_CONTENT_TYPES = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+}
 
 
 def to_local(value: datetime | None) -> datetime | None:
@@ -72,6 +85,27 @@ def today_bounds() -> tuple[datetime, datetime]:
 
 def enum_value(value) -> str:
     return getattr(value, "value", str(value))
+
+
+def safe_path_segment(value: str) -> str:
+    sanitized = re.sub(r"[^A-Za-z0-9_-]+", "_", value.strip())
+    return sanitized.strip("_") or "item"
+
+
+def planogram_image_src(image_path: str) -> str:
+    if image_path.startswith(("http://", "https://", "/")):
+        return image_path
+    normalized_path = image_path.replace("\\", "/")
+    return f"/{normalized_path}"
+
+
+def planogram_preview(model, _attribute) -> Markup:
+    return Markup(
+        '<img src="{}" alt="{}" style="max-width: 120px; max-height: 80px; object-fit: contain;" />'.format(
+            escape(planogram_image_src(model.image_path)),
+            escape(model.category_name),
+        ),
+    )
 
 
 class AdminAuth(AuthenticationBackend):
@@ -475,6 +509,136 @@ class PhotoReportItemAdmin(ModelView, model=PhotoReportItem):
     }
 
 
+class PlanogramAdmin(ModelView, model=Planogram):
+    name = "Планограмма"
+    name_plural = "Планограммы"
+    category = "Планограммы"
+    can_create = False
+    can_delete = False
+    column_list = [
+        Planogram.store,
+        Planogram.category_name,
+        Planogram.description,
+        Planogram.image_path,
+        Planogram.uploaded_by,
+        Planogram.uploaded_at,
+        Planogram.is_active,
+    ]
+    column_formatters = {Planogram.image_path: planogram_preview}
+    column_searchable_list = [Planogram.category_name, Planogram.description, Planogram.uploaded_by]
+    column_sortable_list = [Planogram.id, Planogram.store_id, Planogram.category_name, Planogram.uploaded_at]
+    column_default_sort = [(Planogram.store_id, False), (Planogram.category_name, False)]
+    column_filters = [Planogram.store, Planogram.is_active, Planogram.category_name]
+    column_labels = {
+        Planogram.store: "Магазин",
+        Planogram.category_name: "Категория",
+        Planogram.description: "Описание",
+        Planogram.image_path: "Preview",
+        Planogram.uploaded_by: "Кто загрузил",
+        Planogram.uploaded_at: "Обновлено",
+        Planogram.is_active: "Активно",
+    }
+    form_columns = [
+        Planogram.store,
+        Planogram.category_name,
+        Planogram.description,
+        Planogram.image_path,
+        Planogram.uploaded_by,
+        Planogram.uploaded_at,
+        Planogram.is_active,
+    ]
+    form_ajax_refs = {
+        "store": {
+            "fields": ("code", "name"),
+            "order_by": ("code",),
+        },
+    }
+
+
+class PlanogramUploadAdmin(BaseView):
+    name = "Загрузить планограмму"
+    category = "Планограммы"
+    icon = "fa-solid fa-upload"
+
+    @expose("/planograms/upload", methods=["GET", "POST"], identity="planograms-upload")
+    async def upload(self, request: Request):
+        message = ""
+        with SessionLocal() as db:
+            stores = list(db.scalars(select(Store).where(Store.is_active.is_(True)).order_by(Store.code.asc())))
+
+            if request.method == "POST":
+                form = await request.form()
+                store_id = int(str(form.get("store_id") or "0"))
+                store = db.get(Store, store_id)
+                category_name = str(form.get("category_name") or "").strip()
+                description = str(form.get("description") or "").strip() or None
+                uploaded_file = form.get("image")
+
+                if store is None:
+                    message = "Выберите магазин."
+                elif not category_name:
+                    message = "Укажите категорию."
+                elif not hasattr(uploaded_file, "read") or not getattr(uploaded_file, "filename", ""):
+                    message = "Выберите изображение."
+                elif getattr(uploaded_file, "content_type", "") not in PLANOGRAM_CONTENT_TYPES:
+                    message = "Поддерживаются только JPEG, PNG или WEBP."
+                else:
+                    content_type = str(uploaded_file.content_type)
+                    extension = PLANOGRAM_CONTENT_TYPES[content_type]
+                    store_dir = PLANOGRAM_STORAGE_ROOT / safe_path_segment(store.code)
+                    store_dir.mkdir(parents=True, exist_ok=True)
+                    filename = f"{safe_path_segment(category_name)}-{uuid4().hex[:12]}.{extension}"
+                    file_path = store_dir / filename
+                    file_bytes = await uploaded_file.read()
+                    file_path.write_bytes(file_bytes)
+                    relative_path = file_path.as_posix()
+                    uploaded_by = str(request.session.get("admin_user") or "") or None
+                    existing_planograms = db.scalars(
+                        select(Planogram).where(
+                            Planogram.store_id == store.id,
+                            Planogram.category_name == category_name,
+                            Planogram.is_active.is_(True),
+                        ),
+                    )
+                    for existing_planogram in existing_planograms:
+                        existing_planogram.is_active = False
+
+                    db.add(
+                        Planogram(
+                            store_id=store.id,
+                            category_name=category_name,
+                            description=description,
+                            image_path=relative_path,
+                            uploaded_by=uploaded_by,
+                            uploaded_at=datetime.now(timezone.utc),
+                            is_active=True,
+                        ),
+                    )
+                    db.commit()
+                    message = "Планограмма загружена."
+
+        options = "\n".join(
+            f'<option value="{store.id}">{escape(str(store))}</option>'
+            for store in stores
+        )
+        html = f"""
+        <section style="max-width: 720px; margin: 32px auto; font-family: system-ui, sans-serif;">
+          <h1>Загрузить планограмму</h1>
+          <p>Загрузите актуальное изображение планограммы для магазина и категории.</p>
+          {"<p><strong>" + escape(message) + "</strong></p>" if message else ""}
+          <form method="post" enctype="multipart/form-data" style="display: grid; gap: 14px;">
+            <label>Магазин<select name="store_id" required style="width:100%;padding:10px;">{options}</select></label>
+            <label>Категория<input name="category_name" required placeholder="Алкоголь" style="width:100%;padding:10px;" /></label>
+            <label>Описание<textarea name="description" rows="3" style="width:100%;padding:10px;"></textarea></label>
+            <label>Изображение<input name="image" type="file" accept="image/jpeg,image/png,image/webp" required /></label>
+            <button type="submit" style="padding:12px 16px;">Загрузить</button>
+          </form>
+          <p><a href="/admin/planogram/list">Открыть список планограмм</a></p>
+        </section>
+        """
+        return HTMLResponse(html)
+
+
 class PlanogramZoneAdmin(ModelView, model=PlanogramZone):
     name = "Зона планограммы"
     name_plural = "Зоны / оборудование"
@@ -686,6 +850,8 @@ def setup_admin(app) -> None:
     admin.add_view(AttendanceEventAdmin)
     admin.add_view(InvoiceUploadLogAdmin)
     admin.add_view(RocketRouteAdmin)
+    admin.add_view(PlanogramUploadAdmin)
+    admin.add_view(PlanogramAdmin)
     admin.add_view(PhotoReportAdmin)
     admin.add_view(PhotoReportTemplateAdmin)
     admin.add_view(PhotoReportItemAdmin)

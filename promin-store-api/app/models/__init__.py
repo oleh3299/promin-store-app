@@ -10,6 +10,7 @@ from app.models.enums import (
     UserRole,
 )
 from app.models.photo_report import PhotoReport, PhotoReportItem, PhotoReportTemplate
+from app.models.planogram_image import Planogram
 from app.models.planogram import PlanogramZone
 from app.models.push import PushSubscription
 from app.models.rocket import InvoiceUploadLog, RocketRoute, StoreRequestLog
@@ -29,6 +30,7 @@ __all__ = [
     "PhotoReport",
     "PhotoReportItem",
     "PhotoReportTemplate",
+    "Planogram",
     "PlanogramZone",
     "PushSubscription",
     "RocketRoute",

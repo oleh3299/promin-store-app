@@ -124,6 +124,16 @@ export type Translation = {
     fileTooLarge: string
     genericError: string
   }
+  planograms: {
+    back: string
+    kicker: string
+    title: string
+    subtitle: string
+    empty: string
+    close: string
+    genericError: string
+    updatedAt: (value: string) => string
+  }
   diagnostics: {
     back: string
     kicker: string
@@ -347,6 +357,16 @@ export const translations: Record<Language, Translation> = {
       invalidFileType: 'Підтримуються лише JPEG, PNG або WEBP',
       fileTooLarge: 'Фото завелике',
       genericError: 'Не вдалося надіслати фотозвіт',
+    },
+    planograms: {
+      back: 'Назад',
+      kicker: 'Планограми',
+      title: 'Планограми',
+      subtitle: 'Актуальні планограми магазину.',
+      empty: 'Для цього магазину ще немає активних планограм.',
+      close: 'Закрити',
+      genericError: 'Не вдалося завантажити планограми',
+      updatedAt: (value) => `Оновлено: ${value}`,
     },
     diagnostics: {
       back: '← Назад',
@@ -574,6 +594,16 @@ export const translations: Record<Language, Translation> = {
       fileTooLarge: 'Фото слишком большое',
       genericError: 'Не удалось отправить фотоотчет',
     },
+    planograms: {
+      back: 'Назад',
+      kicker: 'Планограммы',
+      title: 'Планограммы',
+      subtitle: 'Актуальные планограммы магазина.',
+      empty: 'Для этого магазина пока нет активных планограмм.',
+      close: 'Закрыть',
+      genericError: 'Не удалось загрузить планограммы',
+      updatedAt: (value) => `Обновлено: ${value}`,
+    },
     diagnostics: {
       back: '← Назад',
       kicker: 'Диагностика',
@@ -799,6 +829,16 @@ export const translations: Record<Language, Translation> = {
       invalidFileType: 'Only JPEG, PNG, or WEBP are supported',
       fileTooLarge: 'Photo is too large',
       genericError: 'Could not send photo report',
+    },
+    planograms: {
+      back: 'Back',
+      kicker: 'Planograms',
+      title: 'Planograms',
+      subtitle: 'Current store planogram images.',
+      empty: 'No active planograms for this store yet.',
+      close: 'Close',
+      genericError: 'Could not load planograms',
+      updatedAt: (value) => `Updated: ${value}`,
     },
     diagnostics: {
       back: '← Back',

@@ -18,6 +18,7 @@ import HomePage from './pages/HomePage'
 import InvoicePage from './pages/InvoicePage'
 import LoginPage from './pages/LoginPage'
 import PhotoReportPage from './pages/PhotoReportPage'
+import PlanogramsPage from './pages/PlanogramsPage'
 import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
 import type {
@@ -283,6 +284,10 @@ function App() {
     return <PhotoReportPage device={device} t={t} onBack={() => setScreen('home')} />
   }
 
+  if (screen === 'planograms') {
+    return <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
+  }
+
   return (
     <HomePage
       openShiftCount={openShifts.length}
@@ -297,6 +302,7 @@ function App() {
       }}
       onOpenInvoice={() => setScreen('invoice')}
       onOpenPhotoReport={() => setScreen('photoReport')}
+      onOpenPlanograms={() => setScreen('planograms')}
       onOpenSettings={() => setScreen('settings')}
     />
   )

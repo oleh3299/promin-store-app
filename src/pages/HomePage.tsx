@@ -15,13 +15,14 @@ type HomePageProps = {
   onOpenStoreRequests: () => void
   onOpenInvoice: () => void
   onOpenPhotoReport: () => void
+  onOpenPlanograms: () => void
   onOpenSettings: () => void
 }
 
 type MenuItem = {
   title: string
   subtitle: string
-  action: 'attendance' | 'storeRequests' | 'invoice' | 'photoReport' | 'settings' | 'disabled'
+  action: 'attendance' | 'storeRequests' | 'invoice' | 'photoReport' | 'planograms' | 'settings'
 }
 
 function getMenuItems(t: Translation): MenuItem[] {
@@ -48,8 +49,8 @@ function getMenuItems(t: Translation): MenuItem[] {
     },
     {
       title: t.home.menu.planograms,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
+      subtitle: t.planograms.subtitle,
+      action: 'planograms',
     },
     {
       title: t.home.menu.settings,
@@ -69,6 +70,7 @@ function HomePage({
   onOpenStoreRequests,
   onOpenInvoice,
   onOpenPhotoReport,
+  onOpenPlanograms,
   onOpenSettings,
 }: HomePageProps) {
   const menuItems = getMenuItems(t)
@@ -113,7 +115,7 @@ function HomePage({
             key={item.title}
             type="button"
             className={
-              item.action === 'disabled' ? 'menu-card' : 'menu-card active'
+              'menu-card active'
             }
             onClick={() => {
               if (item.action === 'attendance') {
@@ -136,12 +138,15 @@ function HomePage({
                 return
               }
 
+              if (item.action === 'planograms') {
+                onOpenPlanograms()
+                return
+              }
+
               if (item.action === 'settings') {
                 onOpenSettings()
                 return
               }
-
-              alert(t.home.inDevelopment)
             }}
           >
             <span>{item.title}</span>

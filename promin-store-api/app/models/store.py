@@ -22,6 +22,7 @@ class Store(TimestampMixin, Base):
     store_request_logs = relationship("StoreRequestLog", back_populates="store")
     photo_report_templates = relationship("PhotoReportTemplate", back_populates="store")
     planogram_zones = relationship("PlanogramZone", back_populates="store")
+    planograms = relationship("Planogram", back_populates="store")
 
     def __str__(self) -> str:
         return f"{self.code} — {self.name}"

@@ -563,6 +563,69 @@ textarea {
   font-weight: 900;
 }
 
+.planogram-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.planogram-card {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.planogram-card img {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 14px;
+  background: #f4f7f3;
+  object-fit: contain;
+}
+
+.planogram-card span {
+  color: #102018;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.planogram-card small,
+.planogram-card time,
+.empty-state {
+  color: #66736b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.planogram-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  padding: 16px;
+  background: #102018;
+}
+
+.planogram-viewer button {
+  justify-self: end;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: #fff;
+  color: #102018;
+  font-weight: 900;
+}
+
+.planogram-viewer img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
 .request-route-grid {
   display: grid;
   gap: 10px;

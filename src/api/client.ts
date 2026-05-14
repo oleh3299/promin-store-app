@@ -7,6 +7,7 @@ import type {
   EmployeeRead,
   InvoiceTodayResponse,
   InvoiceUploadResponse,
+  PlanogramListResponse,
   PhotoReportTemplateResponse,
   PhotoReportUploadResponse,
   StoreRequestResponse,
@@ -221,6 +222,14 @@ export function submitPhotoReport(deviceToken: string, formData: FormData) {
       method: 'POST',
       body: formData,
     },
+    { deviceToken },
+  )
+}
+
+export function getPlanograms(deviceToken: string) {
+  return apiRequest<PlanogramListResponse>(
+    '/api/planograms',
+    {},
     { deviceToken },
   )
 }

@@ -286,6 +286,7 @@ function App() {
   return (
     <HomePage
       openShiftCount={openShifts.length}
+      storeName={device.storeName}
       language={language}
       t={t}
       onLanguageChange={setLanguage}

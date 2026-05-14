@@ -7,6 +7,7 @@ import {
 
 type HomePageProps = {
   openShiftCount: number
+  storeName: string | null
   language: Language
   t: Translation
   onLanguageChange: (language: Language) => void
@@ -60,6 +61,7 @@ function getMenuItems(t: Translation): MenuItem[] {
 
 function HomePage({
   openShiftCount,
+  storeName,
   language,
   t,
   onLanguageChange,
@@ -77,6 +79,7 @@ function HomePage({
         <div className="home-title">
           <p className="app-kicker">Promin Store</p>
           <h1>{t.home.title}</h1>
+          {storeName && <p className="home-store-name">{storeName}</p>}
         </div>
 
         <div className="language-switcher" aria-label="Language">

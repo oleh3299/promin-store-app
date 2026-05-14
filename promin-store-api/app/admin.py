@@ -529,7 +529,7 @@ class PlanogramAdmin(ModelView, model=Planogram):
     name_plural = "Планограммы"
     category = "Планограммы"
     can_create = False
-    can_delete = False
+    can_delete = True
     column_list = [
         Planogram.store,
         Planogram.category_name,

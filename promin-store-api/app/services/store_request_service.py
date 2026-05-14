@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,6 +16,9 @@ from app.models import (
 )
 from app.schemas.store_request import ActiveStoreEmployeeRead, StoreRequestCreate
 from app.services.rocket_chat_service import RocketChatError, RocketChatService
+
+
+logger = logging.getLogger(__name__)
 
 
 class StoreRequestError(Exception):
@@ -87,6 +91,10 @@ def resolve_employee_id(
 
 
 def resolve_route(db: Session, route_key: str, store_id: int) -> RocketRoute | None:
+    logger.info(
+        "store_request_route_lookup_started",
+        extra={"route_key": route_key, "store_id": store_id, "scope": "store"},
+    )
     store_route = db.scalar(
         select(RocketRoute).where(
             RocketRoute.route_key == route_key,
@@ -96,9 +104,22 @@ def resolve_route(db: Session, route_key: str, store_id: int) -> RocketRoute | N
         ),
     )
     if store_route is not None:
+        logger.info(
+            "store_request_route_resolved",
+            extra={
+                "route_key": route_key,
+                "store_id": store_id,
+                "scope": "store",
+                "room_id": store_route.room_id,
+            },
+        )
         return store_route
 
-    return db.scalar(
+    logger.info(
+        "store_request_route_lookup_started",
+        extra={"route_key": route_key, "store_id": store_id, "scope": "global"},
+    )
+    global_route = db.scalar(
         select(RocketRoute).where(
             RocketRoute.route_key == route_key,
             RocketRoute.scope == "global",
@@ -106,6 +127,23 @@ def resolve_route(db: Session, route_key: str, store_id: int) -> RocketRoute | N
             RocketRoute.is_active.is_(True),
         ),
     )
+    if global_route is not None:
+        logger.info(
+            "store_request_route_resolved",
+            extra={
+                "route_key": route_key,
+                "store_id": store_id,
+                "scope": "global",
+                "room_id": global_route.room_id,
+            },
+        )
+    else:
+        logger.warning(
+            "store_request_route_not_configured",
+            extra={"route_key": route_key, "store_id": store_id},
+        )
+
+    return global_route
 
 
 def format_store_request_message(
@@ -169,12 +207,32 @@ def create_store_request(
     )
 
     text = format_store_request_message(store, device, payload, employee)
+    logger.info(
+        "store_request_delivery_started",
+        extra={
+            "route_key": payload.route_key,
+            "store_id": device.store_id,
+            "device_id": device.id,
+            "room_id": route.room_id,
+            "status": "pending",
+        },
+    )
     try:
         result = RocketChatService().send_message(route.room_id, text)
     except RocketChatError as exc:
         log.error_text = str(exc)
         db.add(log)
         db.commit()
+        logger.warning(
+            "store_request_delivery_failed",
+            extra={
+                "route_key": payload.route_key,
+                "store_id": device.store_id,
+                "device_id": device.id,
+                "room_id": route.room_id,
+                "status": "failed",
+            },
+        )
         raise StoreRequestError("delivery_failed", "Не вдалося відправити заявку") from exc
 
     log.status = "sent"
@@ -182,4 +240,14 @@ def create_store_request(
     log.sent_at = datetime.now(timezone.utc)
     db.add(log)
     db.commit()
+    logger.info(
+        "store_request_delivery_sent",
+        extra={
+            "route_key": payload.route_key,
+            "store_id": device.store_id,
+            "device_id": device.id,
+            "room_id": route.room_id,
+            "status": "sent",
+        },
+    )
     return StoreRequestResult(status="sent", route_key=payload.route_key)

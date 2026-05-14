@@ -264,16 +264,36 @@ class InvoiceUploadLogAdmin(ModelView, model=InvoiceUploadLog):
 
 
 class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
+    can_delete = False
     column_list = [
         PhotoReportTemplate.id,
         PhotoReportTemplate.store_id,
-        PhotoReportTemplate.title,
+        PhotoReportTemplate.item_key,
+        PhotoReportTemplate.item_name,
+        PhotoReportTemplate.description,
+        PhotoReportTemplate.sort_order,
+        PhotoReportTemplate.is_required,
+        PhotoReportTemplate.is_active,
+    ]
+    column_searchable_list = [PhotoReportTemplate.item_name, PhotoReportTemplate.item_key]
+    column_sortable_list = [
+        PhotoReportTemplate.id,
+        PhotoReportTemplate.store_id,
+        PhotoReportTemplate.item_key,
+        PhotoReportTemplate.item_name,
         PhotoReportTemplate.sort_order,
         PhotoReportTemplate.is_active,
     ]
-    column_searchable_list = [PhotoReportTemplate.title]
-    column_sortable_list = [PhotoReportTemplate.id, PhotoReportTemplate.store_id, PhotoReportTemplate.sort_order]
-    form_excluded_columns = [PhotoReportTemplate.created_at, PhotoReportTemplate.updated_at]
+    column_filters = [PhotoReportTemplate.store_id, PhotoReportTemplate.is_active, PhotoReportTemplate.is_required]
+    form_columns = [
+        PhotoReportTemplate.store_id,
+        PhotoReportTemplate.item_key,
+        PhotoReportTemplate.item_name,
+        PhotoReportTemplate.description,
+        PhotoReportTemplate.sort_order,
+        PhotoReportTemplate.is_required,
+        PhotoReportTemplate.is_active,
+    ]
 
 
 class PhotoReportAdmin(ModelView, model=PhotoReport):

@@ -5,8 +5,12 @@ from pydantic import BaseModel
 
 class PhotoReportTemplateItemRead(BaseModel):
     id: int
+    item_key: str
+    item_name: str
     title: str
+    description: str | None
     sort_order: int
+    is_required: bool
 
 
 class PhotoReportTemplateResponse(BaseModel):

@@ -219,14 +219,15 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
           const photo = photos[item.id]
           return (
             <div className="panel photo-report-item" key={item.id}>
-              <h2>{item.title}</h2>
+              <h2>{item.item_name}</h2>
+              {item.description && <p>{item.description}</p>}
               {photo && (
                 <div className="invoice-preview">
-                  <img alt={item.title} src={photo.previewUrl} />
+                  <img alt={item.item_name} src={photo.previewUrl} />
                 </div>
               )}
               <label className="file-picker">
-                <span>{item.title}</span>
+                <span>{item.item_name}</span>
                 <strong>{photo ? t.photoReport.changePhoto : t.photoReport.takePhoto}</strong>
                 <input
                   accept="image/jpeg,image/png,image/webp"

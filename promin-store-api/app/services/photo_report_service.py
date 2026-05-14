@@ -15,14 +15,14 @@ from app.services.store_request_service import StoreRequestError, resolve_employ
 
 
 DEFAULT_PHOTO_REPORT_ITEMS = [
-    "Вхідна група",
-    "Овочева зона",
-    "Молочна вітрина",
-    "Ковбасна вітрина",
-    "Прикаса",
-    "Каса",
-    "Акційні цінники",
-    "Загальний вигляд магазину",
+    ("entrance", "Вхідна група"),
+    ("vegetables", "Овочева зона"),
+    ("milk_fridge", "Молочна вітрина"),
+    ("sausage_fridge", "Ковбасна вітрина"),
+    ("cash_zone", "Прикаса"),
+    ("checkout", "Каса"),
+    ("promo_price_tags", "Акційні цінники"),
+    ("general_view", "Загальний вигляд магазину"),
 ]
 
 TRANSLIT = {
@@ -89,11 +89,13 @@ def ensure_photo_report_template(db: Session, store_id: int) -> list[PhotoReport
     templates = [
         PhotoReportTemplate(
             store_id=store_id,
-            title=title,
+            item_key=item_key,
+            item_name=item_name,
             sort_order=index,
+            is_required=True,
             is_active=True,
         )
-        for index, title in enumerate(DEFAULT_PHOTO_REPORT_ITEMS, start=1)
+        for index, (item_key, item_name) in enumerate(DEFAULT_PHOTO_REPORT_ITEMS, start=1)
     ]
     db.add_all(templates)
     db.commit()
@@ -109,8 +111,12 @@ def get_photo_report_template(db: Session, device: Device) -> list[PhotoReportTe
     return [
         PhotoReportTemplateItemRead(
             id=template.id,
-            title=template.title,
+            item_key=template.item_key,
+            item_name=template.item_name,
+            title=template.item_name,
+            description=template.description,
             sort_order=template.sort_order,
+            is_required=template.is_required,
         )
         for template in ensure_photo_report_template(db, device.store_id)
     ]
@@ -232,20 +238,20 @@ def create_photo_report(
     try:
         for item_id, (filename, content_type, file_bytes) in zip(item_ids, files, strict=True):
             template = templates_by_id[item_id]
-            message = build_photo_report_message(store, now, template.title, employee)
+            message = build_photo_report_message(store, now, template.item_name, employee)
             result = rocket.upload_file(
                 room_id,
                 safe_invoice_filename(filename, content_type),
                 content_type,
                 file_bytes,
                 message,
-                template.title,
+                template.item_name,
             )
             db.add(
                 PhotoReportItem(
                     report_id=report.id,
                     template_id=template.id,
-                    title=template.title,
+                    title=template.item_name,
                     rocket_room_id=room_id,
                     rocket_file_id=result.file_id,
                     rocket_message_id=result.message_id,
@@ -287,7 +293,7 @@ def create_photo_report(
                 PhotoReportItem(
                     report_id=report.id,
                     template_id=failed_template.id,
-                    title=failed_template.title,
+                    title=failed_template.item_name,
                     rocket_room_id=room_id,
                     status="failed",
                     error_text=str(exc),

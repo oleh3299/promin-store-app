@@ -108,8 +108,12 @@ export type InvoiceTodayResponse = {
 
 export type PhotoReportTemplateItem = {
   id: number
+  item_key: string
+  item_name: string
   title: string
+  description: string | null
   sort_order: number
+  is_required: boolean
 }
 
 export type PhotoReportTemplateResponse = {

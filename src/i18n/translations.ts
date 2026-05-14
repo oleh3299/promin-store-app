@@ -108,13 +108,17 @@ export type Translation = {
     employeeLabel: string
     employeeUnknown: string
     employeeSelect: string
+    rulesTitle: string
+    rulesText: string
     takePhoto: string
     changePhoto: string
+    photoAdded: string
     progress: (done: number, total: number) => string
     send: string
     sending: string
     sent: string
     incomplete: string
+    requiredMissing: string
     employeeRequired: string
     invalidFileType: string
     fileTooLarge: string
@@ -328,13 +332,17 @@ export const translations: Record<Language, Translation> = {
       employeeLabel: 'Співробітник',
       employeeUnknown: 'Співробітник не вказаний',
       employeeSelect: 'Хто відправляє?',
+      rulesTitle: 'Правила фотоотчета',
+      rulesText: 'Фото робити прямо. Один пункт — одне фото. Надіслати всі обов’язкові фото до 21:00.',
       takePhoto: 'Зробити фото',
       changePhoto: 'Замінити фото',
+      photoAdded: 'Фото додано',
       progress: (done, total) => `${done} / ${total} виконано`,
       send: 'Надіслати',
       sending: 'Надсилання',
       sent: 'Фотоотчет надіслано',
       incomplete: 'Додайте фото для кожного пункту',
+      requiredMissing: 'Додайте фото до всіх обов’язкових пунктів.',
       employeeRequired: 'Оберіть співробітника, який відправляє фотоотчет',
       invalidFileType: 'Підтримуються лише JPEG, PNG або WEBP',
       fileTooLarge: 'Фото завелике',
@@ -550,13 +558,17 @@ export const translations: Record<Language, Translation> = {
       employeeLabel: 'Сотрудник',
       employeeUnknown: 'Сотрудник не указан',
       employeeSelect: 'Кто отправляет?',
+      rulesTitle: 'Правила фотоотчета',
+      rulesText: 'Фото делать прямо. Один пункт — одно фото. Отправить все обязательные фото до 21:00.',
       takePhoto: 'Сделать фото',
       changePhoto: 'Заменить фото',
+      photoAdded: 'Фото добавлено',
       progress: (done, total) => `${done} / ${total} выполнено`,
       send: 'Отправить',
       sending: 'Отправка',
       sent: 'Фотоотчет отправлен',
       incomplete: 'Добавьте фото для каждого пункта',
+      requiredMissing: 'Добавьте фото ко всем обязательным пунктам.',
       employeeRequired: 'Выберите сотрудника, который отправляет фотоотчет',
       invalidFileType: 'Поддерживаются только JPEG, PNG или WEBP',
       fileTooLarge: 'Фото слишком большое',
@@ -772,13 +784,17 @@ export const translations: Record<Language, Translation> = {
       employeeLabel: 'Employee',
       employeeUnknown: 'Employee not specified',
       employeeSelect: 'Who is sending?',
+      rulesTitle: 'Photo report rules',
+      rulesText: 'Take photos straight. One item — one photo. Send all required photos by 21:00.',
       takePhoto: 'Take photo',
       changePhoto: 'Replace photo',
+      photoAdded: 'Photo added',
       progress: (done, total) => `${done} / ${total} done`,
       send: 'Send',
       sending: 'Sending',
       sent: 'Photo report sent',
       incomplete: 'Add a photo for every item',
+      requiredMissing: 'Add photos to all required items.',
       employeeRequired: 'Choose the employee sending the photo report',
       invalidFileType: 'Only JPEG, PNG, or WEBP are supported',
       fileTooLarge: 'Photo is too large',

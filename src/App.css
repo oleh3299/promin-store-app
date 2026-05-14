@@ -472,7 +472,15 @@ textarea {
   display: none;
 }
 
+.file-picker {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+}
+
 .file-picker strong {
+  display: block;
+  box-sizing: border-box;
   width: 100%;
   border-radius: 18px;
   padding: 15px 16px;
@@ -483,9 +491,30 @@ textarea {
 }
 
 .photo-report-status {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  gap: 8px;
+}
+
+.photo-report-status span {
+  color: #66736b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.photo-report-rules {
+  display: grid;
+  gap: 6px;
+}
+
+.photo-report-rules strong {
+  color: #102018;
+}
+
+.photo-report-rules p {
+  margin: 0;
+  color: #405148;
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .photo-report-list {
@@ -496,11 +525,33 @@ textarea {
 .photo-report-item {
   display: grid;
   gap: 12px;
+  min-width: 0;
+}
+
+.photo-report-item-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .photo-report-item h2 {
+  margin: 0;
   font-size: 18px;
   line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.photo-report-item p {
+  margin: 0;
+  color: #66736b;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.photo-report-added {
+  color: #1f7a42;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .request-route-grid {

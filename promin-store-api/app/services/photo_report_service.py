@@ -204,10 +204,18 @@ def create_photo_report(
     templates = ensure_photo_report_template(db, device.store_id)
     templates_by_id = {template.id: template for template in templates}
     item_ids = parse_item_ids(item_ids_json)
-    required_ids = [template.id for template in templates]
+    required_ids = [template.id for template in templates if template.is_required]
 
-    if item_ids != required_ids or len(files) != len(required_ids):
-        raise StoreRequestError("incomplete_report", "Додайте фото для кожного пункту")
+    if len(item_ids) != len(set(item_ids)) or len(files) != len(item_ids):
+        raise StoreRequestError("invalid_items", "Некоректний список пунктів")
+
+    unknown_ids = [item_id for item_id in item_ids if item_id not in templates_by_id]
+    if unknown_ids:
+        raise StoreRequestError("invalid_items", "Некоректний список пунктів")
+
+    missing_required_ids = [item_id for item_id in required_ids if item_id not in item_ids]
+    if missing_required_ids:
+        raise StoreRequestError("incomplete_report", "Додайте фото до всіх обов'язкових пунктів")
 
     for _, content_type, file_bytes in files:
         if content_type not in ALLOWED_INVOICE_CONTENT_TYPES:
@@ -262,7 +270,8 @@ def create_photo_report(
             )
             items_done += 1
 
-        report.items_done = items_done
+        required_done = sum(1 for item_id in item_ids if templates_by_id[item_id].is_required)
+        report.items_done = required_done
         report.status = "sent"
         report.sent_at = datetime.now(timezone.utc)
         db.add(report)
@@ -272,14 +281,14 @@ def create_photo_report(
             extra={
                 "store_id": device.store_id,
                 "device_id": device.id,
-                "items_done": items_done,
+                "items_done": required_done,
                 "items_total": len(required_ids),
                 "status": "sent",
             },
         )
         return PhotoReportUploadResult(
             report_id=report.id,
-            items_done=items_done,
+            items_done=required_done,
             items_total=len(required_ids),
             status="sent",
         )

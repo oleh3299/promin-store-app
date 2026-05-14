@@ -80,9 +80,11 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     () => employees.find((employee) => employee.employee_id === selectedEmployeeId) ?? null,
     [employees, selectedEmployeeId],
   )
-  const doneCount = items.filter((item) => photos[item.id]).length
+  const requiredItems = useMemo(() => items.filter((item) => item.is_required), [items])
+  const doneCount = requiredItems.filter((item) => photos[item.id]).length
   const employeeRequired = employees.length > 1 && selectedEmployeeId === null
-  const canSubmit = doneCount === items.length && items.length > 0 && !employeeRequired && !isSubmitting
+  const hasMissingRequiredPhotos = requiredItems.some((item) => !photos[item.id])
+  const canSubmit = !hasMissingRequiredPhotos && requiredItems.length > 0 && !employeeRequired && !isSubmitting
 
   const setItemPhoto = (itemId: number, nextFile: File | undefined) => {
     setStatusMessage('')
@@ -116,8 +118,8 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
   const submitReport = async () => {
     if (!device.deviceToken || isSubmitting) return
-    if (doneCount !== items.length) {
-      setStatusMessage(t.photoReport.incomplete)
+    if (hasMissingRequiredPhotos) {
+      setStatusMessage(t.photoReport.requiredMissing)
       return
     }
     if (employeeRequired) {
@@ -126,11 +128,12 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     }
 
     const formData = new FormData()
-    formData.append('item_ids', JSON.stringify(items.map((item) => item.id)))
+    const itemsWithPhotos = items.filter((item) => photos[item.id])
+    formData.append('item_ids', JSON.stringify(itemsWithPhotos.map((item) => item.id)))
     if (selectedEmployeeId !== null) {
       formData.append('employee_id', String(selectedEmployeeId))
     }
-    items.forEach((item) => {
+    itemsWithPhotos.forEach((item) => {
       formData.append('files', photos[item.id].file)
     })
 
@@ -187,7 +190,13 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       {statusMessage && <div className="message-box">{statusMessage}</div>}
 
       <section className="panel photo-report-status">
-        <strong>{t.photoReport.progress(doneCount, items.length)}</strong>
+        <strong>{t.photoReport.progress(doneCount, requiredItems.length)}</strong>
+        {hasMissingRequiredPhotos && !isLoading && <span>{t.photoReport.requiredMissing}</span>}
+      </section>
+
+      <section className="panel photo-report-rules">
+        <strong>{t.photoReport.rulesTitle}</strong>
+        <p>{t.photoReport.rulesText}</p>
       </section>
 
       <section className="panel">
@@ -219,15 +228,17 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
           const photo = photos[item.id]
           return (
             <div className="panel photo-report-item" key={item.id}>
-              <h2>{item.item_name}</h2>
-              {item.description && <p>{item.description}</p>}
+              <div className="photo-report-item-copy">
+                <h2>{item.item_name}</h2>
+                {item.description && <p>{item.description}</p>}
+              </div>
               {photo && (
                 <div className="invoice-preview">
                   <img alt={item.item_name} src={photo.previewUrl} />
                 </div>
               )}
+              {photo && <span className="photo-report-added">{t.photoReport.photoAdded}</span>}
               <label className="file-picker">
-                <span>{item.item_name}</span>
                 <strong>{photo ? t.photoReport.changePhoto : t.photoReport.takePhoto}</strong>
                 <input
                   accept="image/jpeg,image/png,image/webp"

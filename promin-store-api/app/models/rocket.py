@@ -16,6 +16,7 @@ ROCKET_ROUTE_KEYS = (
     "repair",
     "cash",
     "other",
+    "photo_report",
 )
 ROCKET_ROUTE_SCOPES = ("global", "store")
 STORE_REQUEST_STATUSES = ("sent", "failed")
@@ -26,7 +27,7 @@ class RocketRoute(TimestampMixin, Base):
     __tablename__ = "rocket_routes"
     __table_args__ = (
         CheckConstraint(
-            "route_key IN ('purchase', 'accounting', 'it', 'manager', 'security', 'repair', 'cash', 'other')",
+            "route_key IN ('purchase', 'accounting', 'it', 'manager', 'security', 'repair', 'cash', 'other', 'photo_report')",
             name="ck_rocket_routes_route_key",
         ),
         CheckConstraint("scope IN ('global', 'store')", name="ck_rocket_routes_scope"),

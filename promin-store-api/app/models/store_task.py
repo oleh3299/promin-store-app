@@ -1,8 +1,9 @@
 from datetime import date, datetime, time
+import re
 
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, Time, UniqueConstraint, func
-from sqlalchemy.orm.exc import DetachedInstanceError
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, Time, UniqueConstraint, event, func, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm.exc import DetachedInstanceError
 
 from app.db import Base
 from app.models.base import TimestampMixin
@@ -53,6 +54,89 @@ class TaskTemplate(TimestampMixin, Base):
 
     def __str__(self) -> str:
         return self.title
+
+
+CYRILLIC_SLUG_MAP = str.maketrans(
+    {
+        "а": "a",
+        "б": "b",
+        "в": "v",
+        "г": "h",
+        "ґ": "g",
+        "д": "d",
+        "е": "e",
+        "є": "ie",
+        "ё": "e",
+        "ж": "zh",
+        "з": "z",
+        "и": "y",
+        "і": "i",
+        "ї": "i",
+        "й": "i",
+        "к": "k",
+        "л": "l",
+        "м": "m",
+        "н": "n",
+        "о": "o",
+        "п": "p",
+        "р": "r",
+        "с": "s",
+        "т": "t",
+        "у": "u",
+        "ф": "f",
+        "х": "kh",
+        "ц": "ts",
+        "ч": "ch",
+        "ш": "sh",
+        "щ": "shch",
+        "ь": "",
+        "ы": "y",
+        "ъ": "",
+        "э": "e",
+        "ю": "iu",
+        "я": "ia",
+    },
+)
+TEMPLATE_KEY_OVERRIDES = {
+    "помити кавоварку": "clean_coffee_machine",
+    "помыть кофеварку": "clean_coffee_machine",
+}
+
+
+def slugify_template_title(title: str) -> str:
+    normalized_title = title.strip().lower()
+    if normalized_title in TEMPLATE_KEY_OVERRIDES:
+        return TEMPLATE_KEY_OVERRIDES[normalized_title]
+
+    transliterated = normalized_title.translate(CYRILLIC_SLUG_MAP)
+    slug = re.sub(r"[^a-z0-9]+", "_", transliterated)
+    slug = re.sub(r"_+", "_", slug).strip("_")
+    return slug[:120] or "task_template"
+
+
+def unique_template_key(connection, target: TaskTemplate) -> str:
+    base_key = slugify_template_title(target.title)
+    candidate = base_key
+    index = 2
+
+    while True:
+        statement = select(TaskTemplate.id).where(TaskTemplate.template_key == candidate)
+        if target.id is not None:
+            statement = statement.where(TaskTemplate.id != target.id)
+        existing_id = connection.execute(statement).scalar_one_or_none()
+        if existing_id is None:
+            return candidate
+
+        suffix = f"_{index}"
+        candidate = f"{base_key[: 128 - len(suffix)]}{suffix}"
+        index += 1
+
+
+@event.listens_for(TaskTemplate, "before_insert")
+@event.listens_for(TaskTemplate, "before_update")
+def set_task_template_key(_mapper, connection, target: TaskTemplate) -> None:
+    if not target.template_key:
+        target.template_key = unique_template_key(connection, target)
 
 
 class StoreTask(TimestampMixin, Base):

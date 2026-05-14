@@ -778,7 +778,6 @@ class TaskTemplateAdmin(ModelView, model=TaskTemplate):
         TaskTemplate.is_active: "Активен",
     }
     form_columns = [
-        TaskTemplate.template_key,
         TaskTemplate.title,
         TaskTemplate.description,
         TaskTemplate.task_type,

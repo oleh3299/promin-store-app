@@ -90,6 +90,9 @@ export type Translation = {
     invalidFileType: string
     fileTooLarge: string
     genericError: string
+    todayTitle: string
+    todayEmpty: string
+    statusSent: string
     types: {
       incoming: string
       return: string
@@ -307,6 +310,9 @@ export const translations: Record<Language, Translation> = {
       invalidFileType: 'Підтримуються лише JPEG, PNG або WEBP',
       fileTooLarge: 'Фото завелике',
       genericError: 'Не вдалося надіслати накладну',
+      todayTitle: 'Надіслані сьогодні',
+      todayEmpty: 'Сьогодні ще немає надісланих накладних',
+      statusSent: 'Надіслано',
       types: {
         incoming: 'Поступлення',
         return: 'Повернення',
@@ -526,6 +532,9 @@ export const translations: Record<Language, Translation> = {
       invalidFileType: 'Поддерживаются только JPEG, PNG или WEBP',
       fileTooLarge: 'Фото слишком большое',
       genericError: 'Не удалось отправить накладную',
+      todayTitle: 'Отправленные сегодня',
+      todayEmpty: 'Сегодня еще нет отправленных накладных',
+      statusSent: 'Отправлено',
       types: {
         incoming: 'Поступление',
         return: 'Возврат',
@@ -745,6 +754,9 @@ export const translations: Record<Language, Translation> = {
       invalidFileType: 'Only JPEG, PNG, or WEBP are supported',
       fileTooLarge: 'Photo is too large',
       genericError: 'Could not send invoice',
+      todayTitle: 'Sent today',
+      todayEmpty: 'No invoices have been sent today yet',
+      statusSent: 'Sent',
       types: {
         incoming: 'Incoming',
         return: 'Return',

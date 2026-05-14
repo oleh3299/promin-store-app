@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  getTodayInvoices,
   getStoreRequestActiveEmployees,
   uploadInvoice,
 } from '../api/client'
-import type { ActiveStoreEmployee, InvoiceRequestType } from '../api/types'
+import type { ActiveStoreEmployee, InvoiceRequestType, InvoiceTodayItem } from '../api/types'
 import type { Translation } from '../i18n/translations'
 import type { DeviceState } from '../types/attendance'
 
@@ -16,6 +17,11 @@ type InvoicePageProps = {
 const invoiceTypes: InvoiceRequestType[] = ['incoming', 'return', 'writeoff', 'assembly']
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxInvoiceFileSize = 10 * 1024 * 1024
+const invoiceTimeFormatter = new Intl.DateTimeFormat('uk-UA', {
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'Europe/Uzhgorod',
+})
 
 function InvoicePage({ device, t, onBack }: InvoicePageProps) {
   const [requestType, setRequestType] = useState<InvoiceRequestType>('incoming')
@@ -27,6 +33,26 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
   const [comment, setComment] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [todayItems, setTodayItems] = useState<InvoiceTodayItem[]>([])
+  const [isLoadingToday, setIsLoadingToday] = useState(true)
+
+  const loadTodayInvoices = useCallback(async () => {
+    if (!device.deviceToken) {
+      setTodayItems([])
+      setIsLoadingToday(false)
+      return
+    }
+
+    setIsLoadingToday(true)
+    try {
+      const response = await getTodayInvoices(device.deviceToken)
+      setTodayItems(response.items)
+    } catch {
+      setTodayItems([])
+    } finally {
+      setIsLoadingToday(false)
+    }
+  }, [device.deviceToken])
 
   useEffect(() => {
     let cancelled = false
@@ -60,6 +86,10 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
       cancelled = true
     }
   }, [device.deviceToken])
+
+  useEffect(() => {
+    void loadTodayInvoices()
+  }, [loadTodayInvoices])
 
   useEffect(() => {
     if (!file) {
@@ -130,6 +160,7 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
         setFile(null)
         setComment('')
         setStatusMessage(t.invoice.sent)
+        await loadTodayInvoices()
         return
       }
 
@@ -236,6 +267,23 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
         <button className="confirm-button" disabled={!canSubmit} onClick={() => void submitInvoice()}>
           {isSubmitting ? t.invoice.sending : t.invoice.send}
         </button>
+      </section>
+
+      <section className="panel invoice-today">
+        <h2>{t.invoice.todayTitle}</h2>
+        {!isLoadingToday && todayItems.length === 0 && <p>{t.invoice.todayEmpty}</p>}
+        {todayItems.length > 0 && (
+          <div className="invoice-today-list">
+            {todayItems.map((item) => (
+              <div className="invoice-today-row" key={item.id}>
+                <span>{invoiceTimeFormatter.format(new Date(item.sent_at ?? item.created_at))}</span>
+                <strong>{item.request_type_label || t.invoice.types[item.request_type]}</strong>
+                <span>{item.employee_name ?? t.invoice.employeeUnknown}</span>
+                <span>{item.status === 'sent' ? t.invoice.statusSent : item.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   )

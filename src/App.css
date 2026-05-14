@@ -421,6 +421,53 @@ textarea {
   object-fit: contain;
 }
 
+.invoice-today {
+  display: grid;
+  gap: 12px;
+}
+
+.invoice-today h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.invoice-today p {
+  margin: 0;
+  color: #66736b;
+  font-weight: 700;
+}
+
+.invoice-today-list {
+  display: grid;
+  gap: 8px;
+}
+
+.invoice-today-row {
+  display: grid;
+  grid-template-columns: 52px minmax(92px, 1fr) minmax(120px, 1.2fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid #e3e8e1;
+  color: #405148;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.invoice-today-row:first-child {
+  border-top: 0;
+}
+
+.invoice-today-row strong {
+  color: #183c27;
+}
+
+@media (max-width: 560px) {
+  .invoice-today-row {
+    grid-template-columns: 52px 1fr;
+  }
+}
+
 .file-picker input {
   display: none;
 }

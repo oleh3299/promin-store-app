@@ -92,6 +92,20 @@ export type InvoiceUploadResponse = {
   message: string | null
 }
 
+export type InvoiceTodayItem = {
+  id: number
+  request_type: InvoiceRequestType
+  request_type_label: string
+  employee_name: string | null
+  status: string
+  created_at: string
+  sent_at: string | null
+}
+
+export type InvoiceTodayResponse = {
+  items: InvoiceTodayItem[]
+}
+
 export type PhotoReportTemplateItem = {
   id: number
   title: string

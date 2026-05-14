@@ -5,6 +5,7 @@ import type {
   DeviceRead,
   DeviceLoginResponse,
   EmployeeRead,
+  InvoiceTodayResponse,
   InvoiceUploadResponse,
   PhotoReportTemplateResponse,
   PhotoReportUploadResponse,
@@ -193,6 +194,14 @@ export function uploadInvoice(deviceToken: string, formData: FormData) {
       method: 'POST',
       body: formData,
     },
+    { deviceToken },
+  )
+}
+
+export function getTodayInvoices(deviceToken: string) {
+  return apiRequest<InvoiceTodayResponse>(
+    '/api/invoices/today',
+    {},
     { deviceToken },
   )
 }

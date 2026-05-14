@@ -3,12 +3,20 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Device
-from app.schemas.invoice import InvoiceRequestType, InvoiceUploadResponse
+from app.schemas.invoice import InvoiceRequestType, InvoiceTodayResponse, InvoiceUploadResponse
 from app.security import get_current_device
-from app.services.invoice_service import MAX_INVOICE_FILE_SIZE, upload_invoice
+from app.services.invoice_service import MAX_INVOICE_FILE_SIZE, get_today_invoice_uploads, upload_invoice
 from app.services.store_request_service import StoreRequestError
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
+
+
+@router.get("/today", response_model=InvoiceTodayResponse)
+def get_today_invoices_endpoint(
+    db: Session = Depends(get_db),
+    current_device: Device = Depends(get_current_device),
+) -> InvoiceTodayResponse:
+    return InvoiceTodayResponse(items=get_today_invoice_uploads(db, current_device))
 
 
 @router.post("/upload", response_model=InvoiceUploadResponse)

@@ -138,6 +138,10 @@ class RocketChatService:
             raise RocketChatError("Rocket.Chat credentials are not configured")
 
         endpoint = f"{self.base_url}/api/v1/rooms.upload/{room_id}"
+        form_data = {"msg": message}
+        if description:
+            form_data["description"] = description
+
         try:
             response = requests.post(
                 endpoint,
@@ -145,10 +149,7 @@ class RocketChatService:
                     "X-Auth-Token": self.auth_token,
                     "X-User-Id": self.user_id,
                 },
-                data={
-                    "msg": message,
-                    "description": description,
-                },
+                data=form_data,
                 files={
                     "file": (filename, file_bytes, content_type),
                 },

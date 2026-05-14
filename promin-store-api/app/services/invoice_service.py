@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
 import logging
 from pathlib import PurePath
+from zoneinfo import ZoneInfo
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Device, Employee, InvoiceUploadLog, Store
-from app.schemas.invoice import InvoiceRequestType
+from app.schemas.invoice import InvoiceRequestType, InvoiceTodayItem
 from app.services.rocket_chat_service import RocketChatError, RocketChatService
 from app.services.store_request_service import StoreRequestError, resolve_employee_id, resolve_route
 
@@ -23,6 +25,7 @@ INVOICE_TYPE_LABELS: dict[InvoiceRequestType, str] = {
     "writeoff": "Списання",
     "assembly": "Комплектація",
 }
+LOCAL_TIMEZONE = ZoneInfo("Europe/Uzhgorod")
 
 logger = logging.getLogger(__name__)
 
@@ -35,23 +38,60 @@ class InvoiceUploadResult:
 
 def build_invoice_message(
     store: Store,
-    device: Device,
     request_type: InvoiceRequestType,
     employee: Employee | None,
     comment: str | None,
+    created_at: datetime,
 ) -> str:
+    local_created_at = created_at.astimezone(LOCAL_TIMEZONE)
     employee_label = employee.full_name if employee is not None else "не вказано"
-    device_label = device.login or device.device_name
+    comment_label = comment if comment else "не вказано"
     lines = [
         f"Магазин: {store.name} / {store.code}",
-        f"Пристрій: {device_label}",
+        f"Дата: {local_created_at:%d.%m.%Y}",
+        f"Час: {local_created_at:%H:%M}",
         f"Тип документа: {INVOICE_TYPE_LABELS[request_type]}",
         f"Співробітник: {employee_label}",
+        f"Коментар: {comment_label}",
     ]
-    if comment:
-        lines.extend(["", f"Коментар: {comment}"])
-    lines.extend(["", "Файл: фото накладної"])
     return "\n".join(lines)
+
+
+def get_today_invoice_uploads(db: Session, device: Device) -> list[InvoiceTodayItem]:
+    if device.store_id is None:
+        return []
+
+    now_local = datetime.now(LOCAL_TIMEZONE)
+    day_start_local = datetime.combine(now_local.date(), time.min, tzinfo=LOCAL_TIMEZONE)
+    day_end_local = datetime.combine(now_local.date(), time.max, tzinfo=LOCAL_TIMEZONE)
+    day_start_utc = day_start_local.astimezone(timezone.utc)
+    day_end_utc = day_end_local.astimezone(timezone.utc)
+
+    rows = db.execute(
+        select(InvoiceUploadLog, Employee.full_name)
+        .outerjoin(Employee, Employee.id == InvoiceUploadLog.employee_id)
+        .where(
+            InvoiceUploadLog.store_id == device.store_id,
+            InvoiceUploadLog.device_id == device.id,
+            InvoiceUploadLog.status == "sent",
+            InvoiceUploadLog.created_at >= day_start_utc,
+            InvoiceUploadLog.created_at <= day_end_utc,
+        )
+        .order_by(InvoiceUploadLog.created_at.desc())
+    ).all()
+
+    return [
+        InvoiceTodayItem(
+            id=log.id,
+            request_type=log.request_type,
+            request_type_label=INVOICE_TYPE_LABELS.get(log.request_type, log.request_type),
+            employee_name=employee_name,
+            status=log.status,
+            created_at=log.created_at.isoformat(),
+            sent_at=log.sent_at.isoformat() if log.sent_at else None,
+        )
+        for log, employee_name in rows
+    ]
 
 
 def safe_invoice_filename(filename: str | None, content_type: str) -> str:
@@ -104,7 +144,7 @@ def upload_invoice(
         status="failed",
         created_at=now,
     )
-    message = build_invoice_message(store, device, request_type, employee, comment.strip() if comment else None)
+    message = build_invoice_message(store, request_type, employee, comment.strip() if comment else None, now)
 
     logger.info(
         "invoice_upload_started",
@@ -123,7 +163,7 @@ def upload_invoice(
             content_type,
             file_bytes,
             message,
-            "Фото накладної",
+            "",
         )
     except RocketChatError as exc:
         log.error_text = str(exc)

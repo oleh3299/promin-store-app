@@ -713,10 +713,18 @@ class StoreDepartmentAdmin(ModelView, model=StoreDepartment):
         StoreDepartment.sort_order: "Порядок",
         StoreDepartment.is_active: "Активен",
     }
+    form_columns = [
+        StoreDepartment.store,
+        StoreDepartment.name,
+        StoreDepartment.description,
+        StoreDepartment.sort_order,
+        StoreDepartment.is_active,
+    ]
     form_ajax_refs = {
         "store": {
-            "fields": ("code", "name"),
-            "order_by": ("code",),
+            "fields": [Store.code, Store.name],
+            "order_by": [Store.code],
+            "limit": 25,
         },
     }
 
@@ -811,26 +819,49 @@ class StoreTaskAdmin(ModelView, model=StoreTask):
         StoreTask.related_entity_type: "Связанная сущность",
         StoreTask.related_entity_id: "ID сущности",
     }
+    form_columns = [
+        StoreTask.store,
+        StoreTask.department,
+        StoreTask.template,
+        StoreTask.source,
+        StoreTask.title,
+        StoreTask.description,
+        StoreTask.status,
+        StoreTask.priority,
+        StoreTask.due_date,
+        StoreTask.due_time,
+        StoreTask.requires_photo,
+        StoreTask.requires_comment,
+        StoreTask.requires_verification,
+        StoreTask.assigned_employee,
+        StoreTask.related_entity_type,
+        StoreTask.related_entity_id,
+    ]
     form_ajax_refs = {
         "store": {
-            "fields": ("code", "name"),
-            "order_by": ("code",),
+            "fields": [Store.code, Store.name],
+            "order_by": [Store.code],
+            "limit": 25,
         },
         "department": {
-            "fields": ("name",),
-            "order_by": ("sort_order",),
+            "fields": [StoreDepartment.name],
+            "order_by": [StoreDepartment.store_id, StoreDepartment.sort_order, StoreDepartment.name],
+            "limit": 25,
         },
         "template": {
-            "fields": ("title", "template_key"),
-            "order_by": ("title",),
+            "fields": [TaskTemplate.title, TaskTemplate.template_key],
+            "order_by": [TaskTemplate.title],
+            "limit": 25,
         },
         "assigned_employee": {
-            "fields": ("full_name", "barcode"),
-            "order_by": ("full_name",),
+            "fields": [Employee.full_name, Employee.barcode],
+            "order_by": [Employee.full_name],
+            "limit": 25,
         },
         "completed_by_employee": {
-            "fields": ("full_name", "barcode"),
-            "order_by": ("full_name",),
+            "fields": [Employee.full_name, Employee.barcode],
+            "order_by": [Employee.full_name],
+            "limit": 25,
         },
     }
 

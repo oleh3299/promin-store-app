@@ -1,6 +1,7 @@
 from datetime import date, datetime, time
 
 from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, String, Text, Time, UniqueConstraint, func
+from sqlalchemy.orm.exc import DetachedInstanceError
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -21,6 +22,11 @@ class StoreDepartment(TimestampMixin, Base):
     tasks = relationship("StoreTask", back_populates="department")
 
     def __str__(self) -> str:
+        try:
+            if self.store is not None:
+                return f"{self.store.code} — {self.store.name} / {self.name}"
+        except DetachedInstanceError:
+            pass
         return self.name
 
 

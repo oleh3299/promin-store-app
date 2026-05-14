@@ -435,6 +435,27 @@ textarea {
   text-align: center;
 }
 
+.photo-report-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.photo-report-list {
+  display: grid;
+  gap: 14px;
+}
+
+.photo-report-item {
+  display: grid;
+  gap: 12px;
+}
+
+.photo-report-item h2 {
+  font-size: 18px;
+  line-height: 1.2;
+}
+
 .request-route-grid {
   display: grid;
   gap: 10px;

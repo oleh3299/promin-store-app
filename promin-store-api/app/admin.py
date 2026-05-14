@@ -15,6 +15,9 @@ from app.models import (
     Device,
     Employee,
     InvoiceUploadLog,
+    PhotoReport,
+    PhotoReportItem,
+    PhotoReportTemplate,
     PushSubscription,
     RocketRoute,
     Store,
@@ -260,6 +263,58 @@ class InvoiceUploadLogAdmin(ModelView, model=InvoiceUploadLog):
     ]
 
 
+class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
+    column_list = [
+        PhotoReportTemplate.id,
+        PhotoReportTemplate.store_id,
+        PhotoReportTemplate.title,
+        PhotoReportTemplate.sort_order,
+        PhotoReportTemplate.is_active,
+    ]
+    column_searchable_list = [PhotoReportTemplate.title]
+    column_sortable_list = [PhotoReportTemplate.id, PhotoReportTemplate.store_id, PhotoReportTemplate.sort_order]
+    form_excluded_columns = [PhotoReportTemplate.created_at, PhotoReportTemplate.updated_at]
+
+
+class PhotoReportAdmin(ModelView, model=PhotoReport):
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        PhotoReport.id,
+        PhotoReport.store_id,
+        PhotoReport.device_id,
+        PhotoReport.employee_id,
+        PhotoReport.items_done,
+        PhotoReport.items_total,
+        PhotoReport.status,
+        PhotoReport.created_at,
+        PhotoReport.sent_at,
+    ]
+    column_sortable_list = [PhotoReport.id, PhotoReport.created_at, PhotoReport.sent_at]
+
+
+class PhotoReportItemAdmin(ModelView, model=PhotoReportItem):
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        PhotoReportItem.id,
+        PhotoReportItem.report_id,
+        PhotoReportItem.template_id,
+        PhotoReportItem.title,
+        PhotoReportItem.rocket_room_id,
+        PhotoReportItem.rocket_file_id,
+        PhotoReportItem.rocket_message_id,
+        PhotoReportItem.status,
+        PhotoReportItem.error_text,
+        PhotoReportItem.created_at,
+        PhotoReportItem.sent_at,
+    ]
+    column_searchable_list = [PhotoReportItem.title, PhotoReportItem.status]
+    column_sortable_list = [PhotoReportItem.id, PhotoReportItem.created_at, PhotoReportItem.sent_at]
+
+
 class AuditLogAdmin(ModelView, model=AuditLog):
     column_list = [
         AuditLog.id,
@@ -431,5 +486,8 @@ def setup_admin(app) -> None:
     admin.add_view(RocketRouteAdmin)
     admin.add_view(StoreRequestLogAdmin)
     admin.add_view(InvoiceUploadLogAdmin)
+    admin.add_view(PhotoReportTemplateAdmin)
+    admin.add_view(PhotoReportAdmin)
+    admin.add_view(PhotoReportItemAdmin)
     admin.add_view(AuditLogAdmin)
     admin.add_view(DashboardAdmin)

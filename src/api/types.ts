@@ -91,3 +91,23 @@ export type InvoiceUploadResponse = {
   error: string | null
   message: string | null
 }
+
+export type PhotoReportTemplateItem = {
+  id: number
+  title: string
+  sort_order: number
+}
+
+export type PhotoReportTemplateResponse = {
+  items: PhotoReportTemplateItem[]
+}
+
+export type PhotoReportUploadResponse = {
+  ok: boolean
+  report_id: number | null
+  items_done: number | null
+  items_total: number | null
+  status: string | null
+  error: string | null
+  message: string | null
+}

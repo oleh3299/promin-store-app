@@ -2,6 +2,7 @@ import json
 import mimetypes
 import uuid
 from dataclasses import dataclass
+from urllib.parse import urlencode
 from urllib import error, request
 
 from app.config import get_settings
@@ -68,6 +69,44 @@ class RocketChatService:
         message = data.get("message")
         message_id = message.get("_id") if isinstance(message, dict) else None
         return RocketChatSendResult(message_id=message_id)
+
+    def get_room_id_by_name(self, room_name: str) -> str:
+        if not self.user_id or not self.auth_token:
+            raise RocketChatError("Rocket.Chat credentials are not configured")
+
+        info_request = request.Request(
+            f"{self.base_url}/api/v1/rooms.info?{urlencode({'roomName': room_name})}",
+            headers={
+                "X-Auth-Token": self.auth_token,
+                "X-User-Id": self.user_id,
+            },
+            method="GET",
+        )
+
+        try:
+            with request.urlopen(info_request, timeout=self.timeout) as response:
+                response_body = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            raise RocketChatError(f"Rocket.Chat HTTP {exc.code}") from exc
+        except error.URLError as exc:
+            raise RocketChatError(f"Rocket.Chat room lookup failed: {exc.reason}") from exc
+        except TimeoutError as exc:
+            raise RocketChatError("Rocket.Chat room lookup timed out") from exc
+
+        try:
+            data = json.loads(response_body)
+        except json.JSONDecodeError as exc:
+            raise RocketChatError("Rocket.Chat returned invalid JSON") from exc
+
+        if not data.get("success"):
+            error_message = data.get("error") or data.get("message") or "Rocket.Chat room lookup failed"
+            raise RocketChatError(str(error_message))
+
+        room = data.get("room")
+        room_id = room.get("_id") if isinstance(room, dict) else None
+        if not room_id:
+            raise RocketChatError("Rocket.Chat room id missing")
+        return str(room_id)
 
     def upload_file(
         self,

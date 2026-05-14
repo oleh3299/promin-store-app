@@ -6,6 +6,8 @@ import type {
   DeviceLoginResponse,
   EmployeeRead,
   InvoiceUploadResponse,
+  PhotoReportTemplateResponse,
+  PhotoReportUploadResponse,
   StoreRequestResponse,
   StoreRequestRouteKey,
 } from './types'
@@ -187,6 +189,25 @@ export function createStoreRequest(
 export function uploadInvoice(deviceToken: string, formData: FormData) {
   return apiRequest<InvoiceUploadResponse>(
     '/api/invoices/upload',
+    {
+      method: 'POST',
+      body: formData,
+    },
+    { deviceToken },
+  )
+}
+
+export function getPhotoReportTemplate(deviceToken: string) {
+  return apiRequest<PhotoReportTemplateResponse>(
+    '/api/photo-reports/template',
+    {},
+    { deviceToken },
+  )
+}
+
+export function submitPhotoReport(deviceToken: string, formData: FormData) {
+  return apiRequest<PhotoReportUploadResponse>(
+    '/api/photo-reports',
     {
       method: 'POST',
       body: formData,

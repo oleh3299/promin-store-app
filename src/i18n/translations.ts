@@ -51,6 +51,8 @@ export type Translation = {
       storeRequestsSubtitle: string
       invoice: string
       invoiceSubtitle: string
+      photoReport: string
+      photoReportSubtitle: string
       planograms: string
     }
   }
@@ -94,6 +96,26 @@ export type Translation = {
       writeoff: string
       assembly: string
     }
+  }
+  photoReport: {
+    back: string
+    kicker: string
+    title: string
+    subtitle: string
+    employeeLabel: string
+    employeeUnknown: string
+    employeeSelect: string
+    takePhoto: string
+    changePhoto: string
+    progress: (done: number, total: number) => string
+    send: string
+    sending: string
+    sent: string
+    incomplete: string
+    employeeRequired: string
+    invalidFileType: string
+    fileTooLarge: string
+    genericError: string
   }
   diagnostics: {
     back: string
@@ -246,6 +268,8 @@ export const translations: Record<Language, Translation> = {
         storeRequestsSubtitle: 'Повідомлення для служб магазину',
         invoice: 'Відправити накладну',
         invoiceSubtitle: 'Фото накладної для обробки',
+        photoReport: 'Вечірній фотоотчет',
+        photoReportSubtitle: 'Обовʼязкові фото зон магазину',
         planograms: 'Планограми',
       },
     },
@@ -289,6 +313,26 @@ export const translations: Record<Language, Translation> = {
         writeoff: 'Списання',
         assembly: 'Комплектація',
       },
+    },
+    photoReport: {
+      back: 'Назад',
+      kicker: 'Фотоотчет',
+      title: 'Вечірній фотоотчет',
+      subtitle: 'Зробіть фото по кожному обовʼязковому пункту.',
+      employeeLabel: 'Співробітник',
+      employeeUnknown: 'Співробітник не вказаний',
+      employeeSelect: 'Хто відправляє?',
+      takePhoto: 'Зробити фото',
+      changePhoto: 'Замінити фото',
+      progress: (done, total) => `${done} / ${total} виконано`,
+      send: 'Надіслати',
+      sending: 'Надсилання',
+      sent: 'Фотоотчет надіслано',
+      incomplete: 'Додайте фото для кожного пункту',
+      employeeRequired: 'Оберіть співробітника, який відправляє фотоотчет',
+      invalidFileType: 'Підтримуються лише JPEG, PNG або WEBP',
+      fileTooLarge: 'Фото завелике',
+      genericError: 'Не вдалося надіслати фотоотчет',
     },
     diagnostics: {
       back: '← Назад',
@@ -443,6 +487,8 @@ export const translations: Record<Language, Translation> = {
         storeRequestsSubtitle: 'Сообщения для служб магазина',
         invoice: 'Отправить накладную',
         invoiceSubtitle: 'Фото накладной для обработки',
+        photoReport: 'Вечерний фотоотчет',
+        photoReportSubtitle: 'Обязательные фото зон магазина',
         planograms: 'Планограммы',
       },
     },
@@ -486,6 +532,26 @@ export const translations: Record<Language, Translation> = {
         writeoff: 'Списание',
         assembly: 'Комплектация',
       },
+    },
+    photoReport: {
+      back: 'Назад',
+      kicker: 'Фотоотчет',
+      title: 'Вечерний фотоотчет',
+      subtitle: 'Сделайте фото по каждому обязательному пункту.',
+      employeeLabel: 'Сотрудник',
+      employeeUnknown: 'Сотрудник не указан',
+      employeeSelect: 'Кто отправляет?',
+      takePhoto: 'Сделать фото',
+      changePhoto: 'Заменить фото',
+      progress: (done, total) => `${done} / ${total} выполнено`,
+      send: 'Отправить',
+      sending: 'Отправка',
+      sent: 'Фотоотчет отправлен',
+      incomplete: 'Добавьте фото для каждого пункта',
+      employeeRequired: 'Выберите сотрудника, который отправляет фотоотчет',
+      invalidFileType: 'Поддерживаются только JPEG, PNG или WEBP',
+      fileTooLarge: 'Фото слишком большое',
+      genericError: 'Не удалось отправить фотоотчет',
     },
     diagnostics: {
       back: '← Назад',
@@ -640,6 +706,8 @@ export const translations: Record<Language, Translation> = {
         storeRequestsSubtitle: 'Messages for store services',
         invoice: 'Send invoice',
         invoiceSubtitle: 'Invoice photo for processing',
+        photoReport: 'Evening photo report',
+        photoReportSubtitle: 'Required store area photos',
         planograms: 'Planograms',
       },
     },
@@ -683,6 +751,26 @@ export const translations: Record<Language, Translation> = {
         writeoff: 'Write-off',
         assembly: 'Assembly',
       },
+    },
+    photoReport: {
+      back: 'Back',
+      kicker: 'Photo report',
+      title: 'Evening photo report',
+      subtitle: 'Take a photo for each required checklist item.',
+      employeeLabel: 'Employee',
+      employeeUnknown: 'Employee not specified',
+      employeeSelect: 'Who is sending?',
+      takePhoto: 'Take photo',
+      changePhoto: 'Replace photo',
+      progress: (done, total) => `${done} / ${total} done`,
+      send: 'Send',
+      sending: 'Sending',
+      sent: 'Photo report sent',
+      incomplete: 'Add a photo for every item',
+      employeeRequired: 'Choose the employee sending the photo report',
+      invalidFileType: 'Only JPEG, PNG, or WEBP are supported',
+      fileTooLarge: 'Photo is too large',
+      genericError: 'Could not send photo report',
     },
     diagnostics: {
       back: '← Back',

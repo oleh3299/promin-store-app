@@ -418,6 +418,26 @@ textarea {
   color: #1f7a42;
 }
 
+.route-summary {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(44, 122, 67, 0.22);
+  border-radius: 18px;
+  background: #e4f4e8;
+}
+
+.route-summary span {
+  color: #405148;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.route-summary strong {
+  color: #1f7a42;
+  font-size: 18px;
+}
+
 .shift-list {
   display: grid;
   gap: 10px;

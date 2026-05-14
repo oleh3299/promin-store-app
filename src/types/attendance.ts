@@ -1,5 +1,7 @@
 export type Screen = 'home' | 'attendance' | 'settings' | 'login' | 'diagnostics' | 'storeRequests'
 
+export type StoreRequestEntry = 'default' | 'urgentIt'
+
 export type AttendanceMode = 'checkin' | 'checkout' | null
 
 export type InputMethod = 'scan' | 'manual' | null

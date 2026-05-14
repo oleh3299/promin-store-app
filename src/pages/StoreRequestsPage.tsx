@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ApiError,
   createStoreRequest,
   getStoreRequestActiveEmployees,
 } from '../api/client'
@@ -9,10 +8,11 @@ import type {
   StoreRequestRouteKey,
 } from '../api/types'
 import type { Translation } from '../i18n/translations'
-import type { DeviceState } from '../types/attendance'
+import type { DeviceState, StoreRequestEntry } from '../types/attendance'
 
 type StoreRequestsPageProps = {
   device: DeviceState
+  entry: StoreRequestEntry
   t: Translation
   onBack: () => void
 }
@@ -25,15 +25,38 @@ const routeOptions: Array<{ key: StoreRequestRouteKey; label: keyof Translation[
 
 const accountingTypes = ['receipt', 'return', 'writeoff', 'completion', 'other'] as const
 
-function StoreRequestsPage({ device, t, onBack }: StoreRequestsPageProps) {
-  const [routeKey, setRouteKey] = useState<StoreRequestRouteKey>('purchase')
-  const [requestType, setRequestType] = useState<string>('receipt')
+function getInitialRouteKey(entry: StoreRequestEntry): StoreRequestRouteKey {
+  return entry === 'urgentIt' ? 'it' : 'purchase'
+}
+
+function getInitialRequestType(entry: StoreRequestEntry, routeKey: StoreRequestRouteKey): string | null {
+  if (entry === 'urgentIt') return 'urgent_it'
+  if (routeKey === 'it') return 'it_problem'
+  if (routeKey === 'accounting') return 'receipt'
+  return null
+}
+
+function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps) {
+  const [routeKey, setRouteKey] = useState<StoreRequestRouteKey>(getInitialRouteKey(entry))
+  const [requestType, setRequestType] = useState<string | null>(
+    getInitialRequestType(entry, getInitialRouteKey(entry)),
+  )
   const [message, setMessage] = useState('')
   const [employees, setEmployees] = useState<ActiveStoreEmployee[]>([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null)
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const isUrgentIt = entry === 'urgentIt'
+  const messagePlaceholder = routeKey === 'it' ? t.storeRequests.itMessagePlaceholder : t.storeRequests.messagePlaceholder
+
+  useEffect(() => {
+    const nextRouteKey = getInitialRouteKey(entry)
+    setRouteKey(nextRouteKey)
+    setRequestType(getInitialRequestType(entry, nextRouteKey))
+    setMessage('')
+    setStatusMessage('')
+  }, [entry])
 
   useEffect(() => {
     let cancelled = false
@@ -84,7 +107,7 @@ function StoreRequestsPage({ device, t, onBack }: StoreRequestsPageProps) {
     try {
       const response = await createStoreRequest(device.deviceToken, {
         route_key: routeKey,
-        request_type: routeKey === 'accounting' ? requestType : null,
+        request_type: requestType,
         employee_id: selectedEmployeeId,
         message: message.trim(),
       })
@@ -106,8 +129,8 @@ function StoreRequestsPage({ device, t, onBack }: StoreRequestsPageProps) {
       }
 
       setStatusMessage(response.message ?? t.storeRequests.genericError)
-    } catch (error) {
-      setStatusMessage(error instanceof ApiError ? error.message : t.storeRequests.genericError)
+    } catch {
+      setStatusMessage(t.storeRequests.genericError)
     } finally {
       setIsSubmitting(false)
     }
@@ -122,29 +145,40 @@ function StoreRequestsPage({ device, t, onBack }: StoreRequestsPageProps) {
       <section className="app-header vertical">
         <p className="app-kicker">{t.storeRequests.kicker}</p>
         <h1>{t.storeRequests.title}</h1>
-        <p className="app-subtitle">{t.storeRequests.subtitle}</p>
+        <p className="app-subtitle">{isUrgentIt ? t.storeRequests.urgentSubtitle : t.storeRequests.subtitle}</p>
       </section>
 
       {statusMessage && <div className="message-box">{statusMessage}</div>}
 
       <section className="panel store-request-form">
-        <div className="request-route-grid">
-          {routeOptions.map((option) => (
-            <button
-              key={option.key}
-              className={routeKey === option.key ? 'route-button selected' : 'route-button'}
-              type="button"
-              onClick={() => setRouteKey(option.key)}
-            >
-              {String(t.storeRequests[option.label])}
-            </button>
-          ))}
-        </div>
+        {isUrgentIt ? (
+          <div className="route-summary">
+            <span>{t.storeRequests.requestType}</span>
+            <strong>{t.storeRequests.it}</strong>
+          </div>
+        ) : (
+          <div className="request-route-grid">
+            {routeOptions.map((option) => (
+              <button
+                key={option.key}
+                className={routeKey === option.key ? 'route-button selected' : 'route-button'}
+                type="button"
+                onClick={() => {
+                  setRouteKey(option.key)
+                  setRequestType(getInitialRequestType('default', option.key))
+                  setStatusMessage('')
+                }}
+              >
+                {String(t.storeRequests[option.label])}
+              </button>
+            ))}
+          </div>
+        )}
 
         {routeKey === 'accounting' && (
           <label>
             <span>{t.storeRequests.requestType}</span>
-            <select value={requestType} onChange={(event) => setRequestType(event.target.value)}>
+            <select value={requestType ?? 'receipt'} onChange={(event) => setRequestType(event.target.value)}>
               {accountingTypes.map((type) => (
                 <option key={type} value={type}>
                   {t.storeRequests.accountingTypes[type]}
@@ -180,7 +214,7 @@ function StoreRequestsPage({ device, t, onBack }: StoreRequestsPageProps) {
           <span>{t.storeRequests.messageLabel}</span>
           <textarea
             value={message}
-            placeholder={t.storeRequests.messagePlaceholder}
+            placeholder={messagePlaceholder}
             onChange={(event) => setMessage(event.target.value)}
             rows={6}
           />

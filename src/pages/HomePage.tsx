@@ -12,6 +12,7 @@ type HomePageProps = {
   onLanguageChange: (language: Language) => void
   onOpenAttendance: () => void
   onOpenStoreRequests: () => void
+  onOpenUrgentItRequest: () => void
   onOpenSettings: () => void
   onOpenDiagnostics: () => void
 }
@@ -19,7 +20,7 @@ type HomePageProps = {
 type MenuItem = {
   title: string
   subtitle: string
-  action: 'attendance' | 'storeRequests' | 'settings' | 'diagnostics' | 'disabled'
+  action: 'attendance' | 'storeRequests' | 'urgentItRequest' | 'settings' | 'diagnostics' | 'disabled'
 }
 
 function getMenuItems(t: Translation): MenuItem[] {
@@ -72,8 +73,8 @@ function getMenuItems(t: Translation): MenuItem[] {
     },
     {
       title: t.home.menu.itPanicButton,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
+      subtitle: t.storeRequests.urgentSubtitle,
+      action: 'urgentItRequest',
     },
     {
       title: t.home.menu.shiftMetrics,
@@ -90,6 +91,7 @@ function HomePage({
   onLanguageChange,
   onOpenAttendance,
   onOpenStoreRequests,
+  onOpenUrgentItRequest,
   onOpenSettings,
   onOpenDiagnostics,
 }: HomePageProps) {
@@ -144,6 +146,11 @@ function HomePage({
 
               if (item.action === 'storeRequests') {
                 onOpenStoreRequests()
+                return
+              }
+
+              if (item.action === 'urgentItRequest') {
+                onOpenUrgentItRequest()
                 return
               }
 

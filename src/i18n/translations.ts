@@ -134,12 +134,14 @@ export type Translation = {
     kicker: string
     title: string
     subtitle: string
+    urgentSubtitle: string
     purchase: string
     accounting: string
     it: string
     requestType: string
     messageLabel: string
     messagePlaceholder: string
+    itMessagePlaceholder: string
     employeeLabel: string
     employeeUnknown: string
     employeeSelect: string
@@ -304,12 +306,14 @@ export const translations: Record<Language, Translation> = {
       kicker: 'Заявки',
       title: 'Заявки',
       subtitle: 'Надішліть повідомлення відповідальній службі.',
+      urgentSubtitle: 'Термінова IT заявка',
       purchase: 'Замовлення товару',
       accounting: 'Бухгалтерія',
       it: 'IT проблема',
       requestType: 'Тип заявки',
       messageLabel: 'Повідомлення',
       messagePlaceholder: 'Опишіть проблему або заявку',
+      itMessagePlaceholder: 'Опишіть проблему',
       employeeLabel: 'Співробітник',
       employeeUnknown: 'Співробітник не вказаний',
       employeeSelect: 'Хто відправляє заявку?',
@@ -476,12 +480,14 @@ export const translations: Record<Language, Translation> = {
       kicker: 'Заявки',
       title: 'Заявки',
       subtitle: 'Надішліть повідомлення відповідальній службі.',
+      urgentSubtitle: 'Термінова IT заявка',
       purchase: 'Замовлення товару',
       accounting: 'Бухгалтерія',
       it: 'IT проблема',
       requestType: 'Тип заявки',
       messageLabel: 'Повідомлення',
       messagePlaceholder: 'Опишіть проблему або заявку',
+      itMessagePlaceholder: 'Опишіть проблему',
       employeeLabel: 'Співробітник',
       employeeUnknown: 'Співробітник не вказаний',
       employeeSelect: 'Хто відправляє заявку?',
@@ -648,12 +654,14 @@ export const translations: Record<Language, Translation> = {
       kicker: 'Заявки',
       title: 'Заявки',
       subtitle: 'Надішліть повідомлення відповідальній службі.',
+      urgentSubtitle: 'Термінова IT заявка',
       purchase: 'Замовлення товару',
       accounting: 'Бухгалтерія',
       it: 'IT проблема',
       requestType: 'Тип заявки',
       messageLabel: 'Повідомлення',
       messagePlaceholder: 'Опишіть проблему або заявку',
+      itMessagePlaceholder: 'Опишіть проблему',
       employeeLabel: 'Співробітник',
       employeeUnknown: 'Співробітник не вказаний',
       employeeSelect: 'Хто відправляє заявку?',

@@ -25,12 +25,15 @@ import type {
   OfflineAttendanceEvent,
   Screen,
   Shift,
+  StoreRequestEntry,
   SyncState,
 } from './types/attendance'
 
 function App() {
   const [initialState] = useState(loadAppPersistence)
   const [screen, setScreen] = useState<Screen>(initialState.screen)
+  const [storeRequestEntry, setStoreRequestEntry] =
+    useState<StoreRequestEntry>('default')
   const [selectedStore] = useState(initialState.selectedStore)
   const [language, setLanguage] = useState(initialState.language)
   const [shifts, setShifts] = useState<Shift[]>(initialState.shifts)
@@ -246,6 +249,7 @@ function App() {
     return (
       <StoreRequestsPage
         device={device}
+        entry={storeRequestEntry}
         t={t}
         onBack={() => setScreen('home')}
       />
@@ -275,7 +279,14 @@ function App() {
       t={t}
       onLanguageChange={setLanguage}
       onOpenAttendance={() => setScreen('attendance')}
-      onOpenStoreRequests={() => setScreen('storeRequests')}
+      onOpenStoreRequests={() => {
+        setStoreRequestEntry('default')
+        setScreen('storeRequests')
+      }}
+      onOpenUrgentItRequest={() => {
+        setStoreRequestEntry('urgentIt')
+        setScreen('storeRequests')
+      }}
       onOpenSettings={() => setScreen('settings')}
       onOpenDiagnostics={() => setScreen('diagnostics')}
     />

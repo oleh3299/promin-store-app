@@ -15,7 +15,7 @@ class StoreDepartment(TimestampMixin, Base):
     store_id: Mapped[int] = mapped_column(ForeignKey("stores.id"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    sort_order: Mapped[int] = mapped_column(Integer, default=100, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     store = relationship("Store", back_populates="departments")

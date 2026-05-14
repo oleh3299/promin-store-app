@@ -121,6 +121,22 @@ def store_ajax_ref(limit: int = 25) -> dict:
     }
 
 
+SORT_ORDER_HELP = "Меньшее число отображается выше. Рекомендуемый шаг: 10, 20, 30..."
+SORT_ORDER_FORM_ARGS = {
+    "sort_order": {
+        "label": "Порядок отображения",
+        "description": SORT_ORDER_HELP,
+        "default": 10,
+    },
+}
+SORT_ORDER_WIDGET_ARGS = {
+    "sort_order": {
+        "step": 10,
+        "min": 1,
+    },
+}
+
+
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request) -> bool:
         form = await request.form()
@@ -442,7 +458,7 @@ class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
         PhotoReportTemplate.item_key: "Ключ",
         PhotoReportTemplate.item_name: "Зона",
         PhotoReportTemplate.description: "Описание",
-        PhotoReportTemplate.sort_order: "Порядок",
+        PhotoReportTemplate.sort_order: "Порядок отображения",
         PhotoReportTemplate.is_required: "Обязательно",
         PhotoReportTemplate.is_active: "Активно",
     }
@@ -458,6 +474,8 @@ class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
     form_ajax_refs = {
         "store": store_ajax_ref(),
     }
+    form_args = SORT_ORDER_FORM_ARGS
+    form_widget_args = SORT_ORDER_WIDGET_ARGS
 
 
 class PhotoReportAdmin(ModelView, model=PhotoReport):
@@ -714,7 +732,7 @@ class StoreDepartmentAdmin(ModelView, model=StoreDepartment):
         StoreDepartment.store: "Магазин",
         StoreDepartment.name: "Отдел / зона",
         StoreDepartment.description: "Описание",
-        StoreDepartment.sort_order: "Порядок",
+        StoreDepartment.sort_order: "Порядок отображения",
         StoreDepartment.is_active: "Активен",
     }
     form_columns = [
@@ -727,6 +745,8 @@ class StoreDepartmentAdmin(ModelView, model=StoreDepartment):
     form_ajax_refs = {
         "store": store_ajax_ref(),
     }
+    form_args = SORT_ORDER_FORM_ARGS
+    form_widget_args = SORT_ORDER_WIDGET_ARGS
 
 
 class TaskTemplateAdmin(ModelView, model=TaskTemplate):
@@ -757,6 +777,17 @@ class TaskTemplateAdmin(ModelView, model=TaskTemplate):
         TaskTemplate.priority: "Приоритет",
         TaskTemplate.is_active: "Активен",
     }
+    form_columns = [
+        TaskTemplate.template_key,
+        TaskTemplate.title,
+        TaskTemplate.description,
+        TaskTemplate.task_type,
+        TaskTemplate.requires_photo,
+        TaskTemplate.requires_comment,
+        TaskTemplate.requires_verification,
+        TaskTemplate.priority,
+        TaskTemplate.is_active,
+    ]
 
 
 class StoreTaskAdmin(ModelView, model=StoreTask):

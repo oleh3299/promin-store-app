@@ -15,6 +15,7 @@ import { syncOfflineQueue } from './lib/sync'
 import AttendancePage from './pages/AttendancePage'
 import DiagnosticsPage from './pages/DiagnosticsPage'
 import HomePage from './pages/HomePage'
+import InvoicePage from './pages/InvoicePage'
 import LoginPage from './pages/LoginPage'
 import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
@@ -241,6 +242,7 @@ function App() {
         t={t}
         onNotificationStatusChange={setNotificationStatus}
         onBack={() => setScreen('home')}
+        onOpenDiagnostics={() => setScreen('diagnostics')}
       />
     )
   }
@@ -272,6 +274,10 @@ function App() {
     )
   }
 
+  if (screen === 'invoice') {
+    return <InvoicePage t={t} onBack={() => setScreen('home')} />
+  }
+
   return (
     <HomePage
       openShiftCount={openShifts.length}
@@ -283,12 +289,8 @@ function App() {
         setStoreRequestEntry('default')
         setScreen('storeRequests')
       }}
-      onOpenUrgentItRequest={() => {
-        setStoreRequestEntry('urgentIt')
-        setScreen('storeRequests')
-      }}
+      onOpenInvoice={() => setScreen('invoice')}
       onOpenSettings={() => setScreen('settings')}
-      onOpenDiagnostics={() => setScreen('diagnostics')}
     />
   )
 }

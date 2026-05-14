@@ -1,4 +1,11 @@
-export type Screen = 'home' | 'attendance' | 'settings' | 'login' | 'diagnostics' | 'storeRequests'
+export type Screen =
+  | 'home'
+  | 'attendance'
+  | 'settings'
+  | 'login'
+  | 'diagnostics'
+  | 'storeRequests'
+  | 'invoice'
 
 export type StoreRequestEntry = 'default' | 'urgentIt'
 

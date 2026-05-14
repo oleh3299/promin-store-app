@@ -12,15 +12,14 @@ type HomePageProps = {
   onLanguageChange: (language: Language) => void
   onOpenAttendance: () => void
   onOpenStoreRequests: () => void
-  onOpenUrgentItRequest: () => void
+  onOpenInvoice: () => void
   onOpenSettings: () => void
-  onOpenDiagnostics: () => void
 }
 
 type MenuItem = {
   title: string
   subtitle: string
-  action: 'attendance' | 'storeRequests' | 'urgentItRequest' | 'settings' | 'diagnostics' | 'disabled'
+  action: 'attendance' | 'storeRequests' | 'invoice' | 'settings' | 'disabled'
 }
 
 function getMenuItems(t: Translation): MenuItem[] {
@@ -36,50 +35,19 @@ function getMenuItems(t: Translation): MenuItem[] {
       action: 'storeRequests',
     },
     {
+      title: t.home.menu.invoice,
+      subtitle: t.home.menu.invoiceSubtitle,
+      action: 'invoice',
+    },
+    {
+      title: t.home.menu.planograms,
+      subtitle: t.home.inDevelopment,
+      action: 'disabled',
+    },
+    {
       title: t.home.menu.settings,
       subtitle: t.home.menu.settingsSubtitle,
       action: 'settings',
-    },
-    {
-      title: t.home.menu.diagnostics,
-      subtitle: t.home.menu.diagnosticsSubtitle,
-      action: 'diagnostics',
-    },
-    {
-      title: t.home.menu.currentShift,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
-    },
-    { title: t.home.menu.tasks, subtitle: t.home.inDevelopment, action: 'disabled' },
-    {
-      title: t.home.menu.photoReports,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
-    },
-    {
-      title: t.home.menu.productScan,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
-    },
-    {
-      title: t.home.menu.priceTags,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
-    },
-    {
-      title: t.home.menu.openingControl,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
-    },
-    {
-      title: t.home.menu.itPanicButton,
-      subtitle: t.storeRequests.urgentSubtitle,
-      action: 'urgentItRequest',
-    },
-    {
-      title: t.home.menu.shiftMetrics,
-      subtitle: t.home.inDevelopment,
-      action: 'disabled',
     },
   ]
 }
@@ -91,9 +59,8 @@ function HomePage({
   onLanguageChange,
   onOpenAttendance,
   onOpenStoreRequests,
-  onOpenUrgentItRequest,
+  onOpenInvoice,
   onOpenSettings,
-  onOpenDiagnostics,
 }: HomePageProps) {
   const menuItems = getMenuItems(t)
 
@@ -149,18 +116,13 @@ function HomePage({
                 return
               }
 
-              if (item.action === 'urgentItRequest') {
-                onOpenUrgentItRequest()
+              if (item.action === 'invoice') {
+                onOpenInvoice()
                 return
               }
 
               if (item.action === 'settings') {
                 onOpenSettings()
-                return
-              }
-
-              if (item.action === 'diagnostics') {
-                onOpenDiagnostics()
                 return
               }
 

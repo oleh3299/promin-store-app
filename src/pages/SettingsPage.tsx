@@ -10,6 +10,7 @@ type SettingsPageProps = {
   t: Translation
   onNotificationStatusChange: (status: string) => void
   onBack: () => void
+  onOpenDiagnostics: () => void
 }
 
 function SettingsPage({
@@ -17,6 +18,7 @@ function SettingsPage({
   t,
   onNotificationStatusChange,
   onBack,
+  onOpenDiagnostics,
 }: SettingsPageProps) {
   return (
     <main className="app-shell">
@@ -60,6 +62,10 @@ function SettingsPage({
           onClick={() => showTestNotification(t.pwa)}
         >
           {t.settings.testNotification}
+        </button>
+
+        <button className="wide-button secondary" onClick={onOpenDiagnostics}>
+          {t.settings.diagnostics}
         </button>
       </section>
     </main>

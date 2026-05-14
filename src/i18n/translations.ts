@@ -47,18 +47,11 @@ export type Translation = {
       attendanceSubtitle: string
       settings: string
       settingsSubtitle: string
-      diagnostics: string
-      diagnosticsSubtitle: string
       storeRequests: string
       storeRequestsSubtitle: string
-      currentShift: string
-      tasks: string
-      photoReports: string
-      productScan: string
-      priceTags: string
-      openingControl: string
-      itPanicButton: string
-      shiftMetrics: string
+      invoice: string
+      invoiceSubtitle: string
+      planograms: string
     }
   }
   settings: {
@@ -71,6 +64,15 @@ export type Translation = {
     pushLabel: string
     allowNotifications: string
     testNotification: string
+    diagnostics: string
+  }
+  invoice: {
+    back: string
+    kicker: string
+    title: string
+    subtitle: string
+    preparingTitle: string
+    preparingText: string
   }
   diagnostics: {
     back: string
@@ -219,18 +221,11 @@ export const translations: Record<Language, Translation> = {
         attendanceSubtitle: 'Прихід / вихід співробітників',
         settings: 'Налаштування',
         settingsSubtitle: 'Застосунок і сповіщення',
-        diagnostics: 'Діагностика',
-        diagnosticsSubtitle: 'API, авторизація та синхронізація',
         storeRequests: 'Заявки',
         storeRequestsSubtitle: 'Повідомлення для служб магазину',
-        currentShift: 'Хто на зміні',
-        tasks: 'Завдання',
-        photoReports: 'Фотозвіти',
-        productScan: 'Скан товару',
-        priceTags: 'Друк цінників',
-        openingControl: 'Контроль відкриття',
-        itPanicButton: 'Тривожна кнопка IT',
-        shiftMetrics: 'Показники зміни',
+        invoice: 'Відправити накладну',
+        invoiceSubtitle: 'Фото накладної для обробки',
+        planograms: 'Планограми',
       },
     },
     settings: {
@@ -243,6 +238,15 @@ export const translations: Record<Language, Translation> = {
       pushLabel: 'Push',
       allowNotifications: 'Дозволити сповіщення',
       testNotification: 'Тест сповіщення',
+      diagnostics: 'Діагностика',
+    },
+    invoice: {
+      back: 'Назад',
+      kicker: 'Накладна',
+      title: 'Відправити накладну',
+      subtitle: 'Підготуйте фото накладної для подальшої обробки.',
+      preparingTitle: 'Сценарій готується',
+      preparingText: 'Надсилання фото накладної буде додано окремим оновленням.',
     },
     diagnostics: {
       back: '← Назад',
@@ -393,18 +397,11 @@ export const translations: Record<Language, Translation> = {
         attendanceSubtitle: 'Приход / уход сотрудников',
         settings: 'Настройки',
         settingsSubtitle: 'Приложение и уведомления',
-        diagnostics: 'Диагностика',
-        diagnosticsSubtitle: 'API, авторизация и синхронизация',
         storeRequests: 'Заявки',
-        storeRequestsSubtitle: 'Повідомлення для служб магазину',
-        currentShift: 'Кто на смене',
-        tasks: 'Задания',
-        photoReports: 'Фотоотчеты',
-        productScan: 'Скан товара',
-        priceTags: 'Печать ценников',
-        openingControl: 'Контроль открытия',
-        itPanicButton: 'Тревожная кнопка IT',
-        shiftMetrics: 'Показатели смены',
+        storeRequestsSubtitle: 'Сообщения для служб магазина',
+        invoice: 'Отправить накладную',
+        invoiceSubtitle: 'Фото накладной для обработки',
+        planograms: 'Планограммы',
       },
     },
     settings: {
@@ -417,6 +414,15 @@ export const translations: Record<Language, Translation> = {
       pushLabel: 'Push',
       allowNotifications: 'Разрешить уведомления',
       testNotification: 'Тест уведомления',
+      diagnostics: 'Диагностика',
+    },
+    invoice: {
+      back: 'Назад',
+      kicker: 'Накладная',
+      title: 'Отправить накладную',
+      subtitle: 'Подготовьте фото накладной для дальнейшей обработки.',
+      preparingTitle: 'Сценарий готовится',
+      preparingText: 'Отправка фото накладной будет добавлена отдельным обновлением.',
     },
     diagnostics: {
       back: '← Назад',
@@ -567,18 +573,11 @@ export const translations: Record<Language, Translation> = {
         attendanceSubtitle: 'Employee check-in / check-out',
         settings: 'Settings',
         settingsSubtitle: 'App and notifications',
-        diagnostics: 'Diagnostics',
-        diagnosticsSubtitle: 'API, auth, and sync',
-        storeRequests: 'Заявки',
-        storeRequestsSubtitle: 'Повідомлення для служб магазину',
-        currentShift: 'Current shift',
-        tasks: 'Tasks',
-        photoReports: 'Photo reports',
-        productScan: 'Product scan',
-        priceTags: 'Print price tags',
-        openingControl: 'Opening control',
-        itPanicButton: 'IT panic button',
-        shiftMetrics: 'Shift metrics',
+        storeRequests: 'Store requests',
+        storeRequestsSubtitle: 'Messages for store services',
+        invoice: 'Send invoice',
+        invoiceSubtitle: 'Invoice photo for processing',
+        planograms: 'Planograms',
       },
     },
     settings: {
@@ -591,6 +590,15 @@ export const translations: Record<Language, Translation> = {
       pushLabel: 'Push',
       allowNotifications: 'Allow notifications',
       testNotification: 'Test notification',
+      diagnostics: 'Diagnostics',
+    },
+    invoice: {
+      back: 'Back',
+      kicker: 'Invoice',
+      title: 'Send invoice',
+      subtitle: 'Prepare an invoice photo for processing.',
+      preparingTitle: 'Workflow in preparation',
+      preparingText: 'Invoice photo sending will be added in a separate update.',
     },
     diagnostics: {
       back: '← Back',

@@ -245,6 +245,12 @@ h1 {
   margin: 0 0 10px;
 }
 
+.coming-soon-panel p {
+  margin: 0;
+  color: #5b665f;
+  line-height: 1.45;
+}
+
 .wide-button,
 .confirm-button {
   width: 100%;

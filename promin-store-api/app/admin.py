@@ -113,6 +113,14 @@ def planogram_preview(model, _attribute) -> Markup:
     )
 
 
+def store_ajax_ref(limit: int = 25) -> dict:
+    return {
+        "fields": [Store.code, Store.name],
+        "order_by": [Store.code],
+        "limit": limit,
+    }
+
+
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request) -> bool:
         form = await request.form()
@@ -189,6 +197,7 @@ class EmployeeAdmin(ModelView, model=Employee):
         Employee.store: "Магазин",
         Employee.is_active: "Активен",
     }
+    form_ajax_refs = {"store": store_ajax_ref()}
 
 
 class DeviceAdmin(ModelView, model=Device):
@@ -228,6 +237,7 @@ class DeviceAdmin(ModelView, model=Device):
         Device.created_at,
         Device.updated_at,
     ]
+    form_ajax_refs = {"store": store_ajax_ref()}
 
     async def on_model_change(self, data, model: Device, is_created: bool, request: Request) -> None:
         password_hash = data.get("password_hash")
@@ -255,6 +265,7 @@ class AttendanceShiftAdmin(ModelView, model=AttendanceShift):
         AttendanceShift.checkin_at: "Приход",
         AttendanceShift.checkout_at: "Уход",
     }
+    form_ajax_refs = {"store": store_ajax_ref()}
 
 
 class AttendanceEventAdmin(ModelView, model=AttendanceEvent):
@@ -277,6 +288,7 @@ class AttendanceEventAdmin(ModelView, model=AttendanceEvent):
         AttendanceEvent.source: "Источник",
         AttendanceEvent.event_time: "Время",
     }
+    form_ajax_refs = {"store": store_ajax_ref()}
 
 
 class PushSubscriptionAdmin(ModelView, model=PushSubscription):
@@ -317,6 +329,7 @@ class RocketRouteAdmin(ModelView, model=RocketRoute):
         RocketRoute.updated_at: "Обновлено",
     }
     form_excluded_columns = [RocketRoute.created_at, RocketRoute.updated_at]
+    form_ajax_refs = {"store": store_ajax_ref()}
 
 
 class StoreRequestLogAdmin(ModelView, model=StoreRequestLog):
@@ -443,10 +456,7 @@ class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
         PhotoReportTemplate.is_active,
     ]
     form_ajax_refs = {
-        "store": {
-            "fields": ("code", "name"),
-            "order_by": ("code",),
-        },
+        "store": store_ajax_ref(),
     }
 
 
@@ -553,10 +563,7 @@ class PlanogramAdmin(ModelView, model=Planogram):
         Planogram.is_active,
     ]
     form_ajax_refs = {
-        "store": {
-            "fields": ("code", "name"),
-            "order_by": ("code",),
-        },
+        "store": store_ajax_ref(),
     }
 
 
@@ -683,10 +690,7 @@ class PlanogramZoneAdmin(ModelView, model=PlanogramZone):
         PlanogramZone.is_active,
     ]
     form_ajax_refs = {
-        "store": {
-            "fields": ("code", "name"),
-            "order_by": ("code",),
-        },
+        "store": store_ajax_ref(),
     }
 
 
@@ -721,11 +725,7 @@ class StoreDepartmentAdmin(ModelView, model=StoreDepartment):
         StoreDepartment.is_active,
     ]
     form_ajax_refs = {
-        "store": {
-            "fields": [Store.code, Store.name],
-            "order_by": [Store.code],
-            "limit": 25,
-        },
+        "store": store_ajax_ref(),
     }
 
 
@@ -838,11 +838,7 @@ class StoreTaskAdmin(ModelView, model=StoreTask):
         StoreTask.related_entity_id,
     ]
     form_ajax_refs = {
-        "store": {
-            "fields": [Store.code, Store.name],
-            "order_by": [Store.code],
-            "limit": 25,
-        },
+        "store": store_ajax_ref(),
         "department": {
             "fields": [StoreDepartment.name],
             "order_by": [StoreDepartment.store_id, StoreDepartment.sort_order, StoreDepartment.name],

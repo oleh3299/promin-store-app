@@ -10,7 +10,7 @@ from sqladmin import Admin, BaseView, ModelView, expose
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy import select
 from starlette.requests import Request
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, RedirectResponse
 
 from app.config import get_settings
 from app.db import engine, SessionLocal
@@ -563,8 +563,16 @@ class PlanogramUploadAdmin(BaseView):
     @expose("/planograms/upload", methods=["GET", "POST"], identity="planograms-upload")
     async def upload(self, request: Request):
         message = ""
+        store_options: list[dict[str, str | int]] = []
         with SessionLocal() as db:
             stores = list(db.scalars(select(Store).where(Store.is_active.is_(True)).order_by(Store.code.asc())))
+            store_options = [
+                {
+                    "id": store.id,
+                    "label": f"{store.code} — {store.name}",
+                }
+                for store in stores
+            ]
 
             if request.method == "POST":
                 form = await request.form()
@@ -615,11 +623,11 @@ class PlanogramUploadAdmin(BaseView):
                         ),
                     )
                     db.commit()
-                    message = "Планограмма загружена."
+                    return RedirectResponse("/admin/planogram/list", status_code=303)
 
         options = "\n".join(
-            f'<option value="{store.id}">{escape(str(store))}</option>'
-            for store in stores
+            f'<option value="{store["id"]}">{escape(str(store["label"]))}</option>'
+            for store in store_options
         )
         html = f"""
         <section style="max-width: 720px; margin: 32px auto; font-family: system-ui, sans-serif;">

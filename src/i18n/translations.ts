@@ -71,8 +71,29 @@ export type Translation = {
     kicker: string
     title: string
     subtitle: string
-    preparingTitle: string
-    preparingText: string
+    operationType: string
+    employeeLabel: string
+    employeeUnknown: string
+    employeeSelect: string
+    photoLabel: string
+    takePhoto: string
+    commentLabel: string
+    commentPlaceholder: string
+    send: string
+    sending: string
+    sent: string
+    routeNotConfigured: string
+    employeeRequired: string
+    fileRequired: string
+    invalidFileType: string
+    fileTooLarge: string
+    genericError: string
+    types: {
+      incoming: string
+      return: string
+      writeoff: string
+      assembly: string
+    }
   }
   diagnostics: {
     back: string
@@ -244,9 +265,30 @@ export const translations: Record<Language, Translation> = {
       back: 'Назад',
       kicker: 'Накладна',
       title: 'Відправити накладну',
-      subtitle: 'Підготуйте фото накладної для подальшої обробки.',
-      preparingTitle: 'Сценарій готується',
-      preparingText: 'Надсилання фото накладної буде додано окремим оновленням.',
+      subtitle: 'Надішліть фото накладної в бухгалтерію магазину.',
+      operationType: 'Тип операції',
+      employeeLabel: 'Співробітник',
+      employeeUnknown: 'Співробітник не вказаний',
+      employeeSelect: 'Хто відправляє?',
+      photoLabel: 'Фото накладної',
+      takePhoto: 'Зробити фото',
+      commentLabel: 'Коментар',
+      commentPlaceholder: 'Додайте коментар за потреби',
+      send: 'Надіслати',
+      sending: 'Надсилання',
+      sent: 'Накладну надіслано',
+      routeNotConfigured: 'Маршрут для бухгалтерії не налаштований',
+      employeeRequired: 'Оберіть співробітника, який відправляє накладну',
+      fileRequired: 'Додайте фото накладної',
+      invalidFileType: 'Підтримуються лише JPEG, PNG або WEBP',
+      fileTooLarge: 'Фото завелике',
+      genericError: 'Не вдалося надіслати накладну',
+      types: {
+        incoming: 'Поступлення',
+        return: 'Повернення',
+        writeoff: 'Списання',
+        assembly: 'Комплектація',
+      },
     },
     diagnostics: {
       back: '← Назад',
@@ -420,9 +462,30 @@ export const translations: Record<Language, Translation> = {
       back: 'Назад',
       kicker: 'Накладная',
       title: 'Отправить накладную',
-      subtitle: 'Подготовьте фото накладной для дальнейшей обработки.',
-      preparingTitle: 'Сценарий готовится',
-      preparingText: 'Отправка фото накладной будет добавлена отдельным обновлением.',
+      subtitle: 'Отправьте фото накладной в бухгалтерию магазина.',
+      operationType: 'Тип операции',
+      employeeLabel: 'Сотрудник',
+      employeeUnknown: 'Сотрудник не указан',
+      employeeSelect: 'Кто отправляет?',
+      photoLabel: 'Фото накладной',
+      takePhoto: 'Сделать фото',
+      commentLabel: 'Комментарий',
+      commentPlaceholder: 'Добавьте комментарий при необходимости',
+      send: 'Отправить',
+      sending: 'Отправка',
+      sent: 'Накладная отправлена',
+      routeNotConfigured: 'Маршрут для бухгалтерии не настроен',
+      employeeRequired: 'Выберите сотрудника, который отправляет накладную',
+      fileRequired: 'Добавьте фото накладной',
+      invalidFileType: 'Поддерживаются только JPEG, PNG или WEBP',
+      fileTooLarge: 'Фото слишком большое',
+      genericError: 'Не удалось отправить накладную',
+      types: {
+        incoming: 'Поступление',
+        return: 'Возврат',
+        writeoff: 'Списание',
+        assembly: 'Комплектация',
+      },
     },
     diagnostics: {
       back: '← Назад',
@@ -596,9 +659,30 @@ export const translations: Record<Language, Translation> = {
       back: 'Back',
       kicker: 'Invoice',
       title: 'Send invoice',
-      subtitle: 'Prepare an invoice photo for processing.',
-      preparingTitle: 'Workflow in preparation',
-      preparingText: 'Invoice photo sending will be added in a separate update.',
+      subtitle: 'Send an invoice photo to store accounting.',
+      operationType: 'Operation type',
+      employeeLabel: 'Employee',
+      employeeUnknown: 'Employee not specified',
+      employeeSelect: 'Who is sending?',
+      photoLabel: 'Invoice photo',
+      takePhoto: 'Take photo',
+      commentLabel: 'Comment',
+      commentPlaceholder: 'Add a comment if needed',
+      send: 'Send',
+      sending: 'Sending',
+      sent: 'Invoice sent',
+      routeNotConfigured: 'Accounting route is not configured',
+      employeeRequired: 'Choose the employee sending the invoice',
+      fileRequired: 'Add an invoice photo',
+      invalidFileType: 'Only JPEG, PNG, or WEBP are supported',
+      fileTooLarge: 'Photo is too large',
+      genericError: 'Could not send invoice',
+      types: {
+        incoming: 'Incoming',
+        return: 'Return',
+        writeoff: 'Write-off',
+        assembly: 'Assembly',
+      },
     },
     diagnostics: {
       back: '← Back',

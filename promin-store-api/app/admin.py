@@ -14,6 +14,7 @@ from app.models import (
     AuditLog,
     Device,
     Employee,
+    InvoiceUploadLog,
     PushSubscription,
     RocketRoute,
     Store,
@@ -227,6 +228,38 @@ class StoreRequestLogAdmin(ModelView, model=StoreRequestLog):
     column_sortable_list = [StoreRequestLog.id, StoreRequestLog.created_at, StoreRequestLog.sent_at]
 
 
+class InvoiceUploadLogAdmin(ModelView, model=InvoiceUploadLog):
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        InvoiceUploadLog.id,
+        InvoiceUploadLog.store_id,
+        InvoiceUploadLog.device_id,
+        InvoiceUploadLog.employee_id,
+        InvoiceUploadLog.request_type,
+        InvoiceUploadLog.rocket_room_id,
+        InvoiceUploadLog.rocket_file_id,
+        InvoiceUploadLog.rocket_message_id,
+        InvoiceUploadLog.status,
+        InvoiceUploadLog.error_text,
+        InvoiceUploadLog.created_at,
+        InvoiceUploadLog.sent_at,
+    ]
+    column_searchable_list = [
+        InvoiceUploadLog.request_type,
+        InvoiceUploadLog.rocket_room_id,
+        InvoiceUploadLog.rocket_file_id,
+        InvoiceUploadLog.rocket_message_id,
+        InvoiceUploadLog.status,
+    ]
+    column_sortable_list = [
+        InvoiceUploadLog.id,
+        InvoiceUploadLog.created_at,
+        InvoiceUploadLog.sent_at,
+    ]
+
+
 class AuditLogAdmin(ModelView, model=AuditLog):
     column_list = [
         AuditLog.id,
@@ -397,5 +430,6 @@ def setup_admin(app) -> None:
     admin.add_view(PushSubscriptionAdmin)
     admin.add_view(RocketRouteAdmin)
     admin.add_view(StoreRequestLogAdmin)
+    admin.add_view(InvoiceUploadLogAdmin)
     admin.add_view(AuditLogAdmin)
     admin.add_view(DashboardAdmin)

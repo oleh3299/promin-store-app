@@ -19,6 +19,7 @@ ROCKET_ROUTE_KEYS = (
 )
 ROCKET_ROUTE_SCOPES = ("global", "store")
 STORE_REQUEST_STATUSES = ("sent", "failed")
+INVOICE_REQUEST_TYPES = ("incoming", "return", "writeoff", "assembly")
 
 
 class RocketRoute(TimestampMixin, Base):
@@ -73,3 +74,27 @@ class StoreRequestLog(Base):
     store = relationship("Store", back_populates="store_request_logs")
     device = relationship("Device", back_populates="store_request_logs")
     employee = relationship("Employee", back_populates="store_request_logs")
+
+
+class InvoiceUploadLog(Base):
+    __tablename__ = "invoice_upload_logs"
+    __table_args__ = (
+        CheckConstraint(
+            "request_type IN ('incoming', 'return', 'writeoff', 'assembly')",
+            name="ck_invoice_upload_logs_request_type",
+        ),
+        CheckConstraint("status IN ('sent', 'failed')", name="ck_invoice_upload_logs_status"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    store_id: Mapped[int] = mapped_column(ForeignKey("stores.id"), nullable=False)
+    device_id: Mapped[int] = mapped_column(ForeignKey("devices.id"), nullable=False)
+    employee_id: Mapped[int | None] = mapped_column(ForeignKey("employees.id"), nullable=True)
+    request_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    rocket_room_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    rocket_file_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    rocket_message_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    error_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

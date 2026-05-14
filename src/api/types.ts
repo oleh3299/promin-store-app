@@ -81,3 +81,13 @@ export type StoreRequestResponse = {
   error: string | null
   message: string | null
 }
+
+export type InvoiceRequestType = 'incoming' | 'return' | 'writeoff' | 'assembly'
+
+export type InvoiceUploadResponse = {
+  ok: boolean
+  status: string | null
+  request_type: string | null
+  error: string | null
+  message: string | null
+}

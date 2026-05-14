@@ -10,7 +10,7 @@ from app.models.enums import (
     UserRole,
 )
 from app.models.push import PushSubscription
-from app.models.rocket import RocketRoute, StoreRequestLog
+from app.models.rocket import InvoiceUploadLog, RocketRoute, StoreRequestLog
 from app.models.store import Store
 from app.models.user import User
 
@@ -23,6 +23,7 @@ __all__ = [
     "Device",
     "DeviceStatus",
     "Employee",
+    "InvoiceUploadLog",
     "PushSubscription",
     "RocketRoute",
     "ShiftStatus",

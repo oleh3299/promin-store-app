@@ -275,7 +275,7 @@ function App() {
   }
 
   if (screen === 'invoice') {
-    return <InvoicePage t={t} onBack={() => setScreen('home')} />
+    return <InvoicePage device={device} t={t} onBack={() => setScreen('home')} />
   }
 
   return (

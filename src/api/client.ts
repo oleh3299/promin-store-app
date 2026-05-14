@@ -5,6 +5,7 @@ import type {
   DeviceRead,
   DeviceLoginResponse,
   EmployeeRead,
+  InvoiceUploadResponse,
   StoreRequestResponse,
   StoreRequestRouteKey,
 } from './types'
@@ -37,7 +38,7 @@ async function apiRequest<T>(
 ): Promise<T> {
   const headers = new Headers(init.headers)
 
-  if (!headers.has('Content-Type') && init.body) {
+  if (!headers.has('Content-Type') && init.body && !(init.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json')
   }
 
@@ -178,6 +179,17 @@ export function createStoreRequest(
     {
       method: 'POST',
       body: JSON.stringify(payload),
+    },
+    { deviceToken },
+  )
+}
+
+export function uploadInvoice(deviceToken: string, formData: FormData) {
+  return apiRequest<InvoiceUploadResponse>(
+    '/api/invoices/upload',
+    {
+      method: 'POST',
+      body: formData,
     },
     { deviceToken },
   )

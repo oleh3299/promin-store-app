@@ -1,11 +1,15 @@
 import json
-import mimetypes
-import uuid
+import logging
 from dataclasses import dataclass
 from urllib.parse import urlencode
 from urllib import error, request
 
+import requests
+
 from app.config import get_settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class RocketChatError(Exception):
@@ -30,6 +34,19 @@ class RocketChatService:
         self.user_id = settings.rocket_chat_user_id
         self.auth_token = settings.rocket_chat_auth_token
         self.timeout = settings.rocket_chat_timeout_seconds
+
+    def _extract_error_message(self, response_body: str, fallback: str) -> str:
+        try:
+            data = json.loads(response_body)
+        except json.JSONDecodeError:
+            return response_body[:500] or fallback
+
+        if isinstance(data, dict):
+            error_message = data.get("error") or data.get("message") or data.get("errorType")
+            if error_message:
+                return str(error_message)
+
+        return fallback
 
     def send_message(self, room_id: str, text: str) -> RocketChatSendResult:
         if not self.user_id or not self.auth_token:
@@ -120,43 +137,46 @@ class RocketChatService:
         if not self.user_id or not self.auth_token:
             raise RocketChatError("Rocket.Chat credentials are not configured")
 
-        boundary = f"----promin-store-{uuid.uuid4().hex}"
-        body = self._build_multipart_body(
-            boundary,
-            fields={"msg": message, "description": description},
-            files={
-                "file": {
-                    "filename": filename,
-                    "content_type": content_type,
-                    "content": file_bytes,
+        endpoint = f"{self.base_url}/api/v1/rooms.upload/{room_id}"
+        try:
+            response = requests.post(
+                endpoint,
+                headers={
+                    "X-Auth-Token": self.auth_token,
+                    "X-User-Id": self.user_id,
                 },
-            },
-        )
-        upload_request = request.Request(
-            f"{self.base_url}/api/v1/rooms.upload/{room_id}",
-            data=body,
-            headers={
-                "X-Auth-Token": self.auth_token,
-                "X-User-Id": self.user_id,
-                "Content-Type": f"multipart/form-data; boundary={boundary}",
-                "Content-Length": str(len(body)),
-            },
-            method="POST",
-        )
-
-        try:
-            with request.urlopen(upload_request, timeout=self.timeout) as response:
-                response_body = response.read().decode("utf-8")
-        except error.HTTPError as exc:
-            raise RocketChatError(f"Rocket.Chat HTTP {exc.code}") from exc
-        except error.URLError as exc:
-            raise RocketChatError(f"Rocket.Chat upload failed: {exc.reason}") from exc
-        except TimeoutError as exc:
+                data={
+                    "msg": message,
+                    "description": description,
+                },
+                files={
+                    "file": (filename, file_bytes, content_type),
+                },
+                timeout=self.timeout,
+            )
+        except requests.Timeout as exc:
             raise RocketChatError("Rocket.Chat upload timed out") from exc
+        except requests.RequestException as exc:
+            raise RocketChatError(f"Rocket.Chat upload failed: {exc}") from exc
+
+        response_body = response.text
+        logger.info(
+            "rocket_chat_upload_response",
+            extra={
+                "endpoint": endpoint,
+                "room_id": room_id,
+                "status_code": response.status_code,
+                "response_body": response_body[:500],
+            },
+        )
+
+        if not response.ok:
+            error_message = self._extract_error_message(response_body, response.reason)
+            raise RocketChatError(f"Rocket.Chat HTTP {response.status_code}: {error_message}")
 
         try:
-            data = json.loads(response_body)
-        except json.JSONDecodeError as exc:
+            data = response.json()
+        except ValueError as exc:
             raise RocketChatError("Rocket.Chat returned invalid JSON") from exc
 
         if not data.get("success"):
@@ -169,42 +189,3 @@ class RocketChatService:
             file_id=file_data.get("_id") if isinstance(file_data, dict) else None,
             message_id=message_data.get("_id") if isinstance(message_data, dict) else None,
         )
-
-    def _build_multipart_body(
-        self,
-        boundary: str,
-        fields: dict[str, str],
-        files: dict[str, dict[str, bytes | str]],
-    ) -> bytes:
-        lines: list[bytes] = []
-        boundary_bytes = boundary.encode("ascii")
-
-        for name, value in fields.items():
-            lines.extend(
-                [
-                    b"--" + boundary_bytes,
-                    f'Content-Disposition: form-data; name="{name}"'.encode("utf-8"),
-                    b"",
-                    value.encode("utf-8"),
-                ],
-            )
-
-        for name, file_data in files.items():
-            filename = str(file_data["filename"])
-            content_type = str(file_data.get("content_type") or mimetypes.guess_type(filename)[0] or "application/octet-stream")
-            content = file_data["content"]
-            if not isinstance(content, bytes):
-                raise TypeError("Multipart file content must be bytes")
-
-            lines.extend(
-                [
-                    b"--" + boundary_bytes,
-                    f'Content-Disposition: form-data; name="{name}"; filename="{filename}"'.encode("utf-8"),
-                    f"Content-Type: {content_type}".encode("utf-8"),
-                    b"",
-                    content,
-                ],
-            )
-
-        lines.extend([b"--" + boundary_bytes + b"--", b""])
-        return b"\r\n".join(lines)

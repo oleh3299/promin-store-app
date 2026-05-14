@@ -20,6 +20,16 @@ class Employee(TimestampMixin, Base):
     shifts = relationship("AttendanceShift", back_populates="employee")
     events = relationship("AttendanceEvent", back_populates="employee")
     store_request_logs = relationship("StoreRequestLog", back_populates="employee")
+    assigned_store_tasks = relationship(
+        "StoreTask",
+        foreign_keys="StoreTask.assigned_employee_id",
+        back_populates="assigned_employee",
+    )
+    completed_store_tasks = relationship(
+        "StoreTask",
+        foreign_keys="StoreTask.completed_by_employee_id",
+        back_populates="completed_by_employee",
+    )
 
     def __str__(self) -> str:
         return self.full_name

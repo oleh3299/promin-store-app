@@ -21,3 +21,4 @@ class User(TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     audit_logs = relationship("AuditLog", back_populates="actor_user")
+    verified_store_tasks = relationship("StoreTask", back_populates="verifier")

@@ -15,6 +15,13 @@ from app.models.planogram import PlanogramZone
 from app.models.push import PushSubscription
 from app.models.rocket import InvoiceUploadLog, RocketRoute, StoreRequestLog
 from app.models.store import Store
+from app.models.store_task import (
+    StoreDepartment,
+    StoreTask,
+    StoreTaskAttachment,
+    StoreTaskEvent,
+    TaskTemplate,
+)
 from app.models.user import User
 
 __all__ = [
@@ -36,7 +43,12 @@ __all__ = [
     "RocketRoute",
     "ShiftStatus",
     "Store",
+    "StoreDepartment",
     "StoreRequestLog",
+    "StoreTask",
+    "StoreTaskAttachment",
+    "StoreTaskEvent",
+    "TaskTemplate",
     "User",
     "UserRole",
 ]

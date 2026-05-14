@@ -141,3 +141,61 @@ export type PlanogramItem = {
 export type PlanogramListResponse = {
   items: PlanogramItem[]
 }
+
+export type StoreTaskStatus =
+  | 'open'
+  | 'in_progress'
+  | 'submitted'
+  | 'completed'
+  | 'verified'
+  | 'rejected'
+  | 'cancelled'
+
+export type StoreTaskItem = {
+  id: number
+  title: string
+  description: string | null
+  status: StoreTaskStatus
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  due_date: string | null
+  due_time: string | null
+  department_name: string | null
+  requires_photo: boolean
+  requires_comment: boolean
+  requires_verification: boolean
+  completed_at: string | null
+  is_overdue: boolean
+  created_at: string
+}
+
+export type StoreTaskAttachment = {
+  id: number
+  attachment_type: string
+  file_url: string | null
+  created_at: string
+}
+
+export type StoreTaskEvent = {
+  id: number
+  event_type: string
+  author_type: string
+  comment: string | null
+  created_at: string
+}
+
+export type StoreTaskDetail = StoreTaskItem & {
+  attachments: StoreTaskAttachment[]
+  events: StoreTaskEvent[]
+}
+
+export type StoreTaskListResponse = {
+  items: StoreTaskItem[]
+}
+
+export type StoreTaskActionResponse = {
+  ok: boolean
+  status: string | null
+  task: StoreTaskItem | null
+  error: string | null
+  message: string | null
+}

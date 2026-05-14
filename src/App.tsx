@@ -21,6 +21,7 @@ import PhotoReportPage from './pages/PhotoReportPage'
 import PlanogramsPage from './pages/PlanogramsPage'
 import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
+import StoreTasksPage from './pages/StoreTasksPage'
 import type {
   AttendancePageState,
   AuthState,
@@ -288,6 +289,10 @@ function App() {
     return <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
   }
 
+  if (screen === 'storeTasks') {
+    return <StoreTasksPage device={device} onBack={() => setScreen('home')} />
+  }
+
   return (
     <HomePage
       openShiftCount={openShifts.length}
@@ -303,6 +308,7 @@ function App() {
       onOpenInvoice={() => setScreen('invoice')}
       onOpenPhotoReport={() => setScreen('photoReport')}
       onOpenPlanograms={() => setScreen('planograms')}
+      onOpenStoreTasks={() => setScreen('storeTasks')}
       onOpenSettings={() => setScreen('settings')}
     />
   )

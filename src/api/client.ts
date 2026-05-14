@@ -12,6 +12,9 @@ import type {
   PhotoReportUploadResponse,
   StoreRequestResponse,
   StoreRequestRouteKey,
+  StoreTaskActionResponse,
+  StoreTaskDetail,
+  StoreTaskListResponse,
 } from './types'
 
 export const API_BASE_URL =
@@ -230,6 +233,42 @@ export function getPlanograms(deviceToken: string) {
   return apiRequest<PlanogramListResponse>(
     '/api/planograms',
     {},
+    { deviceToken },
+  )
+}
+
+export function getStoreTasks(deviceToken: string, statusFilter?: string) {
+  const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : ''
+  return apiRequest<StoreTaskListResponse>(
+    `/api/store-tasks${query}`,
+    {},
+    { deviceToken },
+  )
+}
+
+export function getStoreTask(deviceToken: string, taskId: number) {
+  return apiRequest<StoreTaskDetail>(
+    `/api/store-tasks/${taskId}`,
+    {},
+    { deviceToken },
+  )
+}
+
+export function startStoreTask(deviceToken: string, taskId: number) {
+  return apiRequest<StoreTaskActionResponse>(
+    `/api/store-tasks/${taskId}/start`,
+    { method: 'POST' },
+    { deviceToken },
+  )
+}
+
+export function submitStoreTask(deviceToken: string, taskId: number, formData: FormData) {
+  return apiRequest<StoreTaskActionResponse>(
+    `/api/store-tasks/${taskId}/submit`,
+    {
+      method: 'POST',
+      body: formData,
+    },
     { deviceToken },
   )
 }

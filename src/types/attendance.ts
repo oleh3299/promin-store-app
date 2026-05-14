@@ -8,6 +8,7 @@ export type Screen =
   | 'invoice'
   | 'photoReport'
   | 'planograms'
+  | 'storeTasks'
 
 export type StoreRequestEntry = 'default' | 'urgentIt'
 

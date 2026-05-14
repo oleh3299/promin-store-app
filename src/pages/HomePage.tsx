@@ -16,13 +16,14 @@ type HomePageProps = {
   onOpenInvoice: () => void
   onOpenPhotoReport: () => void
   onOpenPlanograms: () => void
+  onOpenStoreTasks: () => void
   onOpenSettings: () => void
 }
 
 type MenuItem = {
   title: string
   subtitle: string
-  action: 'attendance' | 'storeRequests' | 'invoice' | 'photoReport' | 'planograms' | 'settings'
+  action: 'attendance' | 'storeRequests' | 'invoice' | 'photoReport' | 'planograms' | 'storeTasks' | 'settings'
 }
 
 function getMenuItems(t: Translation): MenuItem[] {
@@ -53,6 +54,11 @@ function getMenuItems(t: Translation): MenuItem[] {
       action: 'planograms',
     },
     {
+      title: 'Завдання',
+      subtitle: 'Операційні завдання магазину',
+      action: 'storeTasks',
+    },
+    {
       title: t.home.menu.settings,
       subtitle: t.home.menu.settingsSubtitle,
       action: 'settings',
@@ -71,6 +77,7 @@ function HomePage({
   onOpenInvoice,
   onOpenPhotoReport,
   onOpenPlanograms,
+  onOpenStoreTasks,
   onOpenSettings,
 }: HomePageProps) {
   const menuItems = getMenuItems(t)
@@ -140,6 +147,11 @@ function HomePage({
 
               if (item.action === 'planograms') {
                 onOpenPlanograms()
+                return
+              }
+
+              if (item.action === 'storeTasks') {
+                onOpenStoreTasks()
                 return
               }
 

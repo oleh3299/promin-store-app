@@ -29,7 +29,12 @@ from app.models import (
     PushSubscription,
     RocketRoute,
     Store,
+    StoreDepartment,
     StoreRequestLog,
+    StoreTask,
+    StoreTaskAttachment,
+    StoreTaskEvent,
+    TaskTemplate,
     User,
 )
 from app.models.enums import DeviceStatus, ShiftStatus, UserRole
@@ -685,6 +690,205 @@ class PlanogramZoneAdmin(ModelView, model=PlanogramZone):
     }
 
 
+class StoreDepartmentAdmin(ModelView, model=StoreDepartment):
+    name = "Отдел магазина"
+    name_plural = "Отделы магазина"
+    category = "Задания магазинов"
+    can_delete = False
+    column_list = [
+        StoreDepartment.store,
+        StoreDepartment.sort_order,
+        StoreDepartment.name,
+        StoreDepartment.description,
+        StoreDepartment.is_active,
+    ]
+    column_searchable_list = [StoreDepartment.name, StoreDepartment.description]
+    column_sortable_list = [StoreDepartment.store_id, StoreDepartment.sort_order, StoreDepartment.name]
+    column_default_sort = [(StoreDepartment.store_id, False), (StoreDepartment.sort_order, False)]
+    column_filters = [StoreDepartment.store, StoreDepartment.is_active]
+    column_labels = {
+        StoreDepartment.store: "Магазин",
+        StoreDepartment.name: "Отдел / зона",
+        StoreDepartment.description: "Описание",
+        StoreDepartment.sort_order: "Порядок",
+        StoreDepartment.is_active: "Активен",
+    }
+    form_ajax_refs = {
+        "store": {
+            "fields": ("code", "name"),
+            "order_by": ("code",),
+        },
+    }
+
+
+class TaskTemplateAdmin(ModelView, model=TaskTemplate):
+    name = "Шаблон задания"
+    name_plural = "Шаблоны заданий"
+    category = "Задания магазинов"
+    can_delete = False
+    column_list = [
+        TaskTemplate.title,
+        TaskTemplate.task_type,
+        TaskTemplate.requires_photo,
+        TaskTemplate.requires_comment,
+        TaskTemplate.requires_verification,
+        TaskTemplate.priority,
+        TaskTemplate.is_active,
+    ]
+    column_searchable_list = [TaskTemplate.template_key, TaskTemplate.title, TaskTemplate.description]
+    column_sortable_list = [TaskTemplate.id, TaskTemplate.title, TaskTemplate.task_type, TaskTemplate.priority]
+    column_filters = [TaskTemplate.task_type, TaskTemplate.priority, TaskTemplate.is_active]
+    column_labels = {
+        TaskTemplate.template_key: "Ключ",
+        TaskTemplate.title: "Название",
+        TaskTemplate.description: "Описание",
+        TaskTemplate.task_type: "Тип",
+        TaskTemplate.requires_photo: "Нужно фото",
+        TaskTemplate.requires_comment: "Нужен комментарий",
+        TaskTemplate.requires_verification: "Нужна проверка",
+        TaskTemplate.priority: "Приоритет",
+        TaskTemplate.is_active: "Активен",
+    }
+
+
+class StoreTaskAdmin(ModelView, model=StoreTask):
+    name = "Задание магазина"
+    name_plural = "Задания магазинов"
+    category = "Задания магазинов"
+    can_delete = False
+    page_size = 50
+    column_list = [
+        StoreTask.store,
+        StoreTask.department,
+        StoreTask.title,
+        StoreTask.source,
+        StoreTask.status,
+        StoreTask.priority,
+        StoreTask.due_date,
+        StoreTask.due_time,
+        StoreTask.completed_by_employee,
+        StoreTask.completed_at,
+        StoreTask.verified_at,
+    ]
+    column_searchable_list = [StoreTask.title, StoreTask.description, StoreTask.related_entity_type]
+    column_sortable_list = [
+        StoreTask.id,
+        StoreTask.store_id,
+        StoreTask.status,
+        StoreTask.priority,
+        StoreTask.due_date,
+        StoreTask.completed_at,
+        StoreTask.verified_at,
+    ]
+    column_default_sort = [(StoreTask.due_date, False), (StoreTask.id, True)]
+    column_filters = [
+        StoreTask.store,
+        StoreTask.department,
+        StoreTask.status,
+        StoreTask.priority,
+        StoreTask.source,
+        StoreTask.due_date,
+    ]
+    column_labels = {
+        StoreTask.store: "Магазин",
+        StoreTask.department: "Отдел",
+        StoreTask.template: "Шаблон",
+        StoreTask.source: "Источник",
+        StoreTask.title: "Задание",
+        StoreTask.description: "Описание",
+        StoreTask.status: "Статус",
+        StoreTask.priority: "Приоритет",
+        StoreTask.due_date: "Срок",
+        StoreTask.due_time: "Время",
+        StoreTask.requires_photo: "Нужно фото",
+        StoreTask.requires_comment: "Нужен комментарий",
+        StoreTask.requires_verification: "Нужна проверка",
+        StoreTask.assigned_employee: "Назначено",
+        StoreTask.completed_by_employee: "Выполнил",
+        StoreTask.completed_at: "Выполнено",
+        StoreTask.verifier: "Проверил",
+        StoreTask.verified_at: "Проверено",
+        StoreTask.related_entity_type: "Связанная сущность",
+        StoreTask.related_entity_id: "ID сущности",
+    }
+    form_ajax_refs = {
+        "store": {
+            "fields": ("code", "name"),
+            "order_by": ("code",),
+        },
+        "department": {
+            "fields": ("name",),
+            "order_by": ("sort_order",),
+        },
+        "template": {
+            "fields": ("title", "template_key"),
+            "order_by": ("title",),
+        },
+        "assigned_employee": {
+            "fields": ("full_name", "barcode"),
+            "order_by": ("full_name",),
+        },
+        "completed_by_employee": {
+            "fields": ("full_name", "barcode"),
+            "order_by": ("full_name",),
+        },
+    }
+
+
+class StoreTaskAttachmentAdmin(ModelView, model=StoreTaskAttachment):
+    name = "Фото задания"
+    name_plural = "Фото заданий"
+    category = "Технические логи"
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        StoreTaskAttachment.id,
+        StoreTaskAttachment.task_id,
+        StoreTaskAttachment.attachment_type,
+        StoreTaskAttachment.file_path,
+        StoreTaskAttachment.rocket_file_id,
+        StoreTaskAttachment.created_at,
+    ]
+    column_searchable_list = [StoreTaskAttachment.file_path, StoreTaskAttachment.rocket_file_id]
+    column_sortable_list = [StoreTaskAttachment.id, StoreTaskAttachment.task_id, StoreTaskAttachment.created_at]
+    column_labels = {
+        StoreTaskAttachment.task_id: "Задание",
+        StoreTaskAttachment.attachment_type: "Тип",
+        StoreTaskAttachment.file_path: "Файл",
+        StoreTaskAttachment.rocket_file_id: "Rocket file",
+        StoreTaskAttachment.created_at: "Создано",
+    }
+
+
+class StoreTaskEventAdmin(ModelView, model=StoreTaskEvent):
+    name = "История задания"
+    name_plural = "История заданий"
+    category = "Технические логи"
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        StoreTaskEvent.id,
+        StoreTaskEvent.task_id,
+        StoreTaskEvent.event_type,
+        StoreTaskEvent.author_type,
+        StoreTaskEvent.author_id,
+        StoreTaskEvent.comment,
+        StoreTaskEvent.created_at,
+    ]
+    column_searchable_list = [StoreTaskEvent.event_type, StoreTaskEvent.author_type, StoreTaskEvent.comment]
+    column_sortable_list = [StoreTaskEvent.id, StoreTaskEvent.task_id, StoreTaskEvent.created_at]
+    column_labels = {
+        StoreTaskEvent.task_id: "Задание",
+        StoreTaskEvent.event_type: "Событие",
+        StoreTaskEvent.author_type: "Автор",
+        StoreTaskEvent.author_id: "ID автора",
+        StoreTaskEvent.comment: "Комментарий",
+        StoreTaskEvent.created_at: "Создано",
+    }
+
+
 class AuditLogAdmin(ModelView, model=AuditLog):
     name = "Лог аудита"
     name_plural = "Логи аудита"
@@ -864,7 +1068,12 @@ def setup_admin(app) -> None:
     admin.add_view(PhotoReportTemplateAdmin)
     admin.add_view(PhotoReportItemAdmin)
     admin.add_view(PlanogramZoneAdmin)
+    admin.add_view(StoreDepartmentAdmin)
+    admin.add_view(TaskTemplateAdmin)
+    admin.add_view(StoreTaskAdmin)
     admin.add_view(UserAdmin)
     admin.add_view(PushSubscriptionAdmin)
+    admin.add_view(StoreTaskAttachmentAdmin)
+    admin.add_view(StoreTaskEventAdmin)
     admin.add_view(StoreRequestLogAdmin)
     admin.add_view(AuditLogAdmin)

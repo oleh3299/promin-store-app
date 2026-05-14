@@ -21,6 +21,7 @@ class Store(TimestampMixin, Base):
     rocket_routes = relationship("RocketRoute", back_populates="store")
     store_request_logs = relationship("StoreRequestLog", back_populates="store")
     photo_report_templates = relationship("PhotoReportTemplate", back_populates="store")
+    planogram_zones = relationship("PlanogramZone", back_populates="store")
 
     def __str__(self) -> str:
         return f"{self.code} — {self.name}"

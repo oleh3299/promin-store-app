@@ -18,6 +18,7 @@ from app.models import (
     PhotoReport,
     PhotoReportItem,
     PhotoReportTemplate,
+    PlanogramZone,
     PushSubscription,
     RocketRoute,
     Store,
@@ -98,33 +99,64 @@ class AdminAuth(AuthenticationBackend):
 
 
 class UserAdmin(ModelView, model=User):
+    name = "Пользователь"
+    name_plural = "Пользователи"
+    category = "Система"
     column_list = [User.id, User.email, User.full_name, User.role, User.is_active, User.created_at]
     column_searchable_list = [User.email, User.full_name]
     column_sortable_list = [User.id, User.email, User.created_at]
+    column_labels = {
+        User.email: "Email",
+        User.full_name: "ФИО",
+        User.role: "Роль",
+        User.is_active: "Активен",
+        User.created_at: "Создано",
+    }
     form_excluded_columns = [User.audit_logs, User.created_at, User.updated_at]
 
 
 class StoreAdmin(ModelView, model=Store):
-    column_list = [Store.id, Store.code, Store.name, Store.is_active, Store.created_at]
+    name = "Магазин"
+    name_plural = "Магазины"
+    category = "Основное"
+    column_list = [Store.code, Store.name, Store.address, Store.is_active]
     column_searchable_list = [Store.code, Store.name]
     column_sortable_list = [Store.id, Store.code, Store.created_at]
+    column_labels = {
+        Store.code: "Код",
+        Store.name: "Магазин",
+        Store.address: "Адрес",
+        Store.is_active: "Активен",
+        Store.created_at: "Создано",
+    }
 
 
 class EmployeeAdmin(ModelView, model=Employee):
+    name = "Сотрудник"
+    name_plural = "Сотрудники"
+    category = "Основное"
     column_list = [
-        Employee.id,
         Employee.full_name,
         Employee.barcode,
         Employee.position,
-        Employee.store_id,
+        Employee.store,
         Employee.is_active,
     ]
     column_searchable_list = [Employee.full_name, Employee.barcode, Employee.external_1c_id]
+    column_labels = {
+        Employee.full_name: "ФИО",
+        Employee.barcode: "Штрихкод",
+        Employee.position: "Должность",
+        Employee.store: "Магазин",
+        Employee.is_active: "Активен",
+    }
 
 
 class DeviceAdmin(ModelView, model=Device):
+    name = "Устройство"
+    name_plural = "Устройства"
+    category = "Основное"
     column_list = [
-        Device.id,
         Device.store,
         Device.device_name,
         Device.login,
@@ -137,6 +169,17 @@ class DeviceAdmin(ModelView, model=Device):
     ]
     column_searchable_list = [Device.device_uuid, Device.device_name, Device.login]
     column_sortable_list = [Device.id, Device.login, Device.last_seen_at, Device.created_at]
+    column_labels = {
+        Device.store: "Магазин",
+        Device.device_name: "Название",
+        Device.login: "Логин устройства",
+        Device.is_active: "Активно",
+        Device.last_seen_at: "Последняя активность",
+        Device.disabled_at: "Отключено",
+        Device.disabled_reason: "Причина отключения",
+        Device.created_at: "Создано",
+        Device.updated_at: "Обновлено",
+    }
     form_excluded_columns = [
         Device.token_hash,
         Device.shifts,
@@ -154,6 +197,9 @@ class DeviceAdmin(ModelView, model=Device):
 
 
 class AttendanceShiftAdmin(ModelView, model=AttendanceShift):
+    name = "Смена"
+    name_plural = "Смены"
+    category = "Табель"
     column_list = [
         AttendanceShift.id,
         AttendanceShift.employee_id,
@@ -163,9 +209,19 @@ class AttendanceShiftAdmin(ModelView, model=AttendanceShift):
         AttendanceShift.checkout_at,
     ]
     column_sortable_list = [AttendanceShift.id, AttendanceShift.checkin_at]
+    column_labels = {
+        AttendanceShift.employee_id: "Сотрудник",
+        AttendanceShift.store_id: "Магазин",
+        AttendanceShift.status: "Статус",
+        AttendanceShift.checkin_at: "Приход",
+        AttendanceShift.checkout_at: "Уход",
+    }
 
 
 class AttendanceEventAdmin(ModelView, model=AttendanceEvent):
+    name = "Событие табеля"
+    name_plural = "События табеля"
+    category = "Табель"
     column_list = [
         AttendanceEvent.id,
         AttendanceEvent.employee_id,
@@ -175,9 +231,19 @@ class AttendanceEventAdmin(ModelView, model=AttendanceEvent):
         AttendanceEvent.event_time,
     ]
     column_sortable_list = [AttendanceEvent.id, AttendanceEvent.event_time]
+    column_labels = {
+        AttendanceEvent.employee_id: "Сотрудник",
+        AttendanceEvent.store_id: "Магазин",
+        AttendanceEvent.event_type: "Тип события",
+        AttendanceEvent.source: "Источник",
+        AttendanceEvent.event_time: "Время",
+    }
 
 
 class PushSubscriptionAdmin(ModelView, model=PushSubscription):
+    name = "Push-подписка"
+    name_plural = "Push-подписки"
+    category = "Система"
     column_list = [
         PushSubscription.id,
         PushSubscription.device_id,
@@ -188,11 +254,13 @@ class PushSubscriptionAdmin(ModelView, model=PushSubscription):
 
 
 class RocketRouteAdmin(ModelView, model=RocketRoute):
+    name = "Маршрут Rocket.Chat"
+    name_plural = "Маршруты Rocket.Chat"
+    category = "Заявки и документы"
     column_list = [
-        RocketRoute.id,
         RocketRoute.route_key,
         RocketRoute.scope,
-        RocketRoute.store_id,
+        RocketRoute.store,
         RocketRoute.room_name,
         RocketRoute.is_active,
         RocketRoute.created_at,
@@ -200,10 +268,22 @@ class RocketRouteAdmin(ModelView, model=RocketRoute):
     ]
     column_searchable_list = [RocketRoute.route_key, RocketRoute.room_id, RocketRoute.room_name]
     column_sortable_list = [RocketRoute.id, RocketRoute.route_key, RocketRoute.created_at]
+    column_labels = {
+        RocketRoute.route_key: "Ключ маршрута",
+        RocketRoute.scope: "Область",
+        RocketRoute.store: "Магазин",
+        RocketRoute.room_name: "Канал",
+        RocketRoute.is_active: "Активен",
+        RocketRoute.created_at: "Создано",
+        RocketRoute.updated_at: "Обновлено",
+    }
     form_excluded_columns = [RocketRoute.created_at, RocketRoute.updated_at]
 
 
 class StoreRequestLogAdmin(ModelView, model=StoreRequestLog):
+    name = "Лог заявки"
+    name_plural = "Логи заявок"
+    category = "Система"
     can_create = False
     can_edit = False
     can_delete = False
@@ -232,14 +312,17 @@ class StoreRequestLogAdmin(ModelView, model=StoreRequestLog):
 
 
 class InvoiceUploadLogAdmin(ModelView, model=InvoiceUploadLog):
+    name = "Накладная"
+    name_plural = "Накладные"
+    category = "Заявки и документы"
     can_create = False
     can_edit = False
     can_delete = False
     column_list = [
         InvoiceUploadLog.id,
-        InvoiceUploadLog.store_id,
+        InvoiceUploadLog.store,
         InvoiceUploadLog.device_id,
-        InvoiceUploadLog.employee_id,
+        InvoiceUploadLog.employee,
         InvoiceUploadLog.request_type,
         InvoiceUploadLog.rocket_room_id,
         InvoiceUploadLog.rocket_file_id,
@@ -261,9 +344,20 @@ class InvoiceUploadLogAdmin(ModelView, model=InvoiceUploadLog):
         InvoiceUploadLog.created_at,
         InvoiceUploadLog.sent_at,
     ]
+    column_labels = {
+        InvoiceUploadLog.store: "Магазин",
+        InvoiceUploadLog.employee: "Сотрудник",
+        InvoiceUploadLog.request_type: "Тип документа",
+        InvoiceUploadLog.status: "Статус",
+        InvoiceUploadLog.created_at: "Создано",
+        InvoiceUploadLog.sent_at: "Отправлено",
+    }
 
 
 class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
+    name = "Шаблон фотоотчета"
+    name_plural = "Шаблоны фотоотчетов"
+    category = "Фотоотчеты"
     can_delete = False
     page_size = 50
     column_list = [
@@ -295,9 +389,9 @@ class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
         PhotoReportTemplate.store: "Магазин",
         PhotoReportTemplate.item_key: "Ключ",
         PhotoReportTemplate.item_name: "Зона",
-        PhotoReportTemplate.description: "Опис",
+        PhotoReportTemplate.description: "Описание",
         PhotoReportTemplate.sort_order: "Порядок",
-        PhotoReportTemplate.is_required: "Обов'язково",
+        PhotoReportTemplate.is_required: "Обязательно",
         PhotoReportTemplate.is_active: "Активно",
     }
     form_columns = [
@@ -318,6 +412,9 @@ class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
 
 
 class PhotoReportAdmin(ModelView, model=PhotoReport):
+    name = "Фотоотчет"
+    name_plural = "Фотоотчеты"
+    category = "Фотоотчеты"
     can_create = False
     can_edit = False
     can_delete = False
@@ -333,9 +430,22 @@ class PhotoReportAdmin(ModelView, model=PhotoReport):
         PhotoReport.sent_at,
     ]
     column_sortable_list = [PhotoReport.id, PhotoReport.created_at, PhotoReport.sent_at]
+    column_labels = {
+        PhotoReport.store_id: "Магазин",
+        PhotoReport.device_id: "Устройство",
+        PhotoReport.employee_id: "Сотрудник",
+        PhotoReport.items_done: "Выполнено",
+        PhotoReport.items_total: "Всего",
+        PhotoReport.status: "Статус",
+        PhotoReport.created_at: "Создано",
+        PhotoReport.sent_at: "Отправлено",
+    }
 
 
 class PhotoReportItemAdmin(ModelView, model=PhotoReportItem):
+    name = "Фото фотоотчета"
+    name_plural = "Фото фотоотчетов"
+    category = "Фотоотчеты"
     can_create = False
     can_edit = False
     can_delete = False
@@ -354,9 +464,59 @@ class PhotoReportItemAdmin(ModelView, model=PhotoReportItem):
     ]
     column_searchable_list = [PhotoReportItem.title, PhotoReportItem.status]
     column_sortable_list = [PhotoReportItem.id, PhotoReportItem.created_at, PhotoReportItem.sent_at]
+    column_labels = {
+        PhotoReportItem.report_id: "Фотоотчет",
+        PhotoReportItem.template_id: "Пункт",
+        PhotoReportItem.title: "Зона",
+        PhotoReportItem.status: "Статус",
+        PhotoReportItem.error_text: "Ошибка",
+        PhotoReportItem.created_at: "Создано",
+        PhotoReportItem.sent_at: "Отправлено",
+    }
+
+
+class PlanogramZoneAdmin(ModelView, model=PlanogramZone):
+    name = "Зона планограммы"
+    name_plural = "Зоны / оборудование"
+    category = "Планограммы"
+    can_delete = False
+    column_list = [
+        PlanogramZone.store,
+        PlanogramZone.zone_key,
+        PlanogramZone.zone_name,
+        PlanogramZone.description,
+        PlanogramZone.is_active,
+    ]
+    column_searchable_list = [PlanogramZone.zone_key, PlanogramZone.zone_name]
+    column_sortable_list = [PlanogramZone.id, PlanogramZone.store_id, PlanogramZone.zone_key, PlanogramZone.zone_name]
+    column_default_sort = [(PlanogramZone.store_id, False), (PlanogramZone.zone_key, False)]
+    column_filters = [PlanogramZone.store, PlanogramZone.is_active]
+    column_labels = {
+        PlanogramZone.store: "Магазин",
+        PlanogramZone.zone_key: "Ключ зоны",
+        PlanogramZone.zone_name: "Зона / оборудование",
+        PlanogramZone.description: "Описание",
+        PlanogramZone.is_active: "Активно",
+    }
+    form_columns = [
+        PlanogramZone.store,
+        PlanogramZone.zone_key,
+        PlanogramZone.zone_name,
+        PlanogramZone.description,
+        PlanogramZone.is_active,
+    ]
+    form_ajax_refs = {
+        "store": {
+            "fields": ("code", "name"),
+            "order_by": ("code",),
+        },
+    }
 
 
 class AuditLogAdmin(ModelView, model=AuditLog):
+    name = "Лог аудита"
+    name_plural = "Логи аудита"
+    category = "Система"
     column_list = [
         AuditLog.id,
         AuditLog.actor_user_id,
@@ -370,7 +530,8 @@ class AuditLogAdmin(ModelView, model=AuditLog):
 
 
 class DashboardAdmin(BaseView):
-    name = "Операційний дашборд"
+    name = "Операционный дашборд"
+    category = "Основное"
     icon = "fa-solid fa-chart-line"
 
     @expose("/dashboard", methods=["GET"], identity="dashboard")
@@ -486,8 +647,8 @@ class DashboardAdmin(BaseView):
             )
 
         context = {
-            "title": "Операційний дашборд",
-            "subtitle": "Поточна робота магазинів",
+            "title": "Операционный дашборд",
+            "subtitle": "Текущая работа магазинов",
             "now_label": now_local.strftime("%d.%m.%Y %H:%M"),
             "timezone": str(LOCAL_TZ),
             "summary": {
@@ -517,18 +678,19 @@ def setup_admin(app) -> None:
         title="Promin Store Admin",
         authentication_backend=AdminAuth(secret_key=settings.secret_key),
     )
-    admin.add_view(UserAdmin)
+    admin.add_view(DashboardAdmin)
     admin.add_view(StoreAdmin)
     admin.add_view(EmployeeAdmin)
     admin.add_view(DeviceAdmin)
     admin.add_view(AttendanceShiftAdmin)
     admin.add_view(AttendanceEventAdmin)
-    admin.add_view(PushSubscriptionAdmin)
-    admin.add_view(RocketRouteAdmin)
-    admin.add_view(StoreRequestLogAdmin)
     admin.add_view(InvoiceUploadLogAdmin)
-    admin.add_view(PhotoReportTemplateAdmin)
+    admin.add_view(RocketRouteAdmin)
     admin.add_view(PhotoReportAdmin)
+    admin.add_view(PhotoReportTemplateAdmin)
     admin.add_view(PhotoReportItemAdmin)
+    admin.add_view(PlanogramZoneAdmin)
+    admin.add_view(UserAdmin)
+    admin.add_view(PushSubscriptionAdmin)
+    admin.add_view(StoreRequestLogAdmin)
     admin.add_view(AuditLogAdmin)
-    admin.add_view(DashboardAdmin)

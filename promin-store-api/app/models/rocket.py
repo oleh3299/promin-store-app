@@ -99,3 +99,7 @@ class InvoiceUploadLog(Base):
     error_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    store = relationship("Store")
+    device = relationship("Device")
+    employee = relationship("Employee")

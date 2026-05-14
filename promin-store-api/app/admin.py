@@ -265,13 +265,13 @@ class InvoiceUploadLogAdmin(ModelView, model=InvoiceUploadLog):
 
 class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
     can_delete = False
+    page_size = 50
     column_list = [
-        PhotoReportTemplate.id,
-        PhotoReportTemplate.store_id,
+        PhotoReportTemplate.store,
+        PhotoReportTemplate.sort_order,
         PhotoReportTemplate.item_key,
         PhotoReportTemplate.item_name,
         PhotoReportTemplate.description,
-        PhotoReportTemplate.sort_order,
         PhotoReportTemplate.is_required,
         PhotoReportTemplate.is_active,
     ]
@@ -279,14 +279,29 @@ class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
     column_sortable_list = [
         PhotoReportTemplate.id,
         PhotoReportTemplate.store_id,
-        PhotoReportTemplate.item_key,
-        PhotoReportTemplate.item_name,
         PhotoReportTemplate.sort_order,
         PhotoReportTemplate.is_active,
+        PhotoReportTemplate.item_key,
+        PhotoReportTemplate.item_name,
     ]
-    column_filters = [PhotoReportTemplate.store_id, PhotoReportTemplate.is_active, PhotoReportTemplate.is_required]
+    column_default_sort = [
+        (PhotoReportTemplate.store_id, False),
+        (PhotoReportTemplate.is_active, True),
+        (PhotoReportTemplate.sort_order, False),
+        (PhotoReportTemplate.id, False),
+    ]
+    column_filters = [PhotoReportTemplate.store, PhotoReportTemplate.is_active, PhotoReportTemplate.is_required]
+    column_labels = {
+        PhotoReportTemplate.store: "Магазин",
+        PhotoReportTemplate.item_key: "Ключ",
+        PhotoReportTemplate.item_name: "Зона",
+        PhotoReportTemplate.description: "Опис",
+        PhotoReportTemplate.sort_order: "Порядок",
+        PhotoReportTemplate.is_required: "Обов'язково",
+        PhotoReportTemplate.is_active: "Активно",
+    }
     form_columns = [
-        PhotoReportTemplate.store_id,
+        PhotoReportTemplate.store,
         PhotoReportTemplate.item_key,
         PhotoReportTemplate.item_name,
         PhotoReportTemplate.description,
@@ -294,6 +309,12 @@ class PhotoReportTemplateAdmin(ModelView, model=PhotoReportTemplate):
         PhotoReportTemplate.is_required,
         PhotoReportTemplate.is_active,
     ]
+    form_ajax_refs = {
+        "store": {
+            "fields": ("code", "name"),
+            "order_by": ("code",),
+        },
+    }
 
 
 class PhotoReportAdmin(ModelView, model=PhotoReport):

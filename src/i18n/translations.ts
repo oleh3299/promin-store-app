@@ -275,7 +275,7 @@ export const translations: Record<Language, Translation> = {
         storeRequestsSubtitle: 'Повідомлення для служб магазину',
         invoice: 'Відправити накладну',
         invoiceSubtitle: 'Фото накладної для обробки',
-        photoReport: 'Фотозвіт',
+        photoReport: 'Фотозвіти',
         photoReportSubtitle: 'Обовʼязкові фото зон магазину',
         planograms: 'Планограми',
       },
@@ -327,7 +327,7 @@ export const translations: Record<Language, Translation> = {
     photoReport: {
       back: 'Назад',
       kicker: 'Фотозвіт',
-      title: 'Вечірній фотозвіти',
+      title: 'Вечірній фотозвіт',
       subtitle: 'Зробіть фото по кожному обовʼязковому пункту.',
       employeeLabel: 'Співробітник',
       employeeUnknown: 'Співробітник не вказаний',

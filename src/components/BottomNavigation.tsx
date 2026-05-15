@@ -3,7 +3,7 @@ import type { Screen } from '../types/attendance'
 type BottomNavItem = {
   label: string
   screen: Screen
-  icon: 'home' | 'attendance' | 'scanner' | 'photo' | 'profile'
+  icon: 'home' | 'attendance' | 'scanner' | 'tasks' | 'profile'
 }
 
 type BottomNavigationProps = {
@@ -15,7 +15,7 @@ const items: BottomNavItem[] = [
   { label: 'Головна', screen: 'home', icon: 'home' },
   { label: 'Табель', screen: 'attendance', icon: 'attendance' },
   { label: 'Сканер', screen: 'scanner', icon: 'scanner' },
-  { label: 'Фото', screen: 'photoReport', icon: 'photo' },
+  { label: 'Завдання', screen: 'storeTasks', icon: 'tasks' },
   { label: 'Профіль', screen: 'profile', icon: 'profile' },
 ]
 
@@ -55,11 +55,15 @@ function NavIcon({ icon }: { icon: BottomNavItem['icon'] }) {
     )
   }
 
-  if (icon === 'photo') {
+  if (icon === 'tasks') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4.5 8.5a2 2 0 0 1 2-2h2l1.5-2h4l1.5 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2Z" />
-        <path d="M12 10a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z" />
+        <path d="M8 5h10" />
+        <path d="M8 12h10" />
+        <path d="M8 19h10" />
+        <path d="m4 5 1 1 1.7-2" />
+        <path d="m4 12 1 1 1.7-2" />
+        <path d="m4 19 1 1 1.7-2" />
       </svg>
     )
   }

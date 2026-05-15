@@ -1221,6 +1221,161 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.daily-tasks-page {
+  display: grid;
+  gap: 14px;
+}
+
+.daily-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.daily-summary div {
+  display: grid;
+  gap: 3px;
+  min-height: 76px;
+  align-content: center;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(16, 32, 24, 0.06);
+}
+
+.daily-summary div.attention {
+  background: #fff0e8;
+}
+
+.daily-summary strong {
+  color: #183c27;
+  font-size: 24px;
+}
+
+.daily-summary .attention strong {
+  color: #9b2c2c;
+}
+
+.daily-summary span {
+  color: #66736b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.feed-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+  scrollbar-width: none;
+}
+
+.feed-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.feed-tabs button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  border: 1px solid rgba(16, 32, 24, 0.08);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #405148;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.feed-tabs button.active {
+  border-color: rgba(24, 60, 39, 0.2);
+  background: #183c27;
+  color: #fff;
+}
+
+.daily-feed {
+  display: grid;
+  gap: 12px;
+}
+
+.feed-card {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.feed-card-top,
+.feed-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.feed-type,
+.feed-status,
+.feed-meta span {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.feed-type {
+  background: #eef8f0;
+  color: #183c27;
+}
+
+.feed-status {
+  background: #e8eee8;
+  color: #183c27;
+}
+
+.feed-status.status-overdue {
+  background: #fff0e8;
+  color: #9b2c2c;
+}
+
+.feed-status.status-done {
+  background: #e4f4e8;
+  color: #1f7a42;
+}
+
+.feed-status.status-review,
+.feed-status.status-info {
+  background: #fff7dc;
+  color: #6b4b12;
+}
+
+.feed-card strong {
+  color: #102018;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.feed-card p {
+  margin: 0;
+  color: #66736b;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.feed-meta span {
+  background: #f4f7f3;
+  color: #66736b;
+}
+
+.feed-card button {
+  justify-self: start;
+  min-height: 42px;
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: #183c27;
+  color: #fff;
+  font-weight: 900;
+}
+
 .task-card small,
 .task-detail p {
   color: #66736b;

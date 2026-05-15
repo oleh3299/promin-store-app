@@ -11,7 +11,22 @@ import type { DeviceState } from '../types/attendance'
 
 type StoreTasksPageProps = {
   device: DeviceState
-  onBack: () => void
+}
+
+type FeedTab = 'all' | 'tasks' | 'messages' | 'urgent' | 'done'
+type FeedType = 'Завдання' | 'Повідомлення' | 'Пуш' | 'Контроль'
+type FeedStatus = 'active' | 'overdue' | 'done' | 'review' | 'info'
+
+type FeedItem = {
+  id: string
+  type: FeedType
+  title: string
+  description: string
+  time: string
+  status: FeedStatus
+  priority: StoreTaskItem['priority']
+  actionLabel: 'Виконати' | 'Переглянути' | 'Підтвердити'
+  taskId?: number
 }
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
@@ -21,14 +36,12 @@ const taskDateFormatter = new Intl.DateTimeFormat('uk-UA', {
   month: '2-digit',
   timeZone: 'Europe/Uzhgorod',
 })
-
-const groups: { title: string; statuses: StoreTaskStatus[] }[] = [
-  { title: 'Нові', statuses: ['open'] },
-  { title: 'В роботі', statuses: ['in_progress'] },
-  { title: 'На перевірці', statuses: ['submitted'] },
-  { title: 'Відхилені', statuses: ['rejected'] },
-  { title: 'Виконані', statuses: ['completed', 'verified'] },
-]
+const fullDateFormatter = new Intl.DateTimeFormat('uk-UA', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'Europe/Uzhgorod',
+})
 
 const statusLabels: Record<StoreTaskStatus, string> = {
   open: 'Нове',
@@ -47,6 +60,37 @@ const priorityLabels: Record<StoreTaskItem['priority'], string> = {
   urgent: 'Терміново',
 }
 
+const tabs: { key: FeedTab; label: string }[] = [
+  { key: 'all', label: 'Усі' },
+  { key: 'tasks', label: 'Завдання' },
+  { key: 'messages', label: 'Повідомлення' },
+  { key: 'urgent', label: 'Термінові' },
+  { key: 'done', label: 'Виконані' },
+]
+
+const mockFeedItems: FeedItem[] = [
+  {
+    id: 'message-opening',
+    type: 'Контроль',
+    title: 'Перевірити готовність магазину',
+    description: 'Вітрини, касова зона, фасад і цінники перед активним трафіком.',
+    time: '09:00',
+    status: 'active',
+    priority: 'normal',
+    actionLabel: 'Переглянути',
+  },
+  {
+    id: 'push-prices',
+    type: 'Пуш',
+    title: 'Оновлення акційних цінників',
+    description: 'Після переоцінки перевірте відповідність цінників у торговому залі.',
+    time: '12:30',
+    status: 'info',
+    priority: 'high',
+    actionLabel: 'Підтвердити',
+  },
+]
+
 function formatDeadline(task: StoreTaskItem) {
   if (!task.due_date) {
     return 'Без дедлайну'
@@ -56,11 +100,40 @@ function formatDeadline(task: StoreTaskItem) {
   return task.due_time ? `${dateLabel} ${task.due_time}` : dateLabel
 }
 
-function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
+function taskActionLabel(task: StoreTaskItem): FeedItem['actionLabel'] {
+  if (task.status === 'submitted') {
+    return 'Переглянути'
+  }
+
+  if (task.status === 'completed' || task.status === 'verified') {
+    return 'Переглянути'
+  }
+
+  return 'Виконати'
+}
+
+function taskFeedStatus(task: StoreTaskItem): FeedStatus {
+  if (task.status === 'completed' || task.status === 'verified') {
+    return 'done'
+  }
+
+  if (task.is_overdue) {
+    return 'overdue'
+  }
+
+  if (task.status === 'submitted') {
+    return 'review'
+  }
+
+  return 'active'
+}
+
+function StoreTasksPage({ device }: StoreTasksPageProps) {
   const [tasks, setTasks] = useState<StoreTaskItem[]>([])
   const [selectedTask, setSelectedTask] = useState<StoreTaskDetail | null>(null)
   const [employees, setEmployees] = useState<ActiveStoreEmployee[]>([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState<FeedTab>('all')
   const [file, setFile] = useState<File | null>(null)
   const [comment, setComment] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
@@ -109,14 +182,47 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
     void loadEmployees()
   }, [loadEmployees, loadTasks])
 
-  const groupedTasks = useMemo(
-    () =>
-      groups.map((group) => ({
-        ...group,
-        tasks: tasks.filter((task) => group.statuses.includes(task.status)),
-      })),
-    [tasks],
+  const feedItems = useMemo<FeedItem[]>(() => {
+    const taskItems = tasks.map((task): FeedItem => ({
+      id: `task-${task.id}`,
+      type: 'Завдання',
+      title: task.title,
+      description: task.description ?? task.department_name ?? 'Операційне завдання магазину',
+      time: formatDeadline(task),
+      status: taskFeedStatus(task),
+      priority: task.priority,
+      actionLabel: taskActionLabel(task),
+      taskId: task.id,
+    }))
+
+    return [...mockFeedItems, ...taskItems]
+  }, [tasks])
+
+  const summary = useMemo(
+    () => ({
+      active: feedItems.filter((item) => item.status === 'active' || item.status === 'review').length,
+      overdue: feedItems.filter((item) => item.status === 'overdue').length,
+      done: feedItems.filter((item) => item.status === 'done').length,
+    }),
+    [feedItems],
   )
+
+  const filteredFeedItems = useMemo(() => {
+    if (activeTab === 'tasks') {
+      return feedItems.filter((item) => item.type === 'Завдання' || item.type === 'Контроль')
+    }
+    if (activeTab === 'messages') {
+      return feedItems.filter((item) => item.type === 'Повідомлення' || item.type === 'Пуш')
+    }
+    if (activeTab === 'urgent') {
+      return feedItems.filter((item) => item.priority === 'urgent' || item.priority === 'high' || item.status === 'overdue')
+    }
+    if (activeTab === 'done') {
+      return feedItems.filter((item) => item.status === 'done')
+    }
+
+    return feedItems
+  }, [activeTab, feedItems])
 
   const employeeRequired = employees.length > 1 && selectedEmployeeId === null
   const canSubmit =
@@ -126,18 +232,27 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
     !employeeRequired &&
     !isSubmitting
 
-  const openTask = async (task: StoreTaskItem) => {
+  const openTask = async (taskId: number) => {
     if (!device.deviceToken) return
 
     setStatusMessage('')
     setFile(null)
     setComment('')
     try {
-      const detail = await getStoreTask(device.deviceToken, task.id)
+      const detail = await getStoreTask(device.deviceToken, taskId)
       setSelectedTask(detail)
     } catch {
       setStatusMessage('Не вдалося відкрити завдання')
     }
+  }
+
+  const handleFeedAction = (item: FeedItem) => {
+    if (item.taskId) {
+      void openTask(item.taskId)
+      return
+    }
+
+    setStatusMessage('Елемент додано до денного стеку. Дія буде підключена пізніше.')
   }
 
   const handleFileChange = (nextFile: File | undefined) => {
@@ -242,53 +357,80 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
   }
 
   return (
-    <main className="app-shell">
-      <button className="back-button" onClick={selectedTask ? () => setSelectedTask(null) : onBack}>
-        Назад
-      </button>
+    <main className="app-shell daily-tasks-page">
+      {selectedTask && (
+        <button className="back-button" onClick={() => setSelectedTask(null)}>
+          Назад
+        </button>
+      )}
 
       <section className="app-header vertical">
         <p className="app-kicker">Завдання</p>
-        <h1>{selectedTask ? selectedTask.title : 'Завдання магазину'}</h1>
-        {!selectedTask && <p className="app-subtitle">Операційні завдання поточного магазину.</p>}
+        <h1>{selectedTask ? selectedTask.title : 'Завдання на день'}</h1>
+        {!selectedTask && (
+          <p className="app-subtitle">
+            {device.storeName ?? 'Поточний магазин'} · {fullDateFormatter.format(new Date())}
+          </p>
+        )}
       </section>
 
       {statusMessage && <div className="message-box">{statusMessage}</div>}
 
       {!selectedTask && (
         <>
-          {!isLoading && tasks.length === 0 && (
+          <section className="daily-summary">
+            <div>
+              <strong>{summary.active}</strong>
+              <span>Активні</span>
+            </div>
+            <div className={summary.overdue > 0 ? 'attention' : undefined}>
+              <strong>{summary.overdue}</strong>
+              <span>Прострочені</span>
+            </div>
+            <div>
+              <strong>{summary.done}</strong>
+              <span>Виконані</span>
+            </div>
+          </section>
+
+          <section className="feed-tabs" aria-label="Фільтри завдань">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                className={activeTab === tab.key ? 'active' : undefined}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </section>
+
+          {!isLoading && filteredFeedItems.length === 0 && (
             <section className="panel">
-              <p className="empty-state">Активних завдань немає.</p>
+              <p className="empty-state">У цьому фільтрі поки немає елементів.</p>
             </section>
           )}
 
-          {groupedTasks.map(
-            (group) =>
-              group.tasks.length > 0 && (
-                <section className="task-group" key={group.title}>
-                  <h2>{group.title}</h2>
-                  <div className="task-list">
-                    {group.tasks.map((task) => (
-                      <button className="panel task-card" key={task.id} type="button" onClick={() => void openTask(task)}>
-                        <span className={`task-status status-${task.status}`}>{statusLabels[task.status]}</span>
-                        <strong>{task.title}</strong>
-                        {task.department_name && <small>{task.department_name}</small>}
-                        <div className="task-meta">
-                          <span>{formatDeadline(task)}</span>
-                          <span>{priorityLabels[task.priority]}</span>
-                        </div>
-                        <div className="task-flags">
-                          {task.requires_photo && <span>Потрібне фото</span>}
-                          {task.requires_comment && <span>Потрібен коментар</span>}
-                          {task.is_overdue && <span className="danger">Прострочено</span>}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              ),
-          )}
+          <section className="daily-feed">
+            {filteredFeedItems.map((item) => (
+              <article className="panel feed-card" key={item.id}>
+                <div className="feed-card-top">
+                  <span className="feed-type">{item.type}</span>
+                  <span className={`feed-status status-${item.status}`}>{item.status === 'overdue' ? 'Прострочено' : item.status === 'done' ? 'Виконано' : item.status === 'review' ? 'На перевірці' : 'Активно'}</span>
+                </div>
+                <strong>{item.title}</strong>
+                <p>{item.description}</p>
+                <div className="feed-meta">
+                  <span>{item.time}</span>
+                  <span>{priorityLabels[item.priority]}</span>
+                </div>
+                <button type="button" onClick={() => handleFeedAction(item)}>
+                  {item.actionLabel}
+                </button>
+              </article>
+            ))}
+          </section>
         </>
       )}
 

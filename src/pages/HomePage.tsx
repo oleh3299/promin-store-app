@@ -13,14 +13,14 @@ type HomePageProps = {
   onLanguageChange: (language: Language) => void
   onOpenStoreRequests: () => void
   onOpenInvoice: () => void
+  onOpenPhotoReport: () => void
   onOpenPlanograms: () => void
-  onOpenStoreTasks: () => void
 }
 
 type OperationItem = {
   title: string
   subtitle: string
-  action: 'storeRequests' | 'invoice' | 'planograms' | 'storeTasks'
+  action: 'storeRequests' | 'invoice' | 'photoReport' | 'planograms'
 }
 
 function getOperationItems(t: Translation): OperationItem[] {
@@ -36,14 +36,14 @@ function getOperationItems(t: Translation): OperationItem[] {
       action: 'invoice',
     },
     {
+      title: t.home.menu.photoReport,
+      subtitle: t.home.menu.photoReportSubtitle,
+      action: 'photoReport',
+    },
+    {
       title: t.home.menu.planograms,
       subtitle: t.planograms.subtitle,
       action: 'planograms',
-    },
-    {
-      title: 'Завдання',
-      subtitle: 'Операційні завдання магазину',
-      action: 'storeTasks',
     },
   ]
 }
@@ -56,8 +56,8 @@ function HomePage({
   onLanguageChange,
   onOpenStoreRequests,
   onOpenInvoice,
+  onOpenPhotoReport,
   onOpenPlanograms,
-  onOpenStoreTasks,
 }: HomePageProps) {
   const operationItems = getOperationItems(t)
   const storeStateItems = [
@@ -151,13 +151,13 @@ function HomePage({
                   return
                 }
 
-                if (item.action === 'planograms') {
-                  onOpenPlanograms()
+                if (item.action === 'photoReport') {
+                  onOpenPhotoReport()
                   return
                 }
 
-                if (item.action === 'storeTasks') {
-                  onOpenStoreTasks()
+                if (item.action === 'planograms') {
+                  onOpenPlanograms()
                 }
               }}
             >

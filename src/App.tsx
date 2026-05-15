@@ -285,7 +285,7 @@ function App() {
   } else if (screen === 'planograms') {
     content = <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
   } else if (screen === 'storeTasks') {
-    content = <StoreTasksPage device={device} onBack={() => setScreen('home')} />
+    content = <StoreTasksPage device={device} />
   } else if (screen === 'scanner') {
     content = <ScannerPage device={device} />
   } else if (screen === 'profile') {
@@ -317,8 +317,8 @@ function App() {
           setScreen('storeRequests')
         }}
         onOpenInvoice={() => setScreen('invoice')}
+        onOpenPhotoReport={() => setScreen('photoReport')}
         onOpenPlanograms={() => setScreen('planograms')}
-        onOpenStoreTasks={() => setScreen('storeTasks')}
       />
     )
   }

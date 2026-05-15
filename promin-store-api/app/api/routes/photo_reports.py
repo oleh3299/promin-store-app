@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 
@@ -10,6 +12,7 @@ from app.services.photo_report_service import create_photo_report, get_photo_rep
 from app.services.store_request_service import StoreRequestError
 
 router = APIRouter(prefix="/photo-reports", tags=["photo-reports"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/template", response_model=PhotoReportTemplateResponse)
@@ -28,6 +31,15 @@ async def submit_photo_report(
     db: Session = Depends(get_db),
     current_device: Device = Depends(get_current_device),
 ) -> PhotoReportUploadResponse:
+    logger.info(
+        "photo_report_submit_started",
+        extra={
+            "store_id": current_device.store_id,
+            "device_id": current_device.id,
+            "files_count": len(files),
+            "template_count": len(get_photo_report_template(db, current_device)),
+        },
+    )
     file_payloads = [
         (
             file.filename,

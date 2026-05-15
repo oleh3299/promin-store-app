@@ -219,6 +219,10 @@ export function getPhotoReportTemplate(deviceToken: string) {
 }
 
 export function submitPhotoReport(deviceToken: string, formData: FormData) {
+  console.log('photoReportSubmitRequest', {
+    endpoint: `${API_BASE_URL}/api/photo-reports`,
+    hasDeviceToken: Boolean(deviceToken),
+  })
   return apiRequest<PhotoReportUploadResponse>(
     '/api/photo-reports',
     {

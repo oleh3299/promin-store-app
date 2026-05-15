@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  ApiError,
   getPhotoReportTemplate,
   getStoreRequestActiveEmployees,
   submitPhotoReport,
@@ -21,6 +22,9 @@ type PhotoState = {
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxPhotoSize = 10 * 1024 * 1024
+const networkErrorMessage = 'Помилка мережі. Перевірте інтернет і спробуйте ще раз.'
+const payloadTooLargeMessage = 'Занадто великий обсяг фото. Спробуйте зробити фото меншого розміру.'
+const preparePhotoErrorMessage = 'Не вдалося підготувати фото. Спробуйте додати фото ще раз.'
 
 function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
   const [items, setItems] = useState<PhotoReportTemplateItem[]>([])
@@ -127,19 +131,39 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       return
     }
 
-    const formData = new FormData()
     const itemsWithPhotos = items.filter((item) => photos[item.id])
-    formData.append('item_ids', JSON.stringify(itemsWithPhotos.map((item) => item.id)))
-    if (selectedEmployeeId !== null) {
-      formData.append('employee_id', String(selectedEmployeeId))
+    const totalBytes = itemsWithPhotos.reduce((sum, item) => sum + photos[item.id].file.size, 0)
+    let formData: FormData
+
+    try {
+      formData = new FormData()
+      formData.append('item_ids', JSON.stringify(itemsWithPhotos.map((item) => item.id)))
+      if (selectedEmployeeId !== null) {
+        formData.append('employee_id', String(selectedEmployeeId))
+      }
+      itemsWithPhotos.forEach((item) => {
+        formData.append('files', photos[item.id].file)
+      })
+    } catch (error) {
+      console.error('photoReportSubmitPrepareFailed', {
+        error,
+        itemsCount: itemsWithPhotos.length,
+        filesCount: itemsWithPhotos.length,
+        totalBytes,
+      })
+      setStatusMessage(preparePhotoErrorMessage)
+      return
     }
-    itemsWithPhotos.forEach((item) => {
-      formData.append('files', photos[item.id].file)
-    })
 
     setIsSubmitting(true)
-    setStatusMessage('')
+    setStatusMessage(t.photoReport.sending)
     try {
+      console.log('photoReportSubmitStarted', {
+        itemsCount: itemsWithPhotos.length,
+        filesCount: itemsWithPhotos.length,
+        totalBytes,
+        selectedEmployee: selectedEmployeeId !== null,
+      })
       const response = await submitPhotoReport(device.deviceToken, formData)
       if (response.ok) {
         setStatusMessage(t.photoReport.sent)
@@ -168,7 +192,29 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       }
 
       setStatusMessage(response.message ?? t.photoReport.genericError)
-    } catch {
+    } catch (error) {
+      console.error('photoReportSubmitFailed', {
+        error,
+        itemsCount: itemsWithPhotos.length,
+        filesCount: itemsWithPhotos.length,
+        totalBytes,
+      })
+
+      if (error instanceof ApiError && error.status === 413) {
+        setStatusMessage(payloadTooLargeMessage)
+        return
+      }
+
+      if (error instanceof TypeError) {
+        setStatusMessage(networkErrorMessage)
+        return
+      }
+
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setStatusMessage(networkErrorMessage)
+        return
+      }
+
       setStatusMessage(t.photoReport.genericError)
     } finally {
       setIsSubmitting(false)

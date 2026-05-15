@@ -11,28 +11,20 @@ type HomePageProps = {
   language: Language
   t: Translation
   onLanguageChange: (language: Language) => void
-  onOpenAttendance: () => void
   onOpenStoreRequests: () => void
   onOpenInvoice: () => void
-  onOpenPhotoReport: () => void
   onOpenPlanograms: () => void
   onOpenStoreTasks: () => void
-  onOpenSettings: () => void
 }
 
-type MenuItem = {
+type OperationItem = {
   title: string
   subtitle: string
-  action: 'attendance' | 'storeRequests' | 'invoice' | 'photoReport' | 'planograms' | 'storeTasks' | 'settings'
+  action: 'storeRequests' | 'invoice' | 'planograms' | 'storeTasks'
 }
 
-function getMenuItems(t: Translation): MenuItem[] {
+function getOperationItems(t: Translation): OperationItem[] {
   return [
-    {
-      title: t.home.menu.attendance,
-      subtitle: t.home.menu.attendanceSubtitle,
-      action: 'attendance',
-    },
     {
       title: t.home.menu.storeRequests,
       subtitle: t.home.menu.storeRequestsSubtitle,
@@ -44,11 +36,6 @@ function getMenuItems(t: Translation): MenuItem[] {
       action: 'invoice',
     },
     {
-      title: t.home.menu.photoReport,
-      subtitle: t.home.menu.photoReportSubtitle,
-      action: 'photoReport',
-    },
-    {
       title: t.home.menu.planograms,
       subtitle: t.planograms.subtitle,
       action: 'planograms',
@@ -57,11 +44,6 @@ function getMenuItems(t: Translation): MenuItem[] {
       title: 'Завдання',
       subtitle: 'Операційні завдання магазину',
       action: 'storeTasks',
-    },
-    {
-      title: t.home.menu.settings,
-      subtitle: t.home.menu.settingsSubtitle,
-      action: 'settings',
     },
   ]
 }
@@ -72,15 +54,30 @@ function HomePage({
   language,
   t,
   onLanguageChange,
-  onOpenAttendance,
   onOpenStoreRequests,
   onOpenInvoice,
-  onOpenPhotoReport,
   onOpenPlanograms,
   onOpenStoreTasks,
-  onOpenSettings,
 }: HomePageProps) {
-  const menuItems = getMenuItems(t)
+  const operationItems = getOperationItems(t)
+  const storeStateItems = [
+    {
+      label: 'Відкриття магазину',
+      value: 'Не перевірено',
+    },
+    {
+      label: 'Фото зон',
+      value: '0/8',
+    },
+    {
+      label: 'Активні задачі',
+      value: '0',
+    },
+    {
+      label: 'Накладні в обробці',
+      value: '0',
+    },
+  ]
 
   return (
     <main className="app-shell">
@@ -106,65 +103,69 @@ function HomePage({
         </div>
       </section>
 
-      <section className="status-card">
+      <section className="status-card home-status-card">
+        <div>
+          <p>{t.home.activeDevice}</p>
+          <strong>{storeName ?? 'Promin Store'}</strong>
+        </div>
         <div>
           <p>{t.home.today}</p>
           <strong>
             {openShiftCount} {t.home.onShift}
           </strong>
         </div>
-        <button type="button">{t.home.activeDevice}</button>
       </section>
 
-      <section className="menu-grid">
-        {menuItems.map((item) => (
-          <button
-            key={item.title}
-            type="button"
-            className={
-              'menu-card active'
-            }
-            onClick={() => {
-              if (item.action === 'attendance') {
-                onOpenAttendance()
-                return
-              }
+      <section className="dashboard-section">
+        <div className="section-heading">
+          <h2>Стан магазину</h2>
+        </div>
+        <div className="store-state-grid">
+          {storeStateItems.map((item) => (
+            <article className="store-state-card" key={item.label}>
+              <span>{item.label}</span>
+              <strong>{item.value}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
 
-              if (item.action === 'storeRequests') {
-                onOpenStoreRequests()
-                return
-              }
+      <section className="dashboard-section">
+        <div className="section-heading">
+          <h2>Операції магазину</h2>
+        </div>
+        <div className="operation-grid">
+          {operationItems.map((item) => (
+            <button
+              key={item.title}
+              type="button"
+              className="operation-card"
+              onClick={() => {
+                if (item.action === 'storeRequests') {
+                  onOpenStoreRequests()
+                  return
+                }
 
-              if (item.action === 'invoice') {
-                onOpenInvoice()
-                return
-              }
+                if (item.action === 'invoice') {
+                  onOpenInvoice()
+                  return
+                }
 
-              if (item.action === 'photoReport') {
-                onOpenPhotoReport()
-                return
-              }
+                if (item.action === 'planograms') {
+                  onOpenPlanograms()
+                  return
+                }
 
-              if (item.action === 'planograms') {
-                onOpenPlanograms()
-                return
-              }
-
-              if (item.action === 'storeTasks') {
-                onOpenStoreTasks()
-                return
-              }
-
-              if (item.action === 'settings') {
-                onOpenSettings()
-                return
-              }
-            }}
-          >
-            <span>{item.title}</span>
-            <small>{item.subtitle}</small>
-          </button>
-        ))}
+                if (item.action === 'storeTasks') {
+                  onOpenStoreTasks()
+                }
+              }}
+            >
+              <span>{item.title}</span>
+              <small>{item.subtitle}</small>
+            </button>
+          ))}
+        </div>
       </section>
     </main>
   )

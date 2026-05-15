@@ -94,25 +94,11 @@ function EmployeeDashboardPage({
           </div>
         </article>
 
-        <article className="panel profile-card">
+        <article className="panel profile-card compact-profile-card">
           <span>Показники</span>
-          <div className="indicator-grid">
-            <div>
-              <small>Бали</small>
-              <strong>--</strong>
-            </div>
-            <div>
-              <small>Штрафи</small>
-              <strong>--</strong>
-            </div>
-            <div>
-              <small>Оцінка</small>
-              <strong>--</strong>
-            </div>
-            <div>
-              <small>План</small>
-              <strong>--</strong>
-            </div>
+          <div className="profile-note">
+            <strong>Очікують дані</strong>
+            <small>Бали, штрафи, оцінка та виконання плану з'являться після підключення джерела даних.</small>
           </div>
         </article>
 
@@ -128,7 +114,7 @@ function EmployeeDashboardPage({
         </article>
       </section>
 
-      <section className="quick-actions">
+      <section className="quick-actions compact-actions">
         <button type="button" onClick={onOpenAttendance}>Мій табель</button>
         <button type="button" onClick={onOpenStoreTasks}>Мої завдання</button>
         <button type="button" onClick={onOpenStoreRequests}>Повідомлення</button>

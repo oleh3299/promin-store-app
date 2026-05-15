@@ -312,16 +312,13 @@ function App() {
         language={language}
         t={t}
         onLanguageChange={setLanguage}
-        onOpenAttendance={() => setScreen('attendance')}
         onOpenStoreRequests={() => {
           setStoreRequestEntry('default')
           setScreen('storeRequests')
         }}
         onOpenInvoice={() => setScreen('invoice')}
-        onOpenPhotoReport={() => setScreen('photoReport')}
         onOpenPlanograms={() => setScreen('planograms')}
         onOpenStoreTasks={() => setScreen('storeTasks')}
-        onOpenSettings={() => setScreen('settings')}
       />
     )
   }

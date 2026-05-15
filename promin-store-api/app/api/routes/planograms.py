@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends
+from urllib.parse import quote, unquote
 
 from app.db import get_db
 from app.models import Device, Planogram
@@ -11,10 +12,14 @@ router = APIRouter(prefix="/planograms", tags=["planograms"])
 
 
 def planogram_image_url(image_path: str) -> str:
-    if image_path.startswith(("http://", "https://", "/")):
-        return image_path
     normalized_path = image_path.replace("\\", "/")
-    return f"/{normalized_path}"
+    if normalized_path.startswith(("http://", "https://")):
+        return normalized_path
+
+    if not normalized_path.startswith("/"):
+        normalized_path = f"/{normalized_path}"
+
+    return quote(unquote(normalized_path), safe="/:-._~")
 
 
 @router.get("", response_model=PlanogramListResponse)

@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta, timezone
 from html import escape
 from pathlib import Path
 import re
+from urllib.parse import quote, unquote
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -94,14 +95,18 @@ def enum_value(value) -> str:
 
 def safe_path_segment(value: str) -> str:
     sanitized = re.sub(r"[^A-Za-z0-9_-]+", "_", value.strip())
-    return sanitized.strip("_") or "item"
+    return sanitized.strip("_-") or "item"
 
 
 def planogram_image_src(image_path: str) -> str:
-    if image_path.startswith(("http://", "https://", "/")):
-        return image_path
     normalized_path = image_path.replace("\\", "/")
-    return f"/{normalized_path}"
+    if normalized_path.startswith(("http://", "https://")):
+        return normalized_path
+
+    if not normalized_path.startswith("/"):
+        normalized_path = f"/{normalized_path}"
+
+    return quote(unquote(normalized_path), safe="/:-._~")
 
 
 def planogram_preview(model, _attribute) -> Markup:
@@ -625,7 +630,9 @@ class PlanogramUploadAdmin(BaseView):
                     extension = PLANOGRAM_CONTENT_TYPES[content_type]
                     store_dir = PLANOGRAM_STORAGE_ROOT / safe_path_segment(store.code)
                     store_dir.mkdir(parents=True, exist_ok=True)
-                    filename = f"{safe_path_segment(category_name)}-{uuid4().hex[:12]}.{extension}"
+                    uploaded_at = datetime.now(timezone.utc)
+                    timestamp = uploaded_at.strftime("%Y%m%d_%H%M%S")
+                    filename = f"{timestamp}_{safe_path_segment(category_name)}_{uuid4().hex[:8]}.{extension}"
                     file_path = store_dir / filename
                     file_bytes = await uploaded_file.read()
                     file_path.write_bytes(file_bytes)
@@ -648,7 +655,7 @@ class PlanogramUploadAdmin(BaseView):
                             description=description,
                             image_path=relative_path,
                             uploaded_by=uploaded_by,
-                            uploaded_at=datetime.now(timezone.utc),
+                            uploaded_at=uploaded_at,
                             is_active=True,
                         ),
                     )

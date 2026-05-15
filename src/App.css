@@ -573,13 +573,50 @@ textarea {
   gap: 10px;
   width: 100%;
   text-align: left;
+}
+
+.planogram-card-toggle {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.planogram-card img {
+.planogram-card-toggle strong {
+  justify-self: start;
+  margin-top: 4px;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: #183c27;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.planogram-preview {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #f4f7f3;
+}
+
+.planogram-image-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.planogram-image-button img {
+  display: block;
   width: 100%;
   max-height: 220px;
-  border-radius: 14px;
   background: #f4f7f3;
   object-fit: contain;
 }
@@ -624,6 +661,35 @@ textarea {
   height: 100%;
   min-height: 0;
   object-fit: contain;
+}
+
+.planogram-image-fallback {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  min-height: 180px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #f4f7f3;
+  color: #66736b;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.planogram-image-fallback button {
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: #183c27;
+  color: #fff;
+  font-weight: 900;
+}
+
+.planogram-viewer .planogram-image-fallback {
+  min-height: 0;
+  height: 100%;
+  background: #f4f7f3;
 }
 
 .task-group {

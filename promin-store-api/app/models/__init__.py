@@ -2,6 +2,7 @@ from app.models.attendance import AttendanceEvent, AttendanceShift
 from app.models.audit import AuditLog
 from app.models.device import Device
 from app.models.employee import Employee
+from app.models.hr import HRCandidate, HRCandidateDocument, HRCandidateEvent
 from app.models.enums import (
     AttendanceEventSource,
     AttendanceEventType,
@@ -33,6 +34,9 @@ __all__ = [
     "Device",
     "DeviceStatus",
     "Employee",
+    "HRCandidate",
+    "HRCandidateDocument",
+    "HRCandidateEvent",
     "InvoiceUploadLog",
     "PhotoReport",
     "PhotoReportItem",

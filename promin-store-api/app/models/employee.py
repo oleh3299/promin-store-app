@@ -12,6 +12,7 @@ class Employee(TimestampMixin, Base):
     store_id: Mapped[int | None] = mapped_column(ForeignKey("stores.id"), nullable=True)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     barcode: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
+    tax_code: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
     position: Mapped[str] = mapped_column(String(128), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     external_1c_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)

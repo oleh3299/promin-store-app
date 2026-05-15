@@ -6,6 +6,7 @@ class EmployeeRead(BaseModel):
     store_id: int | None
     full_name: str
     barcode: str
+    tax_code: str | None
     position: str
     is_active: bool
     external_1c_id: str | None

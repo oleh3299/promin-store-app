@@ -16,6 +16,9 @@ class Settings(BaseSettings):
 
     frontend_origin: str = "https://store.prominuz.org"
     one_c_integration_api_key: str | None = None
+    one_c_hr_candidates_url: str | None = None
+    one_c_hr_api_key: str | None = None
+    one_c_hr_timeout_seconds: float = 10.0
     rocket_chat_base_url: str = "https://chat.prominuz.org"
     rocket_chat_user_id: str | None = None
     rocket_chat_auth_token: str | None = None

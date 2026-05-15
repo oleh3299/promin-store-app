@@ -1,14 +1,17 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import Employee
+from app.models import Employee, HRCandidateEvent
 from app.schemas.integration import (
     OneCEmployeePayload,
     OneCEmployeesSyncError,
     OneCEmployeesSyncRequest,
     OneCEmployeesSyncResponse,
 )
+from app.services.hr_service import find_candidate_for_employee_import
 
 
 def _clean_optional(value: str | None) -> str | None:
@@ -51,6 +54,7 @@ def _sync_one_employee(
 ) -> str:
     barcode = _clean_required(payload.barcode)
     external_1c_id = _clean_optional(payload.external_1c_id)
+    tax_code = _clean_optional(payload.tax_code)
     employee = _find_employee(db, payload)
 
     if employee is not None and _barcode_belongs_to_another_employee(db, barcode, employee):
@@ -64,6 +68,7 @@ def _sync_one_employee(
             position=_clean_required(payload.position),
             is_active=payload.is_active,
             external_1c_id=external_1c_id,
+            tax_code=tax_code,
         )
         db.add(employee)
         action = "created"
@@ -73,6 +78,7 @@ def _sync_one_employee(
         employee.position = _clean_required(payload.position)
         employee.is_active = payload.is_active
         employee.external_1c_id = external_1c_id
+        employee.tax_code = tax_code
         db.add(employee)
         action = "updated"
 
@@ -81,6 +87,22 @@ def _sync_one_employee(
     except IntegrityError:
         db.rollback()
         return "duplicate_barcode"
+
+    candidate = find_candidate_for_employee_import(db, tax_code)
+    if candidate is not None:
+        candidate.imported_employee_id = employee.id
+        candidate.sync_status = "imported_from_1c"
+        db.add(candidate)
+        db.add(
+            HRCandidateEvent(
+                candidate_id=candidate.id,
+                event_type="imported_from_1c",
+                author_user_id=None,
+                comment=f"Employee #{employee.id} imported from 1C sync",
+                created_at=datetime.now(timezone.utc),
+            ),
+        )
+        db.commit()
 
     return action
 

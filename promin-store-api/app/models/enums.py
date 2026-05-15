@@ -5,6 +5,10 @@ class UserRole(str, enum.Enum):
     admin = "admin"
     manager = "manager"
     viewer = "viewer"
+    hr_manager = "hr_manager"
+    hr_tablet = "hr_tablet"
+    store_manager = "store_manager"
+    employee = "employee"
 
 
 class DeviceStatus(str, enum.Enum):

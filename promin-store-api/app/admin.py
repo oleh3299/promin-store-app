@@ -21,6 +21,9 @@ from app.models import (
     AuditLog,
     Device,
     Employee,
+    HRCandidate,
+    HRCandidateDocument,
+    HRCandidateEvent,
     InvoiceUploadLog,
     PhotoReport,
     PhotoReportItem,
@@ -953,6 +956,158 @@ class StoreTaskEventAdmin(ModelView, model=StoreTaskEvent):
     }
 
 
+class HRCandidateAdmin(ModelView, model=HRCandidate):
+    name = "HR анкета"
+    name_plural = "Анкети кандидатів"
+    category = "HR / Кадри"
+    can_delete = False
+    page_size = 50
+    column_list = [
+        HRCandidate.id,
+        HRCandidate.last_name,
+        HRCandidate.first_name,
+        HRCandidate.middle_name,
+        HRCandidate.position,
+        HRCandidate.phone1,
+        HRCandidate.tax_code,
+        HRCandidate.decision,
+        HRCandidate.sync_status,
+        HRCandidate.synced_at,
+        HRCandidate.imported_employee,
+        HRCandidate.created_at,
+    ]
+    column_searchable_list = [
+        HRCandidate.last_name,
+        HRCandidate.first_name,
+        HRCandidate.middle_name,
+        HRCandidate.phone1,
+        HRCandidate.phone2,
+        HRCandidate.tax_code,
+        HRCandidate.passport_code,
+    ]
+    column_sortable_list = [
+        HRCandidate.id,
+        HRCandidate.last_name,
+        HRCandidate.interview_date,
+        HRCandidate.internship_datetime,
+        HRCandidate.synced_at,
+        HRCandidate.created_at,
+    ]
+    column_default_sort = [(HRCandidate.created_at, True)]
+    column_filters = [HRCandidate.decision, HRCandidate.sync_status, HRCandidate.position, HRCandidate.interview_date]
+    column_labels = {
+        HRCandidate.first_name: "Імʼя",
+        HRCandidate.last_name: "Прізвище",
+        HRCandidate.middle_name: "По батькові",
+        HRCandidate.birth_date: "Дата народження",
+        HRCandidate.phone1: "Мобільний телефон 1",
+        HRCandidate.phone2: "Мобільний телефон 2",
+        HRCandidate.passport_code: "Серія паспорта",
+        HRCandidate.tax_code: "РНОКПП",
+        HRCandidate.residence_address: "Основне місце проживання",
+        HRCandidate.registration_address: "Прописка",
+        HRCandidate.marital_status: "Сімейний стан",
+        HRCandidate.has_children: "Діти",
+        HRCandidate.has_credits: "Наявність кредитів",
+        HRCandidate.credits_amount: "Сума кредитів",
+        HRCandidate.previous_workplace: "Попереднє місце роботи",
+        HRCandidate.work_experience: "Стаж роботи",
+        HRCandidate.interview_date: "Дата співбесіди",
+        HRCandidate.internship_datetime: "Дата / час стажування",
+        HRCandidate.position: "Посада",
+        HRCandidate.hr_comment: "Коментар HR",
+        HRCandidate.decision: "Рішення",
+        HRCandidate.sync_status: "Статус",
+        HRCandidate.synced_at: "Відправлено в 1С",
+        HRCandidate.imported_employee: "Імпортований працівник",
+        HRCandidate.created_by: "Створив",
+        HRCandidate.created_at: "Створено",
+        HRCandidate.updated_at: "Оновлено",
+    }
+    form_columns = [
+        HRCandidate.last_name,
+        HRCandidate.first_name,
+        HRCandidate.middle_name,
+        HRCandidate.position,
+        HRCandidate.interview_date,
+        HRCandidate.internship_datetime,
+        HRCandidate.birth_date,
+        HRCandidate.phone1,
+        HRCandidate.phone2,
+        HRCandidate.registration_address,
+        HRCandidate.residence_address,
+        HRCandidate.marital_status,
+        HRCandidate.has_children,
+        HRCandidate.has_credits,
+        HRCandidate.credits_amount,
+        HRCandidate.previous_workplace,
+        HRCandidate.work_experience,
+        HRCandidate.passport_code,
+        HRCandidate.tax_code,
+        HRCandidate.hr_comment,
+        HRCandidate.decision,
+        HRCandidate.sync_status,
+    ]
+    form_args = {
+        "decision": {"description": "rejected / trainee / approved"},
+        "sync_status": {"description": "candidate / trainee / approved / rejected / synced_to_1c / imported_from_1c"},
+        "phone1": {"description": "+38 (0__) ___ __ __"},
+        "phone2": {"description": "+38 (0__) ___ __ __"},
+    }
+
+
+class HRCandidateDocumentAdmin(ModelView, model=HRCandidateDocument):
+    name = "Документ кандидата"
+    name_plural = "Документи кандидатів"
+    category = "HR / Кадри"
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        HRCandidateDocument.id,
+        HRCandidateDocument.candidate,
+        HRCandidateDocument.document_type,
+        HRCandidateDocument.is_added,
+        HRCandidateDocument.file_path,
+        HRCandidateDocument.created_at,
+    ]
+    column_searchable_list = [HRCandidateDocument.document_type, HRCandidateDocument.file_path]
+    column_sortable_list = [HRCandidateDocument.id, HRCandidateDocument.candidate_id, HRCandidateDocument.created_at]
+    column_labels = {
+        HRCandidateDocument.candidate: "Кандидат",
+        HRCandidateDocument.document_type: "Документ",
+        HRCandidateDocument.is_added: "Додано",
+        HRCandidateDocument.file_path: "Файл",
+        HRCandidateDocument.created_at: "Створено",
+    }
+
+
+class HRCandidateEventAdmin(ModelView, model=HRCandidateEvent):
+    name = "Історія HR анкети"
+    name_plural = "Історія HR анкет"
+    category = "Технічні логи"
+    can_create = False
+    can_edit = False
+    can_delete = False
+    column_list = [
+        HRCandidateEvent.id,
+        HRCandidateEvent.candidate,
+        HRCandidateEvent.event_type,
+        HRCandidateEvent.author,
+        HRCandidateEvent.comment,
+        HRCandidateEvent.created_at,
+    ]
+    column_searchable_list = [HRCandidateEvent.event_type, HRCandidateEvent.comment]
+    column_sortable_list = [HRCandidateEvent.id, HRCandidateEvent.candidate_id, HRCandidateEvent.created_at]
+    column_labels = {
+        HRCandidateEvent.candidate: "Кандидат",
+        HRCandidateEvent.event_type: "Подія",
+        HRCandidateEvent.author: "Автор",
+        HRCandidateEvent.comment: "Коментар",
+        HRCandidateEvent.created_at: "Створено",
+    }
+
+
 class AuditLogAdmin(ModelView, model=AuditLog):
     name = "Лог аудита"
     name_plural = "Логи аудита"
@@ -1131,6 +1286,8 @@ def setup_admin(app) -> None:
     admin.add_view(PhotoReportAdmin)
     admin.add_view(PhotoReportTemplateAdmin)
     admin.add_view(PhotoReportItemAdmin)
+    admin.add_view(HRCandidateAdmin)
+    admin.add_view(HRCandidateDocumentAdmin)
     admin.add_view(PlanogramZoneAdmin)
     admin.add_view(StoreDepartmentAdmin)
     admin.add_view(TaskTemplateAdmin)
@@ -1139,5 +1296,6 @@ def setup_admin(app) -> None:
     admin.add_view(PushSubscriptionAdmin)
     admin.add_view(StoreTaskAttachmentAdmin)
     admin.add_view(StoreTaskEventAdmin)
+    admin.add_view(HRCandidateEventAdmin)
     admin.add_view(StoreRequestLogAdmin)
     admin.add_view(AuditLogAdmin)

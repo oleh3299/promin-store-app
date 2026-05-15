@@ -1,5 +1,5 @@
 from datetime import datetime, time, timezone
-from pathlib import Path, PurePath
+from pathlib import PurePath
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -15,10 +15,11 @@ from app.models import (
 )
 from app.schemas.store_task import StoreTaskAttachmentRead, StoreTaskDetail, StoreTaskEventRead, StoreTaskRead
 from app.services.store_request_service import StoreRequestError, resolve_employee_id
+from app.storage import STORAGE_ROOT
 
 
 LOCAL_TIMEZONE = ZoneInfo("Europe/Uzhgorod")
-STORE_TASK_STORAGE_ROOT = Path("storage") / "store-tasks"
+STORE_TASK_STORAGE_ROOT = STORAGE_ROOT / "store-tasks"
 MAX_STORE_TASK_FILE_SIZE = 10 * 1024 * 1024
 ALLOWED_STORE_TASK_CONTENT_TYPES = {
     "image/jpeg": "jpg",

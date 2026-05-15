@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pathlib import Path
 from starlette.staticfiles import StaticFiles
 
 from app.admin import setup_admin
 from app.api.router import api_router
 from app.config import get_settings
+from app.storage import STORAGE_ROOT
 
 settings = get_settings()
 
@@ -26,6 +26,6 @@ def health() -> dict[str, str]:
 
 
 app.include_router(api_router)
-Path("storage").mkdir(exist_ok=True)
-app.mount("/storage", StaticFiles(directory="storage"), name="storage")
+STORAGE_ROOT.mkdir(exist_ok=True)
+app.mount("/storage", StaticFiles(directory=STORAGE_ROOT), name="storage")
 setup_admin(app)

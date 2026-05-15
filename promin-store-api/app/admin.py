@@ -1,6 +1,6 @@
 from datetime import datetime, time, timedelta, timezone
 from html import escape
-from pathlib import Path
+import logging
 import re
 from urllib.parse import quote, unquote
 from uuid import uuid4
@@ -43,15 +43,18 @@ from app.models import (
 )
 from app.models.enums import DeviceStatus, ShiftStatus, UserRole
 from app.security import hash_password, verify_password
+from app.storage import STORAGE_ROOT
 
 LOCAL_TZ = ZoneInfo("Europe/Uzhgorod")
 ONLINE_DEVICE_WINDOW = timedelta(minutes=10)
-PLANOGRAM_STORAGE_ROOT = Path("storage") / "planograms"
+PLANOGRAM_STORAGE_ROOT = STORAGE_ROOT / "planograms"
+MAX_PLANOGRAM_FILE_SIZE = 10 * 1024 * 1024
 PLANOGRAM_CONTENT_TYPES = {
     "image/jpeg": "jpg",
     "image/png": "png",
     "image/webp": "webp",
 }
+logger = logging.getLogger(__name__)
 
 
 def to_local(value: datetime | None) -> datetime | None:
@@ -631,39 +634,101 @@ class PlanogramUploadAdmin(BaseView):
                 else:
                     content_type = str(uploaded_file.content_type)
                     extension = PLANOGRAM_CONTENT_TYPES[content_type]
-                    store_dir = PLANOGRAM_STORAGE_ROOT / safe_path_segment(store.code)
-                    store_dir.mkdir(parents=True, exist_ok=True)
                     uploaded_at = datetime.now(timezone.utc)
                     timestamp = uploaded_at.strftime("%Y%m%d_%H%M%S")
+                    store_code = safe_path_segment(store.code)
                     filename = f"{timestamp}_{safe_path_segment(category_name)}_{uuid4().hex[:8]}.{extension}"
+                    store_dir = PLANOGRAM_STORAGE_ROOT / store_code
                     file_path = store_dir / filename
-                    file_bytes = await uploaded_file.read()
-                    file_path.write_bytes(file_bytes)
-                    relative_path = file_path.as_posix()
-                    uploaded_by = str(request.session.get("admin_user") or "") or None
-                    existing_planograms = db.scalars(
-                        select(Planogram).where(
-                            Planogram.store_id == store.id,
-                            Planogram.category_name == category_name,
-                            Planogram.is_active.is_(True),
-                        ),
-                    )
-                    for existing_planogram in existing_planograms:
-                        existing_planogram.is_active = False
+                    relative_path = f"storage/planograms/{store_code}/{filename}"
+                    file_bytes = await uploaded_file.read(MAX_PLANOGRAM_FILE_SIZE + 1)
+                    file_ready = False
+                    if len(file_bytes) > MAX_PLANOGRAM_FILE_SIZE:
+                        message = "Р¤Р°Р№Р» СЃР»РёС€РєРѕРј Р±РѕР»СЊС€РѕР№. РњР°РєСЃРёРјСѓРј 10 MB."
+                    elif not file_bytes:
+                        message = "Р¤Р°Р№Р» РїСѓСЃС‚РѕР№."
+                    else:
+                        try:
+                            store_dir.mkdir(parents=True, exist_ok=True)
+                            file_path.write_bytes(file_bytes)
+                            file_ready = True
+                        except OSError:
+                            db.rollback()
+                            logger.exception(
+                                "planogram_file_save_failed",
+                                extra={
+                                    "store_code": store.code,
+                                    "category_name": category_name,
+                                    "destination": str(file_path),
+                                    "relative_image_path": relative_path,
+                                },
+                            )
+                            message = "РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ С„Р°Р№Р» РїР»Р°РЅРѕРіСЂР°РјРјС‹."
 
-                    db.add(
-                        Planogram(
-                            store_id=store.id,
-                            category_name=category_name,
-                            description=description,
-                            image_path=relative_path,
-                            uploaded_by=uploaded_by,
-                            uploaded_at=uploaded_at,
-                            is_active=True,
-                        ),
-                    )
-                    db.commit()
-                    return RedirectResponse("/admin/planogram/list", status_code=303)
+                    if message:
+                        logger.warning(
+                            "planogram_upload_rejected",
+                            extra={
+                                "store_code": store.code,
+                                "category_name": category_name,
+                                "destination": str(file_path),
+                                "relative_image_path": relative_path,
+                                "file_size": len(file_bytes),
+                                "file_exists_after_save": file_path.exists(),
+                            },
+                        )
+
+                    if file_ready:
+                        file_exists = file_path.exists()
+                        file_size = file_path.stat().st_size if file_exists else 0
+                        logger.info(
+                            "planogram_file_saved",
+                            extra={
+                                "store_code": store.code,
+                                "category_name": category_name,
+                                "destination": str(file_path),
+                                "relative_image_path": relative_path,
+                                "file_size": file_size,
+                                "file_exists_after_save": file_exists,
+                            },
+                        )
+                        if not file_exists or file_size <= 0:
+                            db.rollback()
+                            file_ready = False
+                            message = "Р¤Р°Р№Р» РїР»Р°РЅРѕРіСЂР°РјРјС‹ РЅРµ Р±С‹Р» СЃРѕС…СЂР°РЅРµРЅ."
+                            try:
+                                file_path.unlink(missing_ok=True)
+                            except OSError:
+                                logger.warning(
+                                    "planogram_empty_file_cleanup_failed",
+                                    extra={"destination": str(file_path)},
+                                )
+
+                    if file_ready:
+                        uploaded_by = str(request.session.get("admin_user") or "") or None
+                        existing_planograms = db.scalars(
+                            select(Planogram).where(
+                                Planogram.store_id == store.id,
+                                Planogram.category_name == category_name,
+                                Planogram.is_active.is_(True),
+                            ),
+                        )
+                        for existing_planogram in existing_planograms:
+                            existing_planogram.is_active = False
+
+                        db.add(
+                            Planogram(
+                                store_id=store.id,
+                                category_name=category_name,
+                                description=description,
+                                image_path=relative_path,
+                                uploaded_by=uploaded_by,
+                                uploaded_at=uploaded_at,
+                                is_active=True,
+                            ),
+                        )
+                        db.commit()
+                        return RedirectResponse("/admin/planogram/list", status_code=303)
 
         options = "\n".join(
             f'<option value="{store["id"]}">{escape(str(store["label"]))}</option>'

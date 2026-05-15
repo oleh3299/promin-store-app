@@ -333,7 +333,7 @@ function StoreApp() {
 }
 
 function App() {
-  if (window.location.pathname.startsWith('/admin/hr')) {
+  if (window.location.pathname.startsWith('/hr')) {
     return <HRTabletApp />
   }
 

@@ -27,7 +27,7 @@ const managerRoles = new Set(['admin', 'hr_manager'])
 
 function parseRoute(): HRRoute {
   const path = window.location.pathname
-  const detailMatch = path.match(/^\/admin\/hr\/candidates\/(\d+)$/)
+  const detailMatch = path.match(/^\/hr\/candidates\/(\d+)$/)
   if (detailMatch) {
     return { name: 'detail', id: Number(detailMatch[1]) }
   }
@@ -121,9 +121,9 @@ function HRTabletApp() {
     void queryClient.invalidateQueries({ queryKey: ['hr-me'] })
   }
 
-  const navigateToList = useCallback(() => pushRoute('/admin/hr/candidates'), [])
-  const navigateToNew = useCallback(() => pushRoute('/admin/hr/candidates/new'), [])
-  const navigateToCandidate = useCallback((id: number) => pushRoute(`/admin/hr/candidates/${id}`), [])
+  const navigateToList = useCallback(() => pushRoute('/hr/candidates'), [])
+  const navigateToNew = useCallback(() => pushRoute('/hr/candidates/new'), [])
+  const navigateToCandidate = useCallback((id: number) => pushRoute(`/hr/candidates/${id}`), [])
 
   if (!accessToken) {
     return (

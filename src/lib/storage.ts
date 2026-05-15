@@ -113,7 +113,10 @@ function isScreen(value: unknown): value is Screen {
     value === 'storeRequests' ||
     value === 'invoice' ||
     value === 'photoReport' ||
-    value === 'planograms'
+    value === 'planograms' ||
+    value === 'storeTasks' ||
+    value === 'scanner' ||
+    value === 'profile'
   )
 }
 

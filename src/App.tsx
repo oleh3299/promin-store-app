@@ -12,13 +12,16 @@ import {
   saveAppPersistence,
 } from './lib/storage'
 import { syncOfflineQueue } from './lib/sync'
+import BottomNavigation from './components/BottomNavigation'
 import AttendancePage from './pages/AttendancePage'
 import DiagnosticsPage from './pages/DiagnosticsPage'
+import EmployeeDashboardPage from './pages/EmployeeDashboardPage'
 import HomePage from './pages/HomePage'
 import InvoicePage from './pages/InvoicePage'
 import LoginPage from './pages/LoginPage'
 import PhotoReportPage from './pages/PhotoReportPage'
 import PlanogramsPage from './pages/PlanogramsPage'
+import ScannerPage from './pages/ScannerPage'
 import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
 import StoreTasksPage from './pages/StoreTasksPage'
@@ -221,8 +224,14 @@ function App() {
     )
   }
 
+  const navigateToScreen = (nextScreen: Screen) => {
+    setScreen(nextScreen)
+  }
+
+  let content
+
   if (screen === 'attendance') {
-    return (
+    content = (
       <AttendancePage
         device={device}
         initialState={attendancePageState}
@@ -236,10 +245,8 @@ function App() {
         onBack={() => setScreen('home')}
       />
     )
-  }
-
-  if (screen === 'settings') {
-    return (
+  } else if (screen === 'settings') {
+    content = (
       <SettingsPage
         notificationStatus={notificationStatus}
         t={t}
@@ -248,10 +255,8 @@ function App() {
         onOpenDiagnostics={() => setScreen('diagnostics')}
       />
     )
-  }
-
-  if (screen === 'storeRequests') {
-    return (
+  } else if (screen === 'storeRequests') {
+    content = (
       <StoreRequestsPage
         device={device}
         entry={storeRequestEntry}
@@ -259,10 +264,8 @@ function App() {
         onBack={() => setScreen('home')}
       />
     )
-  }
-
-  if (screen === 'diagnostics') {
-    return (
+  } else if (screen === 'diagnostics') {
+    content = (
       <DiagnosticsPage
         auth={auth}
         device={device}
@@ -275,42 +278,59 @@ function App() {
         onLogout={handleLogout}
       />
     )
-  }
-
-  if (screen === 'invoice') {
-    return <InvoicePage device={device} t={t} onBack={() => setScreen('home')} />
-  }
-
-  if (screen === 'photoReport') {
-    return <PhotoReportPage device={device} t={t} onBack={() => setScreen('home')} />
-  }
-
-  if (screen === 'planograms') {
-    return <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
-  }
-
-  if (screen === 'storeTasks') {
-    return <StoreTasksPage device={device} onBack={() => setScreen('home')} />
+  } else if (screen === 'invoice') {
+    content = <InvoicePage device={device} t={t} onBack={() => setScreen('home')} />
+  } else if (screen === 'photoReport') {
+    content = <PhotoReportPage device={device} t={t} onBack={() => setScreen('home')} />
+  } else if (screen === 'planograms') {
+    content = <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
+  } else if (screen === 'storeTasks') {
+    content = <StoreTasksPage device={device} onBack={() => setScreen('home')} />
+  } else if (screen === 'scanner') {
+    content = <ScannerPage device={device} />
+  } else if (screen === 'profile') {
+    content = (
+      <EmployeeDashboardPage
+        auth={auth}
+        device={device}
+        openShifts={openShifts}
+        shifts={shifts}
+        onOpenAttendance={() => setScreen('attendance')}
+        onOpenStoreTasks={() => setScreen('storeTasks')}
+        onOpenStoreRequests={() => {
+          setStoreRequestEntry('default')
+          setScreen('storeRequests')
+        }}
+        onOpenSettings={() => setScreen('settings')}
+      />
+    )
+  } else {
+    content = (
+      <HomePage
+        openShiftCount={openShifts.length}
+        storeName={device.storeName}
+        language={language}
+        t={t}
+        onLanguageChange={setLanguage}
+        onOpenAttendance={() => setScreen('attendance')}
+        onOpenStoreRequests={() => {
+          setStoreRequestEntry('default')
+          setScreen('storeRequests')
+        }}
+        onOpenInvoice={() => setScreen('invoice')}
+        onOpenPhotoReport={() => setScreen('photoReport')}
+        onOpenPlanograms={() => setScreen('planograms')}
+        onOpenStoreTasks={() => setScreen('storeTasks')}
+        onOpenSettings={() => setScreen('settings')}
+      />
+    )
   }
 
   return (
-    <HomePage
-      openShiftCount={openShifts.length}
-      storeName={device.storeName}
-      language={language}
-      t={t}
-      onLanguageChange={setLanguage}
-      onOpenAttendance={() => setScreen('attendance')}
-      onOpenStoreRequests={() => {
-        setStoreRequestEntry('default')
-        setScreen('storeRequests')
-      }}
-      onOpenInvoice={() => setScreen('invoice')}
-      onOpenPhotoReport={() => setScreen('photoReport')}
-      onOpenPlanograms={() => setScreen('planograms')}
-      onOpenStoreTasks={() => setScreen('storeTasks')}
-      onOpenSettings={() => setScreen('settings')}
-    />
+    <>
+      {content}
+      <BottomNavigation activeScreen={screen} onNavigate={navigateToScreen} />
+    </>
   )
 }
 

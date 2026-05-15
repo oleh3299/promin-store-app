@@ -9,6 +9,8 @@ export type Screen =
   | 'photoReport'
   | 'planograms'
   | 'storeTasks'
+  | 'scanner'
+  | 'profile'
 
 export type StoreRequestEntry = 'default' | 'urgentIt'
 

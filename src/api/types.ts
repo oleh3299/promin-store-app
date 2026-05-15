@@ -33,9 +33,18 @@ export type EmployeeRead = {
   store_id: number | null
   full_name: string
   barcode: string
+  tax_code: string | null
   position: string
   is_active: boolean
   external_1c_id: string | null
+}
+
+export type UserRead = {
+  id: number
+  email: string
+  full_name: string
+  role: 'admin' | 'manager' | 'viewer' | 'hr_manager' | 'hr_tablet' | 'store_manager' | 'employee'
+  is_active: boolean
 }
 
 export type AttendanceShiftRead = {
@@ -196,6 +205,72 @@ export type StoreTaskActionResponse = {
   ok: boolean
   status: string | null
   task: StoreTaskItem | null
+  error: string | null
+  message: string | null
+}
+
+export type HRCandidateStatus =
+  | 'candidate'
+  | 'trainee'
+  | 'approved'
+  | 'synced_to_1c'
+  | 'imported_from_1c'
+  | 'rejected'
+
+export type HRCandidateDecision = 'rejected' | 'trainee' | 'approved'
+
+export type HRCandidateDocument = {
+  document_type: string
+  is_added: boolean
+}
+
+export type HRCandidatePayload = {
+  first_name: string
+  last_name: string
+  middle_name?: string | null
+  birth_date?: string | null
+  phone1?: string | null
+  phone2?: string | null
+  passport_code?: string | null
+  tax_code?: string | null
+  residence_address?: string | null
+  registration_address?: string | null
+  marital_status?: string | null
+  has_children: boolean
+  has_credits: boolean
+  credits_amount?: string | number | null
+  previous_workplace?: string | null
+  work_experience?: string | null
+  interview_date?: string | null
+  internship_datetime?: string | null
+  position?: string | null
+  hr_comment?: string | null
+  decision: HRCandidateDecision
+  passport_copy_added?: boolean
+  registration_copy_added?: boolean
+  tax_code_copy_added?: boolean
+}
+
+export type HRCandidate = HRCandidatePayload & {
+  id: number
+  sync_status: HRCandidateStatus
+  synced_at: string | null
+  imported_employee_id: number | null
+  created_by: number | null
+  created_at: string
+  updated_at: string
+  badge_code: string
+  age: number | null
+  documents: HRCandidateDocument[]
+}
+
+export type HRCandidateListResponse = {
+  items: HRCandidate[]
+}
+
+export type HRCandidateSendResponse = {
+  ok: boolean
+  status: HRCandidateStatus
   error: string | null
   message: string | null
 }

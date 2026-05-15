@@ -1525,6 +1525,577 @@ textarea {
   overflow: hidden;
 }
 
+.hr-tablet-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 28px clamp(18px, 4vw, 44px) 132px;
+  background:
+    radial-gradient(circle at top right, rgba(215, 183, 95, 0.18), transparent 34%),
+    linear-gradient(180deg, #f7faf6 0%, #edf2ee 100%);
+  color: #102018;
+}
+
+.hr-login-shell {
+  display: grid;
+  place-items: center;
+  padding-bottom: 28px;
+}
+
+.hr-login-card,
+.hr-form-card,
+.hr-toolbar-card,
+.hr-candidate-card,
+.hr-side-panel > *,
+.hr-empty-state {
+  border: 1px solid rgba(16, 32, 24, 0.08);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 44px rgba(16, 32, 24, 0.08);
+}
+
+.hr-login-card {
+  width: min(520px, 100%);
+  padding: 34px;
+}
+
+.hr-kicker {
+  margin: 0 0 8px;
+  color: #2c7a43;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hr-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin: 0 auto 22px;
+  max-width: 1180px;
+}
+
+.hr-page-header h1,
+.hr-login-card h1 {
+  font-size: clamp(30px, 4vw, 46px);
+  letter-spacing: 0;
+}
+
+.hr-page-header p,
+.hr-login-card p {
+  max-width: 720px;
+  margin: 10px 0 0;
+  color: #617168;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.hr-login-form,
+.hr-candidate-form {
+  display: grid;
+  gap: 16px;
+}
+
+.hr-login-form {
+  margin-top: 26px;
+}
+
+.hr-field,
+.hr-login-form label {
+  display: grid;
+  gap: 8px;
+  color: #46554d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hr-field input,
+.hr-field select,
+.hr-field textarea,
+.hr-login-form input,
+.hr-search input {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid rgba(16, 32, 24, 0.12);
+  border-radius: 18px;
+  padding: 13px 15px;
+  background: #fbfcfa;
+  color: #102018;
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.hr-field textarea {
+  resize: vertical;
+}
+
+.hr-field input:focus,
+.hr-field select:focus,
+.hr-field textarea:focus,
+.hr-login-form input:focus,
+.hr-search input:focus {
+  border-color: rgba(44, 122, 67, 0.55);
+  box-shadow: 0 0 0 4px rgba(44, 122, 67, 0.1);
+}
+
+.hr-primary-action,
+.hr-sticky-actions button,
+.hr-alert button,
+.hr-empty-state button {
+  min-height: 54px;
+  border: 0;
+  border-radius: 18px;
+  padding: 0 22px;
+  background: #0f3d2e;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.hr-link-button {
+  border: 0;
+  padding: 0;
+  margin-bottom: 12px;
+  background: transparent;
+  color: #2c7a43;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.hr-session-bar {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 26px rgba(16, 32, 24, 0.1);
+}
+
+.hr-session-bar span {
+  max-width: 220px;
+  padding-left: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #405148;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hr-session-bar strong {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #edf6ef;
+  color: #1f6b3b;
+  font-size: 12px;
+}
+
+.hr-session-bar button {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 11px;
+  background: #f1f4f0;
+  color: #102018;
+  font-weight: 800;
+}
+
+.hr-toolbar-card {
+  display: grid;
+  gap: 16px;
+  max-width: 1180px;
+  margin: 0 auto 20px;
+  padding: 18px;
+}
+
+.hr-search {
+  display: grid;
+  gap: 8px;
+  color: #46554d;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hr-status-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.hr-status-tabs button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  border: 1px solid rgba(16, 32, 24, 0.08);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #f6f8f5;
+  color: #405148;
+  font-weight: 850;
+}
+
+.hr-status-tabs button.active {
+  background: #0f3d2e;
+  color: #fff;
+}
+
+.hr-candidate-grid {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 14px;
+}
+
+.hr-candidate-card {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding: 18px;
+  text-align: left;
+  color: #102018;
+  cursor: pointer;
+}
+
+.hr-candidate-card strong {
+  font-size: 20px;
+}
+
+.hr-candidate-card p {
+  margin: 0;
+  color: #5c6a62;
+}
+
+.hr-candidate-card dl,
+.hr-sync-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0 0;
+}
+
+.hr-candidate-card dl div,
+.hr-sync-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hr-candidate-card dt,
+.hr-sync-card dt {
+  color: #7b867f;
+  font-size: 12px;
+}
+
+.hr-candidate-card dd,
+.hr-sync-card dd {
+  margin: 0;
+  font-weight: 850;
+  text-align: right;
+}
+
+.hr-card-topline,
+.hr-candidate-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #6a756f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.hr-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 11px;
+  background: #edf2ee;
+  color: #405148;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.hr-status-badge.trainee { background: #f8edd0; color: #6b4c00; }
+.hr-status-badge.approved { background: #e8f4dd; color: #245b20; }
+.hr-status-badge.synced_to_1c { background: #edf6ef; color: #1f6b3b; }
+.hr-status-badge.imported_from_1c { background: #0f3d2e; color: #fff; }
+.hr-status-badge.rejected { background: #f8e4df; color: #8a2d1d; }
+
+.hr-form-layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 18px;
+  align-items: start;
+}
+
+.hr-form-card {
+  padding: 20px;
+}
+
+.hr-form-card h2,
+.hr-sync-card h2 {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+.hr-field-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.hr-field-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.hr-field-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hr-field-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.hr-age-box,
+.hr-switch {
+  min-height: 54px;
+  border: 1px solid rgba(16, 32, 24, 0.08);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: #f7faf6;
+}
+
+.hr-age-box span,
+.hr-switch span {
+  display: block;
+  color: #657269;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hr-age-box strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 24px;
+}
+
+.hr-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hr-switch input,
+.hr-document-row input {
+  width: 22px;
+  height: 22px;
+  accent-color: #0f3d2e;
+}
+
+.hr-document-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.hr-document-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 13px;
+  background: #f7faf6;
+  color: #405148;
+  font-weight: 800;
+}
+
+.hr-side-panel {
+  position: sticky;
+  top: 76px;
+  display: grid;
+  gap: 14px;
+}
+
+.hr-badge-preview {
+  width: 100%;
+  min-height: 430px;
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+}
+
+.hr-badge-brand {
+  width: 100%;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #d8ded8;
+  color: #0f3d2e;
+  font-size: 18px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.hr-badge-name {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+
+.hr-badge-name strong {
+  font-size: 28px;
+  text-transform: uppercase;
+}
+
+.hr-badge-name span {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.hr-badge-name small,
+.hr-badge-preview p {
+  color: #5d6b63;
+  font-weight: 800;
+}
+
+.hr-sync-card {
+  padding: 18px;
+}
+
+.hr-alert,
+.hr-toast {
+  max-width: 1180px;
+  margin: 0 auto 14px;
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: #fff7df;
+  color: #604a12;
+  font-weight: 850;
+}
+
+.hr-alert.error {
+  background: #f8e4df;
+  color: #8a2d1d;
+}
+
+.hr-field-error {
+  color: #8a2d1d;
+  font-weight: 850;
+}
+
+.hr-sticky-actions {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 30;
+  width: min(1120px, calc(100% - 28px));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(16, 32, 24, 0.08);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 50px rgba(16, 32, 24, 0.16);
+}
+
+.hr-sticky-actions button {
+  flex: 1 1 auto;
+}
+
+.hr-sticky-actions button.secondary {
+  background: #d7b75f;
+  color: #102018;
+}
+
+.hr-sticky-actions button.danger {
+  background: #f3ebe7;
+  color: #8a2d1d;
+}
+
+.hr-empty-state {
+  max-width: 680px;
+  margin: 80px auto;
+  padding: 28px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.hr-empty-state strong {
+  font-size: 24px;
+}
+
+.hr-empty-state span {
+  color: #657269;
+}
+
+.hr-form-skeleton,
+.hr-candidate-card.skeleton {
+  min-height: 140px;
+  border-radius: 28px;
+  background: linear-gradient(90deg, #eef3ed, #fff, #eef3ed);
+  background-size: 220% 100%;
+  animation: hr-skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes hr-skeleton {
+  from { background-position: 0 0; }
+  to { background-position: -220% 0; }
+}
+
+@media (max-width: 900px) {
+  .hr-page-header,
+  .hr-form-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hr-page-header {
+    display: grid;
+    padding-top: 46px;
+  }
+
+  .hr-side-panel {
+    position: static;
+    order: -1;
+  }
+
+  .hr-field-grid.two,
+  .hr-field-grid.three,
+  .hr-field-grid.four {
+    grid-template-columns: 1fr;
+  }
+
+  .hr-sticky-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .hr-tablet-shell {
+    padding-inline: 14px;
+  }
+
+  .hr-session-bar {
+    left: 10px;
+    right: 10px;
+    justify-content: flex-end;
+  }
+
+  .hr-session-bar span {
+    margin-right: auto;
+  }
+
+  .hr-sticky-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 .scanner-hint {
   margin: 8px 0 0;
   color: #405148;

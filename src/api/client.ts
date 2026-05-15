@@ -15,6 +15,11 @@ import type {
   StoreTaskActionResponse,
   StoreTaskDetail,
   StoreTaskListResponse,
+  HRCandidate,
+  HRCandidateListResponse,
+  HRCandidatePayload,
+  HRCandidateSendResponse,
+  UserRead,
 } from './types'
 
 export const API_BASE_URL =
@@ -38,7 +43,7 @@ export class ApiError extends Error {
   }
 }
 
-async function apiRequest<T>(
+export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
   options: RequestOptions = {},
@@ -112,6 +117,17 @@ export function loginDevice(deviceLogin: string, password: string) {
     method: 'POST',
     body: JSON.stringify({ login: deviceLogin, password }),
   })
+}
+
+export function loginUser(email: string, password: string) {
+  return apiRequest<{ access_token: string; token_type: string }>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+}
+
+export function getCurrentUser(accessToken: string) {
+  return apiRequest<UserRead>('/api/auth/me', {}, { accessToken })
 }
 
 export function getDeviceMe(deviceToken: string) {
@@ -275,4 +291,59 @@ export function submitStoreTask(deviceToken: string, taskId: number, formData: F
     },
     { deviceToken },
   )
+}
+
+export function getHRCandidates(accessToken: string, statusFilter?: string) {
+  const query = statusFilter ? `?status_filter=${encodeURIComponent(statusFilter)}` : ''
+  return apiRequest<HRCandidateListResponse>(
+    `/api/hr/candidates${query}`,
+    {},
+    { accessToken },
+  )
+}
+
+export function getHRCandidate(accessToken: string, candidateId: number) {
+  return apiRequest<HRCandidate>(
+    `/api/hr/candidates/${candidateId}`,
+    {},
+    { accessToken },
+  )
+}
+
+export function createHRCandidate(accessToken: string, payload: HRCandidatePayload) {
+  return apiRequest<HRCandidate>(
+    '/api/hr/candidates',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    { accessToken },
+  )
+}
+
+export function updateHRCandidate(
+  accessToken: string,
+  candidateId: number,
+  payload: Partial<HRCandidatePayload> & { sync_status?: HRCandidate['sync_status'] },
+) {
+  return apiRequest<HRCandidate>(
+    `/api/hr/candidates/${candidateId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    },
+    { accessToken },
+  )
+}
+
+export function sendHRCandidateToOneC(accessToken: string, candidateId: number) {
+  return apiRequest<HRCandidateSendResponse>(
+    `/api/hr/candidates/${candidateId}/send-to-1c`,
+    { method: 'POST' },
+    { accessToken },
+  )
+}
+
+export function getHRCandidateBadgeUrl(candidateId: number) {
+  return `${API_BASE_URL}/api/hr/candidates/${candidateId}/badge`
 }

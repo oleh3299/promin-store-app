@@ -25,6 +25,7 @@ import ScannerPage from './pages/ScannerPage'
 import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
 import StoreTasksPage from './pages/StoreTasksPage'
+import HRTabletApp from './hr/HRTabletApp'
 import type {
   AttendancePageState,
   AuthState,
@@ -36,7 +37,7 @@ import type {
   SyncState,
 } from './types/attendance'
 
-function App() {
+function StoreApp() {
   const [initialState] = useState(loadAppPersistence)
   const [screen, setScreen] = useState<Screen>(initialState.screen)
   const [storeRequestEntry, setStoreRequestEntry] =
@@ -131,7 +132,7 @@ function App() {
           ...currentSync,
           apiStatus: 'online',
           lastSyncAt: new Date().toISOString(),
-          lastSyncMessage: 'Термінал активний',
+          lastSyncMessage: 'РўРµСЂРјС–РЅР°Р» Р°РєС‚РёРІРЅРёР№',
         }))
       } catch (error) {
         setLoginError(
@@ -329,6 +330,14 @@ function App() {
       <BottomNavigation activeScreen={screen} onNavigate={navigateToScreen} />
     </>
   )
+}
+
+function App() {
+  if (window.location.pathname.startsWith('/admin/hr')) {
+    return <HRTabletApp />
+  }
+
+  return <StoreApp />
 }
 
 export default App

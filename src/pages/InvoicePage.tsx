@@ -4,7 +4,7 @@ import {
   getStoreRequestActiveEmployees,
   uploadInvoice,
 } from '../api/client'
-import type { ActiveStoreEmployee, InvoiceRequestType, InvoiceTodayItem } from '../api/types'
+import type { ActiveStoreEmployee, InvoiceTodayItem } from '../api/types'
 import type { Translation } from '../i18n/translations'
 import type { DeviceState } from '../types/attendance'
 
@@ -14,7 +14,6 @@ type InvoicePageProps = {
   onBack: () => void
 }
 
-const invoiceTypes: InvoiceRequestType[] = ['incoming', 'return', 'writeoff', 'assembly']
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxInvoiceFileSize = 10 * 1024 * 1024
 const invoiceTimeFormatter = new Intl.DateTimeFormat('uk-UA', {
@@ -24,7 +23,6 @@ const invoiceTimeFormatter = new Intl.DateTimeFormat('uk-UA', {
 })
 
 function InvoicePage({ device, t, onBack }: InvoicePageProps) {
-  const [requestType, setRequestType] = useState<InvoiceRequestType>('incoming')
   const [employees, setEmployees] = useState<ActiveStoreEmployee[]>([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null)
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true)
@@ -143,7 +141,7 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
     }
 
     const formData = new FormData()
-    formData.append('request_type', requestType)
+    formData.append('request_type', 'incoming')
     if (selectedEmployeeId !== null) {
       formData.append('employee_id', String(selectedEmployeeId))
     }
@@ -197,24 +195,12 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.invoice.kicker}</p>
-        <h1>{t.invoice.title}</h1>
-        <p className="app-subtitle">{t.invoice.subtitle}</p>
+        <h1>Відправити накладну</h1>
       </section>
 
       {statusMessage && <div className="message-box">{statusMessage}</div>}
 
       <section className="panel invoice-form">
-        <label>
-          <span>{t.invoice.operationType}</span>
-          <select value={requestType} onChange={(event) => setRequestType(event.target.value as InvoiceRequestType)}>
-            {invoiceTypes.map((type) => (
-              <option key={type} value={type}>
-                {t.invoice.types[type]}
-              </option>
-            ))}
-          </select>
-        </label>
-
         <div className="employee-card">
           <span>{t.invoice.employeeLabel}</span>
           {employees.length === 0 && <strong>{t.invoice.employeeUnknown}</strong>}
@@ -255,12 +241,12 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
         )}
 
         <label>
-          <span>{t.invoice.commentLabel}</span>
+          <span>Коментар (необов'язково)</span>
           <textarea
             value={comment}
-            placeholder={t.invoice.commentPlaceholder}
+            placeholder="Коротке уточнення для бухгалтерії"
             onChange={(event) => setComment(event.target.value)}
-            rows={4}
+            rows={3}
           />
         </label>
 
@@ -277,7 +263,7 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
             {todayItems.map((item) => (
               <div className="invoice-today-row" key={item.id}>
                 <span>{invoiceTimeFormatter.format(new Date(item.sent_at ?? item.created_at))}</span>
-                <strong>{item.request_type_label || t.invoice.types[item.request_type]}</strong>
+                <strong>Накладна</strong>
                 <span>{item.employee_name ?? t.invoice.employeeUnknown}</span>
                 <span>{item.status === 'sent' ? t.invoice.statusSent : item.status}</span>
               </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   createStoreRequest,
   getStoreRequestActiveEmployees,
+  uploadStoreRequest,
 } from '../api/client'
 import type {
   ActiveStoreEmployee,
@@ -17,22 +18,24 @@ type StoreRequestsPageProps = {
   onBack: () => void
 }
 
-const routeOptions: Array<{ key: StoreRequestRouteKey; label: keyof Translation['storeRequests'] }> = [
-  { key: 'purchase', label: 'purchase' },
-  { key: 'accounting', label: 'accounting' },
-  { key: 'it', label: 'it' },
+const routeOptions: Array<{ key: StoreRequestRouteKey; label: string }> = [
+  { key: 'accounting', label: 'Бухгалтерія' },
+  { key: 'it', label: 'IT' },
+  { key: 'manager', label: 'Адміністрація' },
 ]
 
-const accountingTypes = ['receipt', 'return', 'writeoff', 'completion', 'other'] as const
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
+const maxStoreRequestFileSize = 10 * 1024 * 1024
 
 function getInitialRouteKey(entry: StoreRequestEntry): StoreRequestRouteKey {
-  return entry === 'urgentIt' ? 'it' : 'purchase'
+  return entry === 'urgentIt' ? 'it' : 'accounting'
 }
 
 function getInitialRequestType(entry: StoreRequestEntry, routeKey: StoreRequestRouteKey): string | null {
   if (entry === 'urgentIt') return 'urgent_it'
   if (routeKey === 'it') return 'it_problem'
-  if (routeKey === 'accounting') return 'receipt'
+  if (routeKey === 'accounting') return 'accounting'
+  if (routeKey === 'manager') return 'manager'
   return null
 }
 
@@ -47,8 +50,9 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const isUrgentIt = entry === 'urgentIt'
-  const messagePlaceholder = routeKey === 'it' ? t.storeRequests.itMessagePlaceholder : t.storeRequests.messagePlaceholder
+  const messagePlaceholder = routeKey === 'it' ? t.storeRequests.itMessagePlaceholder : 'Коротко опишіть питання'
 
   useEffect(() => {
     const nextRouteKey = getInitialRouteKey(entry)
@@ -99,21 +103,54 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
   const employeeRequired = employees.length > 1 && selectedEmployeeId === null
   const canSubmit = Boolean(message.trim()) && !employeeRequired && !isSubmitting && !isLoadingEmployees
 
+  const handleFileChange = (nextFile: File | undefined) => {
+    setStatusMessage('')
+    if (!nextFile) {
+      setFile(null)
+      return
+    }
+    if (!allowedImageTypes.includes(nextFile.type)) {
+      setFile(null)
+      setStatusMessage('Підтримуються тільки JPEG, PNG або WEBP')
+      return
+    }
+    if (nextFile.size > maxStoreRequestFileSize) {
+      setFile(null)
+      setStatusMessage('Файл занадто великий. Максимум 10 MB')
+      return
+    }
+    setFile(nextFile)
+  }
+
   const submitRequest = async () => {
     if (!device.deviceToken || !canSubmit) return
 
     setIsSubmitting(true)
     setStatusMessage('')
     try {
-      const response = await createStoreRequest(device.deviceToken, {
-        route_key: routeKey,
-        request_type: requestType,
-        employee_id: selectedEmployeeId,
-        message: message.trim(),
-      })
+      const response = file
+        ? await uploadStoreRequest(
+            device.deviceToken,
+            (() => {
+              const formData = new FormData()
+              formData.append('route_key', routeKey)
+              if (requestType) formData.append('request_type', requestType)
+              if (selectedEmployeeId !== null) formData.append('employee_id', String(selectedEmployeeId))
+              formData.append('message', message.trim())
+              formData.append('file', file)
+              return formData
+            })(),
+          )
+        : await createStoreRequest(device.deviceToken, {
+            route_key: routeKey,
+            request_type: requestType,
+            employee_id: selectedEmployeeId,
+            message: message.trim(),
+          })
 
       if (response.ok) {
         setMessage('')
+        setFile(null)
         setStatusMessage(t.storeRequests.sent)
         return
       }
@@ -144,8 +181,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.storeRequests.kicker}</p>
-        <h1>{t.storeRequests.title}</h1>
-        <p className="app-subtitle">{isUrgentIt ? t.storeRequests.urgentSubtitle : t.storeRequests.subtitle}</p>
+        <h1>Зв'язок</h1>
       </section>
 
       {statusMessage && <div className="message-box">{statusMessage}</div>}
@@ -169,23 +205,10 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
                   setStatusMessage('')
                 }}
               >
-                {String(t.storeRequests[option.label])}
+                {option.label}
               </button>
             ))}
           </div>
-        )}
-
-        {routeKey === 'accounting' && (
-          <label>
-            <span>{t.storeRequests.requestType}</span>
-            <select value={requestType ?? 'receipt'} onChange={(event) => setRequestType(event.target.value)}>
-              {accountingTypes.map((type) => (
-                <option key={type} value={type}>
-                  {t.storeRequests.accountingTypes[type]}
-                </option>
-              ))}
-            </select>
-          </label>
         )}
 
         <div className="employee-card">
@@ -211,12 +234,23 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
         </div>
 
         <label>
-          <span>{t.storeRequests.messageLabel}</span>
+          <span>Повідомлення</span>
           <textarea
             value={message}
             placeholder={messagePlaceholder}
             onChange={(event) => setMessage(event.target.value)}
-            rows={6}
+            rows={5}
+          />
+        </label>
+
+        <label className="file-picker compact">
+          <span>Фото (необов'язково)</span>
+          <strong>{file ? file.name : 'Додати фото'}</strong>
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            capture="environment"
+            type="file"
+            onChange={(event) => handleFileChange(event.target.files?.[0])}
           />
         </label>
 

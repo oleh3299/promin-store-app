@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
+from pathlib import PurePath
+from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -19,6 +21,12 @@ from app.services.rocket_chat_service import RocketChatError, RocketChatService
 
 
 logger = logging.getLogger(__name__)
+MAX_STORE_REQUEST_FILE_SIZE = 10 * 1024 * 1024
+ALLOWED_STORE_REQUEST_CONTENT_TYPES = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+}
 
 
 class StoreRequestError(Exception):
@@ -32,6 +40,15 @@ class StoreRequestError(Exception):
 class StoreRequestResult:
     status: str
     route_key: str
+
+
+def safe_store_request_filename(filename: str | None, content_type: str) -> str:
+    extension = ALLOWED_STORE_REQUEST_CONTENT_TYPES[content_type]
+    raw_name = PurePath(filename or "").name
+    stem = raw_name.rsplit(".", 1)[0] if raw_name else "store-request"
+    safe_stem = "".join(char for char in stem if char.isascii() and (char.isalnum() or char in ("-", "_")))
+    safe_stem = safe_stem[:48] or "store-request"
+    return f"{datetime.now(timezone.utc):%Y%m%d%H%M%S}-{uuid4().hex[:8]}-{safe_stem}.{extension}"
 
 
 def get_open_shift_rows(db: Session, store_id: int) -> list[tuple[AttendanceShift, Employee]]:
@@ -250,4 +267,70 @@ def create_store_request(
             "status": "sent",
         },
     )
+    return StoreRequestResult(status="sent", route_key=payload.route_key)
+
+
+def create_store_request_with_optional_file(
+    db: Session,
+    device: Device,
+    payload: StoreRequestCreate,
+    filename: str | None,
+    content_type: str | None,
+    file_bytes: bytes | None,
+) -> StoreRequestResult:
+    if not file_bytes:
+        return create_store_request(db, device, payload)
+
+    if content_type not in ALLOWED_STORE_REQUEST_CONTENT_TYPES:
+        raise StoreRequestError("invalid_file_type", "Підтримуються тільки JPEG, PNG або WEBP")
+
+    if len(file_bytes) > MAX_STORE_REQUEST_FILE_SIZE:
+        raise StoreRequestError("file_too_large", "Файл занадто великий. Максимум 10 MB")
+
+    if device.store_id is None:
+        raise StoreRequestError("device_store_required", "Пристрій не прив'язаний до магазину")
+
+    store = db.get(Store, device.store_id)
+    if store is None:
+        raise StoreRequestError("store_not_found", "Магазин не знайдено")
+
+    employee_id = resolve_employee_id(db, device.store_id, payload.employee_id)
+    employee = db.get(Employee, employee_id) if employee_id is not None else None
+    route = resolve_route(db, payload.route_key, device.store_id)
+    if route is None:
+        raise StoreRequestError("route_not_configured", "Маршрут для цього типу звернення не налаштований")
+
+    now = datetime.now(timezone.utc)
+    log = StoreRequestLog(
+        store_id=device.store_id,
+        device_id=device.id,
+        employee_id=employee_id,
+        route_key=payload.route_key,
+        request_type=payload.request_type,
+        rocket_room_id=route.room_id,
+        status="failed",
+        created_at=now,
+    )
+    text = format_store_request_message(store, device, payload, employee)
+    try:
+        result = RocketChatService().upload_file(
+            route.room_id,
+            safe_store_request_filename(filename, content_type),
+            content_type,
+            file_bytes,
+            text,
+            "",
+        )
+    except RocketChatError as exc:
+        log.error_text = str(exc)
+        db.add(log)
+        db.commit()
+        raise StoreRequestError("delivery_failed", "Не вдалося відправити звернення") from exc
+
+    log.status = "sent"
+    log.rocket_file_id = result.file_id
+    log.rocket_message_id = result.message_id
+    log.sent_at = datetime.now(timezone.utc)
+    db.add(log)
+    db.commit()
     return StoreRequestResult(status="sent", route_key=payload.route_key)

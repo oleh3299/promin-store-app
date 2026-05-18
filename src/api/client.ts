@@ -207,6 +207,17 @@ export function createStoreRequest(
   )
 }
 
+export function uploadStoreRequest(deviceToken: string, formData: FormData) {
+  return apiRequest<StoreRequestResponse>(
+    '/api/store-requests/upload',
+    {
+      method: 'POST',
+      body: formData,
+    },
+    { deviceToken },
+  )
+}
+
 export function uploadInvoice(deviceToken: string, formData: FormData) {
   return apiRequest<InvoiceUploadResponse>(
     '/api/invoices/upload',

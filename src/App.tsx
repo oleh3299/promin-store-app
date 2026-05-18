@@ -6,25 +6,17 @@ import {
   loginDevice,
 } from './api/client'
 import { useI18n } from './i18n/useI18n'
-import { canUseNotifications } from './lib/pwa'
 import {
   loadAppPersistence,
   saveAppPersistence,
 } from './lib/storage'
 import { syncOfflineQueue } from './lib/sync'
-import BottomNavigation from './components/BottomNavigation'
 import AttendancePage from './pages/AttendancePage'
-import DiagnosticsPage from './pages/DiagnosticsPage'
-import EmployeeDashboardPage from './pages/EmployeeDashboardPage'
 import HomePage from './pages/HomePage'
 import InvoicePage from './pages/InvoicePage'
 import LoginPage from './pages/LoginPage'
-import PhotoReportPage from './pages/PhotoReportPage'
 import PlanogramsPage from './pages/PlanogramsPage'
-import ScannerPage from './pages/ScannerPage'
-import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
-import StoreTasksPage from './pages/StoreTasksPage'
 import HRTabletApp from './hr/HRTabletApp'
 import type {
   AttendancePageState,
@@ -37,9 +29,20 @@ import type {
   SyncState,
 } from './types/attendance'
 
+const operationalScreens: Screen[] = [
+  'home',
+  'attendance',
+  'storeRequests',
+  'invoice',
+  'planograms',
+  'login',
+]
+
 function StoreApp() {
   const [initialState] = useState(loadAppPersistence)
-  const [screen, setScreen] = useState<Screen>(initialState.screen)
+  const [screen, setScreen] = useState<Screen>(
+    operationalScreens.includes(initialState.screen) ? initialState.screen : 'home',
+  )
   const [storeRequestEntry, setStoreRequestEntry] =
     useState<StoreRequestEntry>('default')
   const [selectedStore] = useState(initialState.selectedStore)
@@ -55,9 +58,6 @@ function StoreApp() {
   const [sync, setSync] = useState<SyncState>(initialState.sync)
   const [loginError, setLoginError] = useState('')
   const [loginPending, setLoginPending] = useState(false)
-  const [notificationStatus, setNotificationStatus] = useState(
-    canUseNotifications() ? Notification.permission : 'unsupported',
-  )
 
   const t = useI18n(language)
   const openShifts = shifts.filter((shift) => !shift.checkOutTime)
@@ -147,26 +147,6 @@ function StoreApp() {
     [t.auth.disabledDevice, t.auth.invalidCredentials],
   )
 
-  const handleLogout = useCallback(() => {
-    setAuth({
-      accessToken: null,
-      deviceLogin: null,
-      fullName: null,
-    })
-    setDevice((currentDevice) => ({
-      ...currentDevice,
-      id: null,
-      deviceToken: null,
-      status: null,
-      login: null,
-      storeId: null,
-      storeCode: null,
-      storeName: null,
-      deviceName: null,
-    }))
-    setScreen('login')
-  }, [])
-
   useEffect(() => {
     saveAppPersistence({
       selectedStore,
@@ -225,10 +205,6 @@ function StoreApp() {
     )
   }
 
-  const navigateToScreen = (nextScreen: Screen) => {
-    setScreen(nextScreen)
-  }
-
   let content
 
   if (screen === 'attendance') {
@@ -246,16 +222,6 @@ function StoreApp() {
         onBack={() => setScreen('home')}
       />
     )
-  } else if (screen === 'settings') {
-    content = (
-      <SettingsPage
-        notificationStatus={notificationStatus}
-        t={t}
-        onNotificationStatusChange={setNotificationStatus}
-        onBack={() => setScreen('home')}
-        onOpenDiagnostics={() => setScreen('diagnostics')}
-      />
-    )
   } else if (screen === 'storeRequests') {
     content = (
       <StoreRequestsPage
@@ -265,71 +231,28 @@ function StoreApp() {
         onBack={() => setScreen('home')}
       />
     )
-  } else if (screen === 'diagnostics') {
-    content = (
-      <DiagnosticsPage
-        auth={auth}
-        device={device}
-        queueLength={offlineQueue.length}
-        sync={sync}
-        t={t}
-        onBack={() => setScreen('home')}
-        onCheckApi={checkApiStatus}
-        onSync={runQueueSync}
-        onLogout={handleLogout}
-      />
-    )
   } else if (screen === 'invoice') {
     content = <InvoicePage device={device} t={t} onBack={() => setScreen('home')} />
-  } else if (screen === 'photoReport') {
-    content = <PhotoReportPage device={device} t={t} onBack={() => setScreen('home')} />
   } else if (screen === 'planograms') {
     content = <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
-  } else if (screen === 'storeTasks') {
-    content = <StoreTasksPage device={device} />
-  } else if (screen === 'scanner') {
-    content = <ScannerPage device={device} />
-  } else if (screen === 'profile') {
-    content = (
-      <EmployeeDashboardPage
-        auth={auth}
-        device={device}
-        openShifts={openShifts}
-        shifts={shifts}
-        onOpenAttendance={() => setScreen('attendance')}
-        onOpenStoreTasks={() => setScreen('storeTasks')}
-        onOpenStoreRequests={() => {
-          setStoreRequestEntry('default')
-          setScreen('storeRequests')
-        }}
-        onOpenSettings={() => setScreen('settings')}
-      />
-    )
   } else {
     content = (
       <HomePage
         openShiftCount={openShifts.length}
         storeName={device.storeName}
-        language={language}
         t={t}
-        onLanguageChange={setLanguage}
         onOpenStoreRequests={() => {
           setStoreRequestEntry('default')
           setScreen('storeRequests')
         }}
         onOpenInvoice={() => setScreen('invoice')}
-        onOpenPhotoReport={() => setScreen('photoReport')}
+        onOpenAttendance={() => setScreen('attendance')}
         onOpenPlanograms={() => setScreen('planograms')}
       />
     )
   }
 
-  return (
-    <>
-      {content}
-      <BottomNavigation activeScreen={screen} onNavigate={navigateToScreen} />
-    </>
-  )
+  return content
 }
 
 function App() {

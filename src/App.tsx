@@ -4,6 +4,7 @@ import {
   ApiError,
   DEVICE_DISABLED_EVENT,
   getHealth,
+  getStoreTasks,
   loginDevice,
 } from './api/client'
 import { useI18n } from './i18n/useI18n'
@@ -63,6 +64,7 @@ function StoreApp() {
   const [loginError, setLoginError] = useState('')
   const [loginPending, setLoginPending] = useState(false)
   const [deviceBlocked, setDeviceBlocked] = useState(false)
+  const [incomingMessageCount, setIncomingMessageCount] = useState(0)
 
   const t = useI18n(language)
   const openShifts = shifts.filter((shift) => !shift.checkOutTime)
@@ -92,6 +94,24 @@ function StoreApp() {
       }))
     }
   }, [])
+
+  const loadIncomingMessageCount = useCallback(async () => {
+    if (!device.deviceToken) {
+      setIncomingMessageCount(0)
+      return
+    }
+
+    try {
+      const response = await getStoreTasks(device.deviceToken, 'open,new')
+      setIncomingMessageCount(
+        response.items.filter(
+          (task) => task.source === 'rocket_chat' && (task.status === 'open' || task.status === 'new'),
+        ).length,
+      )
+    } catch {
+      setIncomingMessageCount(0)
+    }
+  }, [device.deviceToken])
 
   const clearDeviceSession = useCallback(() => {
     setAuth(DEFAULT_AUTH_STATE)
@@ -184,6 +204,12 @@ function StoreApp() {
   }, [checkApiStatus])
 
   useEffect(() => {
+    if (screen === 'home') {
+      void loadIncomingMessageCount()
+    }
+  }, [loadIncomingMessageCount, screen])
+
+  useEffect(() => {
     const handleDeviceDisabled = () => {
       clearDeviceSession()
       setDeviceBlocked(true)
@@ -255,6 +281,7 @@ function StoreApp() {
         openShiftCount={openShifts.length}
         storeName={device.storeName}
         t={t}
+        incomingMessageCount={incomingMessageCount}
         onOpenStoreRequests={() => {
           setStoreRequestEntry('default')
           setScreen('storeRequests')

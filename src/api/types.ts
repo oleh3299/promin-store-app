@@ -152,6 +152,7 @@ export type PlanogramListResponse = {
 }
 
 export type StoreTaskStatus =
+  | 'new'
   | 'open'
   | 'in_progress'
   | 'submitted'

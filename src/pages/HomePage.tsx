@@ -9,12 +9,14 @@ type HomePageProps = {
   onOpenAttendance: () => void
   onOpenPlanograms: () => void
   onOpenStoreTasks: () => void
+  incomingMessageCount: number
 }
 
 type OperationItem = {
   title: string
   subtitle: string
   action: () => void
+  badgeCount?: number
 }
 
 function HomePage({
@@ -26,6 +28,7 @@ function HomePage({
   onOpenAttendance,
   onOpenPlanograms,
   onOpenStoreTasks,
+  incomingMessageCount,
 }: HomePageProps) {
   const operationItems: OperationItem[] = [
     {
@@ -50,8 +53,9 @@ function HomePage({
     },
     {
       title: 'Повідомлення',
-      subtitle: 'Вхідні завдання з офісу',
+      subtitle: 'Нові повідомлення від бухгалтерії, IT, адміністрації',
       action: onOpenStoreTasks,
+      badgeCount: incomingMessageCount,
     },
   ]
 
@@ -69,7 +73,15 @@ function HomePage({
       <section className="terminal-action-grid" aria-label="Основні операції магазину">
         {operationItems.map((item) => (
           <button key={item.title} type="button" className="terminal-action-card" onClick={item.action}>
-            <span>{item.title}</span>
+            <span>
+              {item.title}
+              {item.badgeCount ? (
+                <strong className="home-card-badge" aria-label={`Нові повідомлення: ${item.badgeCount}`}>
+                  <i />
+                  {item.badgeCount}
+                </strong>
+              ) : null}
+            </span>
             <small>{item.subtitle}</small>
           </button>
         ))}

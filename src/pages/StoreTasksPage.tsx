@@ -25,8 +25,10 @@ type FeedItem = {
   description: string
   time: string
   status: FeedStatus
+  rawStatus: StoreTaskStatus
   priority: StoreTaskItem['priority']
-  actionLabel: 'Виконати' | 'Переглянути' | 'Підтвердити'
+  actionLabel: 'Виконати' | 'Переглянути' | 'Підтвердити' | 'Відповісти'
+  isRocketMessage: boolean
   taskId?: number
 }
 
@@ -44,8 +46,16 @@ const fullDateFormatter = new Intl.DateTimeFormat('uk-UA', {
   year: 'numeric',
   timeZone: 'Europe/Uzhgorod',
 })
+const messageDateFormatter = new Intl.DateTimeFormat('uk-UA', {
+  day: '2-digit',
+  month: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'Europe/Uzhgorod',
+})
 
 const statusLabels: Record<StoreTaskStatus, string> = {
+  new: 'Нове',
   open: 'Нове',
   in_progress: 'В роботі',
   submitted: 'На перевірці',
@@ -91,29 +101,6 @@ const tabs: { key: FeedTab; label: string }[] = [
   { key: 'done', label: 'Виконані' },
 ]
 
-const mockFeedItems: FeedItem[] = [
-  {
-    id: 'message-opening',
-    type: 'Контроль',
-    title: 'Перевірити готовність магазину',
-    description: 'Вітрини, касова зона, фасад і цінники перед активним трафіком.',
-    time: '09:00',
-    status: 'active',
-    priority: 'normal',
-    actionLabel: 'Переглянути',
-  },
-  {
-    id: 'push-prices',
-    type: 'Пуш',
-    title: 'Оновлення акційних цінників',
-    description: 'Після переоцінки перевірте відповідність цінників у торговому залі.',
-    time: '12:30',
-    status: 'info',
-    priority: 'high',
-    actionLabel: 'Підтвердити',
-  },
-]
-
 function formatDeadline(task: StoreTaskItem) {
   if (!task.due_date) {
     return 'Без дедлайну'
@@ -124,6 +111,10 @@ function formatDeadline(task: StoreTaskItem) {
 }
 
 function taskActionLabel(task: StoreTaskItem): FeedItem['actionLabel'] {
+  if (task.source === 'rocket_chat' && (task.status === 'open' || task.status === 'new')) {
+    return 'Відповісти'
+  }
+
   if (task.status === 'submitted') {
     return 'Переглянути'
   }
@@ -156,7 +147,7 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
   const [selectedTask, setSelectedTask] = useState<StoreTaskDetail | null>(null)
   const [employees, setEmployees] = useState<ActiveStoreEmployee[]>([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState<FeedTab>('all')
+  const [activeTab, setActiveTab] = useState<FeedTab>('messages')
   const [file, setFile] = useState<File | null>(null)
   const [comment, setComment] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
@@ -174,7 +165,7 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
     try {
       const response = await getStoreTasks(
         device.deviceToken,
-        'open,in_progress,submitted,rejected,completed,verified',
+        'open,new,in_progress,submitted,rejected,completed,verified',
       )
       setTasks(response.items)
     } catch {
@@ -211,14 +202,16 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
       type: taskFeedType(task),
       title: task.title,
       description: taskFeedDescription(task),
-      time: formatDeadline(task),
+      time: task.source === 'rocket_chat' ? messageDateFormatter.format(new Date(task.created_at)) : formatDeadline(task),
       status: taskFeedStatus(task),
+      rawStatus: task.status,
       priority: task.priority,
       actionLabel: taskActionLabel(task),
+      isRocketMessage: task.source === 'rocket_chat',
       taskId: task.id,
     }))
 
-    return [...mockFeedItems, ...taskItems]
+    return taskItems
   }, [tasks])
 
   const summary = useMemo(
@@ -235,7 +228,9 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
       return feedItems.filter((item) => item.type !== 'Повідомлення' && item.type !== 'Пуш')
     }
     if (activeTab === 'messages') {
-      return feedItems.filter((item) => item.type === 'Повідомлення' || item.type === 'Пуш')
+      return feedItems.filter(
+        (item) => item.isRocketMessage && (item.rawStatus === 'open' || item.rawStatus === 'new'),
+      )
     }
     if (activeTab === 'urgent') {
       return feedItems.filter((item) => item.priority === 'urgent' || item.priority === 'high' || item.status === 'overdue')
@@ -251,7 +246,7 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
   const canSubmit =
     Boolean(selectedTask) &&
     selectedTask !== null &&
-    ['open', 'in_progress', 'rejected'].includes(selectedTask.status) &&
+    ['new', 'open', 'in_progress', 'rejected'].includes(selectedTask.status) &&
     !employeeRequired &&
     !isSubmitting
 
@@ -502,10 +497,10 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
             )}
           </div>
 
-          {selectedTask.requires_photo && (
+          {(selectedTask.requires_photo || selectedTask.source === 'rocket_chat') && (
             <label className="file-picker">
-              <span>Фото виконання</span>
-              <strong>{file ? 'Фото додано' : 'Зробити фото'}</strong>
+              <span>Фото</span>
+              <strong>{file ? 'Фото додано' : 'Додати фото'}</strong>
               <input
                 accept="image/jpeg,image/png,image/webp"
                 capture="environment"
@@ -515,26 +510,26 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
             </label>
           )}
 
-          {selectedTask.requires_comment && (
+          {(selectedTask.requires_comment || selectedTask.source === 'rocket_chat') && (
             <label>
               <span>Коментар</span>
               <textarea
                 value={comment}
-                placeholder="Додайте короткий коментар"
+                placeholder={selectedTask.source === 'rocket_chat' ? 'Напишіть відповідь магазину' : 'Додайте короткий коментар'}
                 rows={4}
                 onChange={(event) => setComment(event.target.value)}
               />
             </label>
           )}
 
-          {selectedTask.status === 'open' || selectedTask.status === 'rejected' ? (
+          {selectedTask.status === 'new' || selectedTask.status === 'open' || selectedTask.status === 'rejected' ? (
             <button className="wide-button secondary" disabled={isSubmitting} onClick={() => void handleStart()}>
-              Почати
+              {selectedTask.source === 'rocket_chat' ? 'Відповісти' : 'Почати'}
             </button>
           ) : null}
 
           <button className="confirm-button" disabled={!canSubmit} onClick={() => void handleSubmit()}>
-            {isSubmitting ? 'Надсилання' : 'Надіслати виконання'}
+            {isSubmitting ? 'Надсилання' : selectedTask.source === 'rocket_chat' ? 'Виконано' : 'Надіслати виконання'}
           </button>
         </section>
       )}

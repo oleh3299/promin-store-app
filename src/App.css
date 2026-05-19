@@ -256,8 +256,33 @@ h1 {
 }
 
 .terminal-action-card span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   font-size: 21px;
   font-weight: 900;
+}
+
+.home-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 34px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #fff0e8;
+  color: #9b2c2c;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.home-card-badge i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c92a2a;
 }
 
 .terminal-action-card small {

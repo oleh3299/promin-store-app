@@ -31,14 +31,31 @@ def _dict_value(payload: dict[str, Any], key: str) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _safe_payload_for_log(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: "***" if key.lower() in {"token", "auth_token", "x-rocket-webhook-token"} else _safe_payload_for_log(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_safe_payload_for_log(item) for item in value]
+    return value
+
+
 def _parse_rocket_payload(payload: dict[str, Any]) -> dict[str, str | None]:
     message = _dict_value(payload, "message")
     user = _dict_value(message, "u")
 
     return {
         "text": _string_value(payload, "text", "msg") or _string_value(message, "msg", "text"),
-        "room_id": _string_value(payload, "roomId", "room_id", "rid") or _string_value(message, "rid", "roomId"),
-        "message_id": _string_value(payload, "messageId", "_id", "message_id", "id") or _string_value(message, "_id", "id"),
+        "room_id": (
+            _string_value(payload, "roomId", "room_id", "channel_id", "rid")
+            or _string_value(message, "rid", "roomId", "room_id")
+        ),
+        "message_id": (
+            _string_value(payload, "messageId", "message_id", "_id", "id")
+            or _string_value(message, "_id", "messageId", "message_id", "id")
+        ),
         "user_name": (
             _string_value(payload, "user_name", "username", "userName")
             or _string_value(user, "username", "name")
@@ -70,7 +87,7 @@ def fallback_message_id(room_id: str, text: str) -> str:
 
 
 def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) -> StoreTask | None:
-    logger.debug("rocket_store_message_payload_received", extra={"payload": payload})
+    logger.debug("rocket_store_message_payload_received", extra={"payload": _safe_payload_for_log(payload)})
     parsed = _parse_rocket_payload(payload)
     text = parsed["text"] or ""
     if not text:
@@ -78,7 +95,7 @@ def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) 
         return None
 
     if not contains_store_message_tag(text):
-        logger.info("rocket_store_message_skipped", extra={"reason": "missing_tag"})
+        logger.info("rocket_store_message_skipped", extra={"reason": "tag_not_found"})
         return None
 
     room_id = parsed["room_id"]
@@ -102,8 +119,8 @@ def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) 
     )
     if existing_task is not None:
         logger.info(
-            "rocket_store_message_duplicate",
-            extra={"source_message_id": source_message_id, "task_id": existing_task.id},
+            "rocket_store_message_skipped",
+            extra={"reason": "duplicate", "source_message_id": source_message_id, "task_id": existing_task.id},
         )
         return existing_task
 
@@ -120,7 +137,14 @@ def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) 
         logger.warning("rocket_store_message_skipped", extra={"reason": "route_not_found", "room_id": room_id})
         return None
 
-    description = clean_store_message_text(text) or STORE_MESSAGE_TITLE
+    description = clean_store_message_text(text)
+    if not description:
+        logger.warning(
+            "rocket_store_message_skipped",
+            extra={"reason": "empty_clean_text", "room_id": room_id, "source_message_id": source_message_id},
+        )
+        return None
+
     user_name = parsed["user_name"]
     now = datetime.now(timezone.utc)
     task = StoreTask(
@@ -155,12 +179,12 @@ def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) 
     db.commit()
     db.refresh(task)
     logger.info(
-        "rocket_store_message_task_created",
+        "rocket_store_message_created",
         extra={
             "task_id": task.id,
             "store_id": task.store_id,
             "room_id": room_id,
-            "source_message_id": source_message_id,
+            "message_id": source_message_id,
             "route_key": route.route_key,
         },
     )

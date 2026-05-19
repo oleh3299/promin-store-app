@@ -25,6 +25,8 @@ import type {
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? 'https://api-store.prominuz.org'
 
+export const DEVICE_DISABLED_EVENT = 'promin:device-disabled'
+
 type RequestOptions = {
   accessToken?: string | null
   deviceToken?: string | null
@@ -41,6 +43,14 @@ export class ApiError extends Error {
     this.path = path
     this.responseBody = responseBody
   }
+}
+
+function emitDeviceDisabledEvent() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.dispatchEvent(new CustomEvent(DEVICE_DISABLED_EVENT))
 }
 
 export async function apiRequest<T>(
@@ -97,6 +107,10 @@ export async function apiRequest<T>(
       status: response.status,
       responseBody,
     })
+
+    if (options.deviceToken && response.status === 403 && detail === 'Device disabled') {
+      emitDeviceDisabledEvent()
+    }
 
     throw new ApiError(response.status, detail, path, responseBody)
   }

@@ -1,4 +1,5 @@
 from datetime import datetime, time, timezone
+import logging
 from pathlib import PurePath
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -14,10 +15,12 @@ from app.models import (
     StoreTaskEvent,
 )
 from app.schemas.store_task import StoreTaskAttachmentRead, StoreTaskDetail, StoreTaskEventRead, StoreTaskRead
+from app.services.rocket_chat_service import RocketChatError, RocketChatService
 from app.services.store_request_service import StoreRequestError, resolve_employee_id
 from app.storage import STORAGE_ROOT
 
 
+logger = logging.getLogger(__name__)
 LOCAL_TIMEZONE = ZoneInfo("Europe/Uzhgorod")
 STORE_TASK_STORAGE_ROOT = STORAGE_ROOT / "store-tasks"
 MAX_STORE_TASK_FILE_SIZE = 10 * 1024 * 1024
@@ -78,6 +81,10 @@ def task_to_read(task: StoreTask) -> StoreTaskRead:
         id=task.id,
         title=task.title,
         description=task.description,
+        source=task.source,
+        category=task.category,
+        source_route_key=task.source_route_key,
+        source_user_name=task.source_user_name,
         status=task.status,
         priority=task.priority,
         due_date=task.due_date.isoformat() if task.due_date else None,
@@ -197,6 +204,48 @@ def save_store_task_file(store: Store, task: StoreTask, filename: str | None, co
     return file_path.as_posix()
 
 
+def send_rocket_chat_task_reply(
+    task: StoreTask,
+    comment: str | None,
+    filename: str | None,
+    content_type: str | None,
+    file_bytes: bytes | None,
+) -> None:
+    if task.source != "rocket_chat" or not task.source_room_id:
+        return
+
+    reply_text = "Відповідь магазину:"
+    if comment:
+        reply_text = f"{reply_text}\n{comment}"
+    else:
+        reply_text = f"{reply_text}\nВиконано"
+
+    try:
+        rocket = RocketChatService()
+        if file_bytes and content_type:
+            rocket.upload_file(
+                task.source_room_id,
+                filename or "store-task-photo.jpg",
+                content_type,
+                file_bytes,
+                reply_text,
+                "",
+                thread_message_id=task.source_message_id,
+            )
+        else:
+            rocket.send_message(task.source_room_id, reply_text, thread_message_id=task.source_message_id)
+    except RocketChatError as exc:
+        logger.warning(
+            "store_task_rocket_reply_failed",
+            extra={
+                "task_id": task.id,
+                "source_room_id": task.source_room_id,
+                "source_message_id": task.source_message_id,
+                "error": str(exc),
+            },
+        )
+
+
 def submit_store_task(
     db: Session,
     device: Device,
@@ -258,6 +307,7 @@ def submit_store_task(
     db.add(task)
     db.commit()
     db.refresh(task)
+    send_rocket_chat_task_reply(task, clean_comment, filename, content_type, file_bytes)
     return task_to_read(task)
 
 

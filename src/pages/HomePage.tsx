@@ -8,6 +8,7 @@ type HomePageProps = {
   onOpenInvoice: () => void
   onOpenAttendance: () => void
   onOpenPlanograms: () => void
+  onOpenStoreTasks: () => void
 }
 
 type OperationItem = {
@@ -24,6 +25,7 @@ function HomePage({
   onOpenInvoice,
   onOpenAttendance,
   onOpenPlanograms,
+  onOpenStoreTasks,
 }: HomePageProps) {
   const operationItems: OperationItem[] = [
     {
@@ -45,6 +47,11 @@ function HomePage({
       title: "Зв'язок",
       subtitle: 'Бухгалтерія, IT, адміністрація',
       action: onOpenStoreRequests,
+    },
+    {
+      title: 'Повідомлення',
+      subtitle: 'Вхідні завдання з офісу',
+      action: onOpenStoreTasks,
     },
   ]
 

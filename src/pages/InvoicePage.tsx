@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  ApiError,
   getTodayInvoices,
   getStoreRequestActiveEmployees,
   uploadInvoice,
@@ -16,6 +17,7 @@ type InvoicePageProps = {
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxInvoiceFileSize = 10 * 1024 * 1024
+const SERVER_UNAVAILABLE_MESSAGE = 'Немає зв’язку з сервером'
 const invoiceTimeFormatter = new Intl.DateTimeFormat('uk-UA', {
   hour: '2-digit',
   minute: '2-digit',
@@ -45,7 +47,8 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
     try {
       const response = await getTodayInvoices(device.deviceToken)
       setTodayItems(response.items)
-    } catch {
+    } catch (error) {
+      console.error('Invoice list load failed', { error })
       setTodayItems([])
     } finally {
       setIsLoadingToday(false)
@@ -66,7 +69,8 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
         if (cancelled) return
         setEmployees(response.items)
         setSelectedEmployeeId(response.items.length === 1 ? response.items[0].employee_id : null)
-      } catch {
+      } catch (error) {
+        console.error('Invoice employee load failed', { error })
         if (!cancelled) {
           setEmployees([])
           setSelectedEmployeeId(null)
@@ -139,6 +143,10 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
       setStatusMessage(t.invoice.employeeRequired)
       return
     }
+    if (!navigator.onLine) {
+      setStatusMessage(SERVER_UNAVAILABLE_MESSAGE)
+      return
+    }
 
     const formData = new FormData()
     formData.append('request_type', 'incoming')
@@ -180,8 +188,9 @@ function InvoicePage({ device, t, onBack }: InvoicePageProps) {
       }
 
       setStatusMessage(response.message ?? t.invoice.genericError)
-    } catch {
-      setStatusMessage(t.invoice.genericError)
+    } catch (error) {
+      console.error('Invoice submit failed', { error })
+      setStatusMessage(error instanceof ApiError ? t.invoice.genericError : SERVER_UNAVAILABLE_MESSAGE)
     } finally {
       setIsSubmitting(false)
     }

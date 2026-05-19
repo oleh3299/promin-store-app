@@ -612,6 +612,24 @@ textarea {
   margin-top: 20vh;
 }
 
+.blocked-device-screen {
+  display: grid;
+  align-items: center;
+}
+
+.blocked-device-screen .error-panel {
+  margin-top: 0;
+  border: 1px solid rgba(155, 44, 44, 0.16);
+}
+
+.blocked-device-screen p:last-child {
+  margin: 12px 0 0;
+  color: #405148;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
 .error-details {
   max-height: 120px;
   overflow: auto;

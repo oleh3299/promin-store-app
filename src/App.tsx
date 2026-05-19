@@ -2,27 +2,30 @@ import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import {
   ApiError,
+  DEVICE_DISABLED_EVENT,
   getHealth,
   loginDevice,
 } from './api/client'
 import { useI18n } from './i18n/useI18n'
 import {
+  DEFAULT_ATTENDANCE_PAGE_STATE,
+  DEFAULT_AUTH_STATE,
+  DEFAULT_DEVICE_STATE,
   loadAppPersistence,
   saveAppPersistence,
 } from './lib/storage'
-import { syncOfflineQueue } from './lib/sync'
 import AttendancePage from './pages/AttendancePage'
 import HomePage from './pages/HomePage'
 import InvoicePage from './pages/InvoicePage'
 import LoginPage from './pages/LoginPage'
 import PlanogramsPage from './pages/PlanogramsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
+import StoreTasksPage from './pages/StoreTasksPage'
 import HRTabletApp from './hr/HRTabletApp'
 import type {
   AttendancePageState,
   AuthState,
   DeviceState,
-  OfflineAttendanceEvent,
   Screen,
   Shift,
   StoreRequestEntry,
@@ -35,8 +38,12 @@ const operationalScreens: Screen[] = [
   'storeRequests',
   'invoice',
   'planograms',
+  'storeTasks',
   'login',
 ]
+
+const DEVICE_BLOCKED_MESSAGE =
+  'Пристрій заблоковано. Зверніться до адміністратора.'
 
 function StoreApp() {
   const [initialState] = useState(loadAppPersistence)
@@ -52,12 +59,10 @@ function StoreApp() {
     useState<AttendancePageState>(initialState.attendancePage)
   const [auth, setAuth] = useState<AuthState>(initialState.auth)
   const [device, setDevice] = useState<DeviceState>(initialState.device)
-  const [offlineQueue, setOfflineQueue] = useState<OfflineAttendanceEvent[]>(
-    initialState.offlineQueue,
-  )
   const [sync, setSync] = useState<SyncState>(initialState.sync)
   const [loginError, setLoginError] = useState('')
   const [loginPending, setLoginPending] = useState(false)
+  const [deviceBlocked, setDeviceBlocked] = useState(false)
 
   const t = useI18n(language)
   const openShifts = shifts.filter((shift) => !shift.checkOutTime)
@@ -68,16 +73,6 @@ function StoreApp() {
     },
     [],
   )
-
-  const queueAttendanceEvent = useCallback((event: OfflineAttendanceEvent) => {
-    setOfflineQueue((currentQueue) => {
-      if (currentQueue.some((item) => item.id === event.id)) {
-        return currentQueue
-      }
-
-      return [...currentQueue, event]
-    })
-  }, [])
 
   const checkApiStatus = useCallback(async () => {
     try {
@@ -98,11 +93,21 @@ function StoreApp() {
     }
   }, [])
 
-  const runQueueSync = useCallback(async () => {
-    const result = await syncOfflineQueue(offlineQueue, device)
-    setOfflineQueue(result.queue)
-    setSync(result.sync)
-  }, [device, offlineQueue])
+  const clearDeviceSession = useCallback(() => {
+    setAuth(DEFAULT_AUTH_STATE)
+    setDevice((currentDevice) => ({
+      ...DEFAULT_DEVICE_STATE,
+      deviceUuid: currentDevice.deviceUuid || DEFAULT_DEVICE_STATE.deviceUuid,
+    }))
+    setShifts([])
+    setAttendancePageState(DEFAULT_ATTENDANCE_PAGE_STATE)
+    setScreen('home')
+    setSync({
+      apiStatus: 'unknown',
+      lastSyncAt: new Date().toISOString(),
+      lastSyncMessage: 'Device disabled',
+    })
+  }, [])
 
   const handleLogin = useCallback(
     async (deviceLogin: string, password: string) => {
@@ -127,6 +132,7 @@ function StoreApp() {
           deviceLogin: deviceLogin.trim().toLowerCase(),
           fullName: response.device.device_name,
         })
+        setDeviceBlocked(false)
         setScreen('home')
         setSync((currentSync) => ({
           ...currentSync,
@@ -135,16 +141,19 @@ function StoreApp() {
           lastSyncMessage: 'РўРµСЂРјС–РЅР°Р» Р°РєС‚РёРІРЅРёР№',
         }))
       } catch (error) {
-        setLoginError(
-          error instanceof ApiError && error.status === 403
-            ? t.auth.disabledDevice
-            : t.auth.invalidCredentials,
-        )
+        if (error instanceof ApiError && error.status === 403 && error.message === 'Device disabled') {
+          clearDeviceSession()
+          setDeviceBlocked(true)
+          setLoginError('')
+          return
+        }
+
+        setLoginError(t.auth.invalidCredentials)
       } finally {
         setLoginPending(false)
       }
     },
-    [t.auth.disabledDevice, t.auth.invalidCredentials],
+    [clearDeviceSession, t.auth.invalidCredentials],
   )
 
   useEffect(() => {
@@ -156,7 +165,7 @@ function StoreApp() {
       attendancePage: attendancePageState,
       auth,
       device,
-      offlineQueue,
+      offlineQueue: [],
       sync,
     })
   }, [
@@ -164,7 +173,6 @@ function StoreApp() {
     auth,
     device,
     language,
-    offlineQueue,
     screen,
     selectedStore,
     shifts,
@@ -176,21 +184,26 @@ function StoreApp() {
   }, [checkApiStatus])
 
   useEffect(() => {
-    if (!navigator.onLine || offlineQueue.length === 0) {
-      return
+    const handleDeviceDisabled = () => {
+      clearDeviceSession()
+      setDeviceBlocked(true)
     }
 
-    void runQueueSync()
-  }, [offlineQueue.length, runQueueSync])
+    window.addEventListener(DEVICE_DISABLED_EVENT, handleDeviceDisabled)
+    return () => window.removeEventListener(DEVICE_DISABLED_EVENT, handleDeviceDisabled)
+  }, [clearDeviceSession])
 
-  useEffect(() => {
-    const handleOnline = () => {
-      void runQueueSync()
-    }
-
-    window.addEventListener('online', handleOnline)
-    return () => window.removeEventListener('online', handleOnline)
-  }, [runQueueSync])
+  if (deviceBlocked) {
+    return (
+      <main className="app-shell blocked-device-screen">
+        <section className="panel error-panel">
+          <p className="app-kicker">PROMIN STORE</p>
+          <h1>Пристрій заблоковано</h1>
+          <p>{DEVICE_BLOCKED_MESSAGE}</p>
+        </section>
+      </main>
+    )
+  }
 
   if (!device.deviceToken || screen === 'login') {
     return (
@@ -216,7 +229,6 @@ function StoreApp() {
         shifts={shifts}
         setShifts={setShifts}
         t={t}
-        onQueueEvent={queueAttendanceEvent}
         onSyncStateChange={setSync}
         onStateChange={handleAttendancePageStateChange}
         onBack={() => setScreen('home')}
@@ -235,6 +247,8 @@ function StoreApp() {
     content = <InvoicePage device={device} t={t} onBack={() => setScreen('home')} />
   } else if (screen === 'planograms') {
     content = <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
+  } else if (screen === 'storeTasks') {
+    content = <StoreTasksPage device={device} onBack={() => setScreen('home')} />
   } else {
     content = (
       <HomePage
@@ -248,6 +262,7 @@ function StoreApp() {
         onOpenInvoice={() => setScreen('invoice')}
         onOpenAttendance={() => setScreen('attendance')}
         onOpenPlanograms={() => setScreen('planograms')}
+        onOpenStoreTasks={() => setScreen('storeTasks')}
       />
     )
   }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { API_BASE_URL, getPlanograms } from '../api/client'
+import { API_BASE_URL, ApiError, getPlanograms } from '../api/client'
 import type { PlanogramItem } from '../api/types'
 import type { Translation } from '../i18n/translations'
 import type { DeviceState } from '../types/attendance'
@@ -18,6 +18,8 @@ const planogramDateFormatter = new Intl.DateTimeFormat('uk-UA', {
   minute: '2-digit',
   timeZone: 'Europe/Uzhgorod',
 })
+
+const SERVER_UNAVAILABLE_MESSAGE = 'Немає зв’язку з сервером'
 
 function planogramImageSrc(imageUrl: string) {
   return encodeURI(imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}${imageUrl}`)
@@ -54,9 +56,10 @@ function PlanogramsPage({ device, t, onBack }: PlanogramsPageProps) {
         if (!cancelled) {
           setItems(response.items)
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
-          setErrorMessage(t.planograms.genericError)
+          console.error('Planograms load failed', { error })
+          setErrorMessage(error instanceof ApiError ? t.planograms.genericError : SERVER_UNAVAILABLE_MESSAGE)
         }
       } finally {
         if (!cancelled) {

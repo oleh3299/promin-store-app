@@ -164,6 +164,10 @@ export type StoreTaskItem = {
   id: number
   title: string
   description: string | null
+  source: string
+  category: 'accounting' | 'photo_report' | 'general' | null
+  source_route_key: string | null
+  source_user_name: string | null
   status: StoreTaskStatus
   priority: 'low' | 'normal' | 'high' | 'urgent'
   due_date: string | null

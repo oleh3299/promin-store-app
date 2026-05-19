@@ -142,12 +142,13 @@ def set_task_template_key(_mapper, connection, target: TaskTemplate) -> None:
 class StoreTask(TimestampMixin, Base):
     __tablename__ = "store_tasks"
     __table_args__ = (
-        CheckConstraint("source IN ('admin', 'operator', 'system')", name="ck_store_tasks_source"),
+        CheckConstraint("source IN ('admin', 'operator', 'system', 'rocket_chat')", name="ck_store_tasks_source"),
         CheckConstraint(
             "status IN ('open', 'in_progress', 'submitted', 'completed', 'verified', 'rejected', 'cancelled')",
             name="ck_store_tasks_status",
         ),
         CheckConstraint("priority IN ('low', 'normal', 'high', 'urgent')", name="ck_store_tasks_priority"),
+        CheckConstraint("category IS NULL OR category IN ('accounting', 'photo_report', 'general')", name="ck_store_tasks_category"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -155,6 +156,11 @@ class StoreTask(TimestampMixin, Base):
     department_id: Mapped[int | None] = mapped_column(ForeignKey("store_departments.id"), nullable=True)
     template_id: Mapped[int | None] = mapped_column(ForeignKey("task_templates.id"), index=True, nullable=True)
     source: Mapped[str] = mapped_column(String(32), nullable=False)
+    source_room_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    source_message_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    source_route_key: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    source_user_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    category: Mapped[str | None] = mapped_column(String(32), nullable=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="open", nullable=False)

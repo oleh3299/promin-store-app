@@ -48,11 +48,15 @@ class RocketChatService:
 
         return fallback
 
-    def send_message(self, room_id: str, text: str) -> RocketChatSendResult:
+    def send_message(self, room_id: str, text: str, thread_message_id: str | None = None) -> RocketChatSendResult:
         if not self.user_id or not self.auth_token:
             raise RocketChatError("Rocket.Chat credentials are not configured")
 
-        payload = json.dumps({"roomId": room_id, "text": text}).encode("utf-8")
+        payload_data = {"roomId": room_id, "text": text}
+        if thread_message_id:
+            payload_data["tmid"] = thread_message_id
+
+        payload = json.dumps(payload_data).encode("utf-8")
         post_request = request.Request(
             f"{self.base_url}/api/v1/chat.postMessage",
             data=payload,
@@ -133,6 +137,7 @@ class RocketChatService:
         file_bytes: bytes,
         message: str,
         description: str,
+        thread_message_id: str | None = None,
     ) -> RocketChatUploadResult:
         if not self.user_id or not self.auth_token:
             raise RocketChatError("Rocket.Chat credentials are not configured")
@@ -141,6 +146,8 @@ class RocketChatService:
         form_data = {"msg": message}
         if description:
             form_data["description"] = description
+        if thread_message_id:
+            form_data["tmid"] = thread_message_id
 
         try:
             response = requests.post(

@@ -11,10 +11,11 @@ import type { DeviceState } from '../types/attendance'
 
 type StoreTasksPageProps = {
   device: DeviceState
+  onBack: () => void
 }
 
 type FeedTab = 'all' | 'tasks' | 'messages' | 'urgent' | 'done'
-type FeedType = 'Завдання' | 'Повідомлення' | 'Пуш' | 'Контроль'
+type FeedType = string
 type FeedStatus = 'active' | 'overdue' | 'done' | 'review' | 'info'
 
 type FeedItem = {
@@ -31,6 +32,7 @@ type FeedItem = {
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxTaskFileSize = 10 * 1024 * 1024
+const serverUnavailableMessage = 'Немає зв’язку з сервером'
 const taskDateFormatter = new Intl.DateTimeFormat('uk-UA', {
   day: '2-digit',
   month: '2-digit',
@@ -58,6 +60,27 @@ const priorityLabels: Record<StoreTaskItem['priority'], string> = {
   normal: 'Звичайний',
   high: 'Високий',
   urgent: 'Терміново',
+}
+
+const categoryLabels: Record<string, string> = {
+  accounting: 'Бухгалтерія',
+  photo_report: 'Фотоотчіт',
+  general: 'Адміністрація',
+}
+
+function taskFeedType(task: StoreTaskItem): FeedType {
+  return task.source === 'rocket_chat' ? 'Повідомлення' : 'Завдання'
+}
+
+function taskFeedDescription(task: StoreTaskItem) {
+  const description = task.description ?? task.department_name ?? 'Операційне завдання магазину'
+  if (task.source !== 'rocket_chat') {
+    return description
+  }
+
+  const category = task.category ? categoryLabels[task.category] ?? task.category : 'Адміністрація'
+  const sender = task.source_user_name ? ` · ${task.source_user_name}` : ''
+  return `${category}${sender}\n${description}`
 }
 
 const tabs: { key: FeedTab; label: string }[] = [
@@ -128,7 +151,7 @@ function taskFeedStatus(task: StoreTaskItem): FeedStatus {
   return 'active'
 }
 
-function StoreTasksPage({ device }: StoreTasksPageProps) {
+function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
   const [tasks, setTasks] = useState<StoreTaskItem[]>([])
   const [selectedTask, setSelectedTask] = useState<StoreTaskDetail | null>(null)
   const [employees, setEmployees] = useState<ActiveStoreEmployee[]>([])
@@ -185,9 +208,9 @@ function StoreTasksPage({ device }: StoreTasksPageProps) {
   const feedItems = useMemo<FeedItem[]>(() => {
     const taskItems = tasks.map((task): FeedItem => ({
       id: `task-${task.id}`,
-      type: 'Завдання',
+      type: taskFeedType(task),
       title: task.title,
-      description: task.description ?? task.department_name ?? 'Операційне завдання магазину',
+      description: taskFeedDescription(task),
       time: formatDeadline(task),
       status: taskFeedStatus(task),
       priority: task.priority,
@@ -209,7 +232,7 @@ function StoreTasksPage({ device }: StoreTasksPageProps) {
 
   const filteredFeedItems = useMemo(() => {
     if (activeTab === 'tasks') {
-      return feedItems.filter((item) => item.type === 'Завдання' || item.type === 'Контроль')
+      return feedItems.filter((item) => item.type !== 'Повідомлення' && item.type !== 'Пуш')
     }
     if (activeTab === 'messages') {
       return feedItems.filter((item) => item.type === 'Повідомлення' || item.type === 'Пуш')
@@ -276,6 +299,10 @@ function StoreTasksPage({ device }: StoreTasksPageProps) {
 
   const handleStart = async () => {
     if (!device.deviceToken || !selectedTask) return
+    if (!navigator.onLine) {
+      setStatusMessage(serverUnavailableMessage)
+      return
+    }
 
     setIsSubmitting(true)
     setStatusMessage('')
@@ -306,6 +333,10 @@ function StoreTasksPage({ device }: StoreTasksPageProps) {
     }
     if (employeeRequired) {
       setStatusMessage('Оберіть співробітника')
+      return
+    }
+    if (!navigator.onLine) {
+      setStatusMessage(serverUnavailableMessage)
       return
     }
 
@@ -360,6 +391,12 @@ function StoreTasksPage({ device }: StoreTasksPageProps) {
     <main className="app-shell daily-tasks-page">
       {selectedTask && (
         <button className="back-button" onClick={() => setSelectedTask(null)}>
+          Назад
+        </button>
+      )}
+
+      {!selectedTask && (
+        <button className="back-button" onClick={onBack}>
           Назад
         </button>
       )}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  ApiError,
   createStoreRequest,
   getStoreRequestActiveEmployees,
   uploadStoreRequest,
@@ -26,6 +27,7 @@ const routeOptions: Array<{ key: StoreRequestRouteKey; label: string }> = [
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxStoreRequestFileSize = 10 * 1024 * 1024
+const SERVER_UNAVAILABLE_MESSAGE = 'Немає зв’язку з сервером'
 
 function getInitialRouteKey(entry: StoreRequestEntry): StoreRequestRouteKey {
   return entry === 'urgentIt' ? 'it' : 'accounting'
@@ -77,7 +79,8 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
 
         setEmployees(response.items)
         setSelectedEmployeeId(response.items.length === 1 ? response.items[0].employee_id : null)
-      } catch {
+      } catch (error) {
+        console.error('Store request employee load failed', { error })
         if (!cancelled) {
           setEmployees([])
           setSelectedEmployeeId(null)
@@ -124,6 +127,10 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
 
   const submitRequest = async () => {
     if (!device.deviceToken || !canSubmit) return
+    if (!navigator.onLine) {
+      setStatusMessage(SERVER_UNAVAILABLE_MESSAGE)
+      return
+    }
 
     setIsSubmitting(true)
     setStatusMessage('')
@@ -166,8 +173,9 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
       }
 
       setStatusMessage(response.message ?? t.storeRequests.genericError)
-    } catch {
-      setStatusMessage(t.storeRequests.genericError)
+    } catch (error) {
+      console.error('Store request submit failed', { error })
+      setStatusMessage(error instanceof ApiError ? t.storeRequests.genericError : SERVER_UNAVAILABLE_MESSAGE)
     } finally {
       setIsSubmitting(false)
     }

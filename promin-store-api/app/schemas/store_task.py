@@ -20,6 +20,10 @@ class StoreTaskRead(BaseModel):
     id: int
     title: str
     description: str | None
+    source: str
+    category: str | None
+    source_route_key: str | None
+    source_user_name: str | None
     status: str
     priority: str
     due_date: str | None

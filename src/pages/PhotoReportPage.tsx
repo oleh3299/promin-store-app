@@ -22,6 +22,7 @@ type PhotoState = {
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxPhotoSize = 10 * 1024 * 1024
+const serverUnavailableMessage = 'Немає зв’язку з сервером'
 const networkErrorMessage = 'Помилка мережі. Перевірте інтернет і спробуйте ще раз.'
 const payloadTooLargeMessage = 'Занадто великий обсяг фото. Спробуйте зробити фото меншого розміру.'
 const preparePhotoErrorMessage = 'Не вдалося підготувати фото. Спробуйте додати фото ще раз.'
@@ -55,9 +56,10 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
         setSelectedEmployeeId(
           employeesResponse.items.length === 1 ? employeesResponse.items[0].employee_id : null,
         )
-      } catch {
+      } catch (error) {
+        console.error('photoReportLoadFailed', { error })
         if (!cancelled) {
-          setStatusMessage(t.photoReport.genericError)
+          setStatusMessage(error instanceof ApiError ? t.photoReport.genericError : serverUnavailableMessage)
         }
       } finally {
         if (!cancelled) {
@@ -128,6 +130,10 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     }
     if (employeeRequired) {
       setStatusMessage(t.photoReport.employeeRequired)
+      return
+    }
+    if (!navigator.onLine) {
+      setStatusMessage(serverUnavailableMessage)
       return
     }
 

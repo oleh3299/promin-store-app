@@ -1,12 +1,9 @@
 import { languageCodes, type Language } from '../i18n/translations'
 import type {
-  AttendanceMode,
   AttendancePageState,
   AuthState,
   DeviceState,
-  InputMethod,
   OfflineAttendanceEvent,
-  Position,
   Screen,
   Shift,
   SyncState,
@@ -80,21 +77,6 @@ type StoredAttendanceState = {
   sync?: SyncState
 }
 
-const validModes: AttendanceMode[] = ['checkin', 'checkout', null]
-const validInputMethods: InputMethod[] = ['scan', 'manual', null]
-const validPositions: Position[] = [
-  'Ревізор',
-  'Викладка / мерчендайзер',
-  'Продавець',
-]
-
-const legacyPositionMap: Record<string, Position> = {
-  'Р РµРІС–Р·РѕСЂ': 'Ревізор',
-  'Р’РёРєР»Р°РґРєР° / РјРµСЂС‡РµРЅРґР°Р№Р·РµСЂ':
-    'Викладка / мерчендайзер',
-  'РџСЂРѕРґР°РІРµС†СЊ': 'Продавець',
-}
-
 const legacyStoreMap: Record<string, string> = {
   'Рњ37': 'M37',
 }
@@ -124,57 +106,12 @@ function isLanguage(value: unknown): value is Language {
   return languageCodes.includes(value as Language)
 }
 
-function normalizePosition(value: unknown): Position | null {
-  if (validPositions.includes(value as Position)) {
-    return value as Position
-  }
-
-  if (typeof value === 'string') {
-    return legacyPositionMap[value] ?? null
-  }
-
-  return null
-}
-
-function isAttendanceMode(value: unknown): value is AttendanceMode {
-  return validModes.includes(value as AttendanceMode)
-}
-
-function isInputMethod(value: unknown): value is InputMethod {
-  return validInputMethods.includes(value as InputMethod)
-}
-
-function normalizeNullableString(value: unknown) {
-  return typeof value === 'string' ? value : null
-}
-
 function normalizeStoreCode(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) {
     return DEFAULT_SELECTED_STORE
   }
 
   return legacyStoreMap[value] ?? value
-}
-
-function normalizeAttendancePageState(value: unknown): AttendancePageState {
-  if (!isObject(value)) {
-    return DEFAULT_ATTENDANCE_PAGE_STATE
-  }
-
-  return {
-    mode: isAttendanceMode(value.mode)
-      ? value.mode
-      : DEFAULT_ATTENDANCE_PAGE_STATE.mode,
-    inputMethod: isInputMethod(value.inputMethod)
-      ? value.inputMethod
-      : DEFAULT_ATTENDANCE_PAGE_STATE.inputMethod,
-    employeeCode:
-      typeof value.employeeCode === 'string'
-        ? value.employeeCode
-        : DEFAULT_ATTENDANCE_PAGE_STATE.employeeCode,
-    selectedEmployeeId: normalizeNullableString(value.selectedEmployeeId),
-    selectedPosition: normalizePosition(value.selectedPosition),
-  }
 }
 
 function normalizeAuthState(value: unknown): AuthState {
@@ -221,31 +158,6 @@ function normalizeDeviceState(value: unknown): DeviceState {
   }
 }
 
-function isOfflineAttendanceEvent(value: unknown): value is OfflineAttendanceEvent {
-  if (!isObject(value)) return false
-
-  return (
-    typeof value.id === 'string' &&
-    (value.type === 'checkin' || value.type === 'checkout') &&
-    typeof value.employeeId === 'string' &&
-    (value.employeeBackendId === undefined ||
-      typeof value.employeeBackendId === 'number') &&
-    typeof value.employeeCode === 'string' &&
-    typeof value.employeeName === 'string' &&
-    (value.position === undefined || normalizePosition(value.position) !== null) &&
-    typeof value.eventTime === 'string'
-  )
-}
-
-function normalizeOfflineQueue(value: unknown): OfflineAttendanceEvent[] {
-  if (!Array.isArray(value)) return []
-
-  return value.filter(isOfflineAttendanceEvent).map((event) => ({
-    ...event,
-    position: event.position ? normalizePosition(event.position) ?? undefined : undefined,
-  }))
-}
-
 function normalizeSyncState(value: unknown): SyncState {
   if (!isObject(value)) {
     return DEFAULT_SYNC_STATE
@@ -262,27 +174,6 @@ function normalizeSyncState(value: unknown): SyncState {
   }
 }
 
-function isShift(value: unknown): value is Shift {
-  if (!isObject(value)) return false
-
-  return (
-    typeof value.employeeId === 'string' &&
-    typeof value.employeeName === 'string' &&
-    normalizePosition(value.position) !== null &&
-    typeof value.checkInTime === 'string' &&
-    (value.checkOutTime === undefined || typeof value.checkOutTime === 'string')
-  )
-}
-
-function normalizeShifts(value: unknown) {
-  if (!Array.isArray(value)) return []
-
-  return value.filter(isShift).map((shift) => ({
-    ...shift,
-    position: normalizePosition(shift.position) ?? 'Продавець',
-  }))
-}
-
 function getStorage() {
   if (typeof window === 'undefined') {
     return null
@@ -297,16 +188,16 @@ function toStoredState(state: AppPersistenceState): StoredAttendanceState {
     selectedStore: state.selectedStore,
     selectedLanguage: state.language,
     attendance: {
-      openShifts: state.shifts.filter((shift) => !shift.checkOutTime),
-      history: state.shifts.filter((shift) => Boolean(shift.checkOutTime)),
+      openShifts: [],
+      history: [],
     },
     appState: {
       screen: state.screen,
-      attendancePage: state.attendancePage,
+      attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
     },
     auth: state.auth,
     device: state.device,
-    offlineQueue: state.offlineQueue,
+    offlineQueue: [],
     sync: state.sync,
   }
 }
@@ -316,14 +207,7 @@ function fromStoredState(value: unknown): AppPersistenceState | null {
     return null
   }
 
-  const attendance = isObject(value.attendance) ? value.attendance : {}
   const appState = isObject(value.appState) ? value.appState : {}
-  const openShifts = normalizeShifts(attendance.openShifts).filter(
-    (shift) => !shift.checkOutTime,
-  )
-  const history = normalizeShifts(attendance.history).filter((shift) =>
-    Boolean(shift.checkOutTime),
-  )
 
   return {
     selectedStore: normalizeStoreCode(value.selectedStore),
@@ -331,11 +215,11 @@ function fromStoredState(value: unknown): AppPersistenceState | null {
       ? value.selectedLanguage
       : DEFAULT_LANGUAGE,
     screen: isScreen(appState.screen) ? appState.screen : 'home',
-    shifts: [...openShifts, ...history],
-    attendancePage: normalizeAttendancePageState(appState.attendancePage),
+    shifts: [],
+    attendancePage: DEFAULT_ATTENDANCE_PAGE_STATE,
     auth: normalizeAuthState(value.auth),
     device: normalizeDeviceState(value.device),
-    offlineQueue: normalizeOfflineQueue(value.offlineQueue),
+    offlineQueue: [],
     sync: normalizeSyncState(value.sync),
   }
 }

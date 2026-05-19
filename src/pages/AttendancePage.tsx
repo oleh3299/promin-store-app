@@ -19,7 +19,6 @@ import type {
   DeviceState,
   Employee,
   InputMethod,
-  OfflineAttendanceEvent,
   Position,
   Shift,
   SyncState,
@@ -32,7 +31,6 @@ type AttendancePageProps = {
   setShifts: (shifts: Shift[]) => void
   device: DeviceState
   t: Translation
-  onQueueEvent: (event: OfflineAttendanceEvent) => void
   onSyncStateChange: (sync: SyncState) => void
   onStateChange: (state: AttendancePageState) => void
   onBack: () => void
@@ -43,14 +41,6 @@ function getCurrentTime() {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-function createEventId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID()
-  }
-
-  return `attendance-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 function mapApiEmployee(employee: {
@@ -80,9 +70,7 @@ function mapApiEmployee(employee: {
   }
 }
 
-function shouldQueueError(error: unknown) {
-  return !(error instanceof ApiError) || error.status >= 500
-}
+const SERVER_UNAVAILABLE_MESSAGE = 'Немає зв’язку з сервером'
 
 function getDeviceAuthMessage(error: ApiError, t: Translation) {
   if (error.status === 403) {
@@ -99,7 +87,6 @@ function AttendancePage({
   setShifts,
   device,
   t,
-  onQueueEvent,
   onSyncStateChange,
   onStateChange,
   onBack,
@@ -153,7 +140,7 @@ function AttendancePage({
 
   const findEmployee = async (code: string) => {
     const trimmedCode = normalizeEmployeeBarcode(code)
-    let fallbackNotFoundMessage = t.attendance.messages.employeeNotFound
+    const fallbackNotFoundMessage = t.attendance.messages.employeeNotFound
 
     if (!isValidEmployeeBarcode(trimmedCode)) {
       console.debug('Employee lookup rejected: empty barcode', {
@@ -175,74 +162,69 @@ function AttendancePage({
       return
     }
 
-    if (device.deviceToken && navigator.onLine) {
-      try {
-        console.debug('Employee lookup start', {
-          scannedBarcode: trimmedCode,
-          endpoint: `${API_BASE_URL}/api/employees/by-barcode/${trimmedCode}`,
-        })
-        const employee = await getEmployeeByBarcode(trimmedCode, device.deviceToken)
-        const mappedEmployee = mapApiEmployee(employee)
-        setSelectedEmployee(mappedEmployee)
-        setSelectedPosition(mappedEmployee.position ?? null)
-        setMessage('')
-        return
-      } catch (error) {
-        console.error('Employee lookup failed', {
-          scannedBarcode: trimmedCode,
-          endpoint: `${API_BASE_URL}/api/employees/by-barcode/${trimmedCode}`,
-          status: error instanceof ApiError ? error.status : undefined,
-          responseBody: error instanceof ApiError ? error.responseBody : undefined,
-          error,
-        })
-
-        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-          setMessage(getDeviceAuthMessage(error, t))
-          setSelectedEmployee(null)
-          return
-        }
-
-        if (error instanceof ApiError && error.status === 404) {
-          setMessage(t.attendance.messages.employeeNotFound)
-          setSelectedEmployee(null)
-          return
-        }
-
-        if (error instanceof Error && error.message === 'Malformed employee response') {
-          setMessage(t.attendance.messages.malformedEmployee)
-          setSelectedEmployee(null)
-          return
-        }
-
-        fallbackNotFoundMessage = t.attendance.messages.networkLookupFailed
-      }
-    }
-
-    const employee = employees.find((item) => item.code === trimmedCode)
-
-    if (!employee) {
-      setMessage(fallbackNotFoundMessage)
+    if (!navigator.onLine) {
+      setMessage(SERVER_UNAVAILABLE_MESSAGE)
       setSelectedEmployee(null)
       return
     }
 
-    setSelectedEmployee(employee)
-    setSelectedPosition(null)
-    setMessage('')
+    try {
+      console.debug('Employee lookup start', {
+        scannedBarcode: trimmedCode,
+        endpoint: `${API_BASE_URL}/api/employees/by-barcode/${trimmedCode}`,
+      })
+      const employee = await getEmployeeByBarcode(trimmedCode, device.deviceToken)
+      const mappedEmployee = mapApiEmployee(employee)
+      setSelectedEmployee(mappedEmployee)
+      setSelectedPosition(mappedEmployee.position ?? null)
+      setMessage('')
+      return
+    } catch (error) {
+      console.error('Employee lookup failed', {
+        scannedBarcode: trimmedCode,
+        endpoint: `${API_BASE_URL}/api/employees/by-barcode/${trimmedCode}`,
+        status: error instanceof ApiError ? error.status : undefined,
+        responseBody: error instanceof ApiError ? error.responseBody : undefined,
+        error,
+      })
+
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        setMessage(getDeviceAuthMessage(error, t))
+        setSelectedEmployee(null)
+        return
+      }
+
+      if (error instanceof ApiError && error.status === 404) {
+        setMessage(t.attendance.messages.employeeNotFound)
+        setSelectedEmployee(null)
+        return
+      }
+
+      if (error instanceof Error && error.message === 'Malformed employee response') {
+        setMessage(t.attendance.messages.malformedEmployee)
+        setSelectedEmployee(null)
+        return
+      }
+
+      setMessage(fallbackNotFoundMessage)
+      setSelectedEmployee(null)
+    }
   }
 
-  const sendOrQueueEvent = async (
-    event: OfflineAttendanceEvent,
-    sender: () => Promise<unknown>,
-  ) => {
-    if (!device.deviceToken || !navigator.onLine) {
-      onQueueEvent(event)
+  const sendAttendanceEvent = async (sender: () => Promise<unknown>) => {
+    if (!device.deviceToken) {
+      setMessage(t.attendance.messages.authRequired)
+      return false
+    }
+
+    if (!navigator.onLine) {
       onSyncStateChange({
-        apiStatus: navigator.onLine ? 'online' : 'offline',
+        apiStatus: 'offline',
         lastSyncAt: new Date().toISOString(),
-        lastSyncMessage: t.attendance.messages.queuedOffline,
+        lastSyncMessage: SERVER_UNAVAILABLE_MESSAGE,
       })
-      return true
+      setMessage(SERVER_UNAVAILABLE_MESSAGE)
+      return false
     }
 
     try {
@@ -254,24 +236,22 @@ function AttendancePage({
       })
       return true
     } catch (error) {
-      if (!shouldQueueError(error)) {
+      if (error instanceof ApiError) {
         setMessage(
-          error instanceof ApiError && (error.status === 401 || error.status === 403)
+          error.status === 401 || error.status === 403
             ? getDeviceAuthMessage(error, t)
-            : error instanceof Error
-              ? error.message
-              : t.attendance.messages.employeeNotFound,
+            : error.message,
         )
         return false
       }
 
-      onQueueEvent(event)
       onSyncStateChange({
         apiStatus: 'offline',
         lastSyncAt: new Date().toISOString(),
-        lastSyncMessage: t.attendance.messages.queuedOffline,
+        lastSyncMessage: SERVER_UNAVAILABLE_MESSAGE,
       })
-      return true
+      setMessage(SERVER_UNAVAILABLE_MESSAGE)
+      return false
     }
   }
 
@@ -289,24 +269,13 @@ function AttendancePage({
     }
 
     const eventTime = new Date().toISOString()
-    const event: OfflineAttendanceEvent = {
-      id: createEventId(),
-      type: 'checkin',
-      employeeId: selectedEmployee.id,
-      employeeBackendId: selectedEmployee.backendId,
-      employeeCode: selectedEmployee.code,
-      employeeName: selectedEmployee.name,
-      position: selectedPosition,
-      eventTime,
-    }
 
-    const accepted = await sendOrQueueEvent(event, () =>
+    const accepted = await sendAttendanceEvent(() =>
       checkIn(device.deviceToken as string, {
         employee_id: selectedEmployee.backendId,
         barcode: selectedEmployee.backendId ? undefined : selectedEmployee.code,
         event_time: eventTime,
         raw_payload: {
-          offline_event_id: event.id,
           position: selectedPosition,
         },
       }),
@@ -340,24 +309,13 @@ function AttendancePage({
     }
 
     const eventTime = new Date().toISOString()
-    const event: OfflineAttendanceEvent = {
-      id: createEventId(),
-      type: 'checkout',
-      employeeId: selectedEmployee.id,
-      employeeBackendId: selectedEmployee.backendId,
-      employeeCode: selectedEmployee.code,
-      employeeName: selectedEmployee.name,
-      position: openShift.position,
-      eventTime,
-    }
 
-    const accepted = await sendOrQueueEvent(event, () =>
+    const accepted = await sendAttendanceEvent(() =>
       checkOut(device.deviceToken as string, {
         employee_id: selectedEmployee.backendId,
         barcode: selectedEmployee.backendId ? undefined : selectedEmployee.code,
         event_time: eventTime,
         raw_payload: {
-          offline_event_id: event.id,
           position: openShift.position,
         },
       }),

@@ -21,7 +21,7 @@ type StoreRequestsPageProps = {
 
 const routeOptions: Array<{ key: StoreRequestRouteKey; label: string }> = [
   { key: 'accounting', label: 'Бухгалтерія' },
-  { key: 'it', label: 'IT' },
+  { key: 'it', label: 'Технічна служба' },
   { key: 'manager', label: 'Адміністрація' },
 ]
 

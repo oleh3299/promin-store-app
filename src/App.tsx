@@ -20,6 +20,8 @@ import HomePage from './pages/HomePage'
 import InvoicePage from './pages/InvoicePage'
 import LoginPage from './pages/LoginPage'
 import PlanogramsPage from './pages/PlanogramsPage'
+import DiagnosticsPage from './pages/DiagnosticsPage'
+import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
 import StoreTasksPage from './pages/StoreTasksPage'
 import HRTabletApp from './hr/HRTabletApp'
@@ -40,6 +42,8 @@ const operationalScreens: Screen[] = [
   'invoice',
   'planograms',
   'storeTasks',
+  'settings',
+  'diagnostics',
   'login',
 ]
 
@@ -65,6 +69,9 @@ function StoreApp() {
   const [loginPending, setLoginPending] = useState(false)
   const [deviceBlocked, setDeviceBlocked] = useState(false)
   const [incomingMessageCount, setIncomingMessageCount] = useState(0)
+  const [notificationStatus, setNotificationStatus] = useState(
+    typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
+  )
 
   const t = useI18n(language)
   const openShifts = shifts.filter((shift) => !shift.checkOutTime)
@@ -275,6 +282,30 @@ function StoreApp() {
     content = <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
   } else if (screen === 'storeTasks') {
     content = <StoreTasksPage device={device} onBack={() => setScreen('home')} />
+  } else if (screen === 'settings') {
+    content = (
+      <SettingsPage
+        notificationStatus={notificationStatus}
+        t={t}
+        onNotificationStatusChange={setNotificationStatus}
+        onBack={() => setScreen('home')}
+        onOpenDiagnostics={() => setScreen('diagnostics')}
+      />
+    )
+  } else if (screen === 'diagnostics') {
+    content = (
+      <DiagnosticsPage
+        auth={auth}
+        device={device}
+        queueLength={0}
+        sync={sync}
+        t={t}
+        onBack={() => setScreen('settings')}
+        onCheckApi={checkApiStatus}
+        onSync={checkApiStatus}
+        onLogout={clearDeviceSession}
+      />
+    )
   } else {
     content = (
       <HomePage
@@ -290,6 +321,7 @@ function StoreApp() {
         onOpenAttendance={() => setScreen('attendance')}
         onOpenPlanograms={() => setScreen('planograms')}
         onOpenStoreTasks={() => setScreen('storeTasks')}
+        onOpenSettings={() => setScreen('settings')}
       />
     )
   }

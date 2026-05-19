@@ -285,6 +285,34 @@ h1 {
   background: #c92a2a;
 }
 
+.home-settings-button {
+  position: fixed;
+  right: max(18px, calc((100vw - 520px) / 2 + 18px));
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(16, 32, 24, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #183c27;
+  box-shadow: 0 12px 28px rgba(16, 32, 24, 0.14);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.home-settings-button svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .terminal-action-card small {
   color: #657269;
   font-size: 14px;

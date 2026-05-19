@@ -26,6 +26,26 @@ def _string_value(payload: dict[str, Any], *keys: str) -> str | None:
     return None
 
 
+def _dict_value(payload: dict[str, Any], key: str) -> dict[str, Any]:
+    value = payload.get(key)
+    return value if isinstance(value, dict) else {}
+
+
+def _parse_rocket_payload(payload: dict[str, Any]) -> dict[str, str | None]:
+    message = _dict_value(payload, "message")
+    user = _dict_value(message, "u")
+
+    return {
+        "text": _string_value(payload, "text", "msg") or _string_value(message, "msg", "text"),
+        "room_id": _string_value(payload, "roomId", "room_id", "rid") or _string_value(message, "rid", "roomId"),
+        "message_id": _string_value(payload, "messageId", "_id", "message_id", "id") or _string_value(message, "_id", "id"),
+        "user_name": (
+            _string_value(payload, "user_name", "username", "userName")
+            or _string_value(user, "username", "name")
+        ),
+    }
+
+
 def clean_store_message_text(text: str) -> str:
     cleaned = re.sub(re.escape(STORE_MESSAGE_TAG), "", text, flags=re.IGNORECASE)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
@@ -50,18 +70,29 @@ def fallback_message_id(room_id: str, text: str) -> str:
 
 
 def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) -> StoreTask | None:
-    text = _string_value(payload, "text") or ""
+    logger.debug("rocket_store_message_payload_received", extra={"payload": payload})
+    parsed = _parse_rocket_payload(payload)
+    text = parsed["text"] or ""
+    if not text:
+        logger.warning("rocket_store_message_skipped", extra={"reason": "missing_text"})
+        return None
+
     if not contains_store_message_tag(text):
+        logger.info("rocket_store_message_skipped", extra={"reason": "missing_tag"})
         return None
 
-    room_id = _string_value(payload, "roomId", "room_id", "rid")
+    room_id = parsed["room_id"]
     if not room_id:
-        logger.warning("rocket_store_message_missing_room_id")
+        logger.warning("rocket_store_message_skipped", extra={"reason": "missing_room_id"})
         return None
 
-    source_message_id = _string_value(payload, "messageId", "_id", "message_id", "id")
+    source_message_id = parsed["message_id"]
     if not source_message_id:
         source_message_id = fallback_message_id(room_id, text)
+        logger.info(
+            "rocket_store_message_fallback_message_id",
+            extra={"room_id": room_id, "source_message_id": source_message_id},
+        )
 
     existing_task = db.scalar(
         select(StoreTask).where(
@@ -86,11 +117,11 @@ def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) 
         .limit(1),
     )
     if route is None or route.store_id is None:
-        logger.warning("rocket_store_message_route_not_found", extra={"room_id": room_id})
+        logger.warning("rocket_store_message_skipped", extra={"reason": "route_not_found", "room_id": room_id})
         return None
 
     description = clean_store_message_text(text) or STORE_MESSAGE_TITLE
-    user_name = _string_value(payload, "user_name", "username", "userName")
+    user_name = parsed["user_name"]
     now = datetime.now(timezone.utc)
     task = StoreTask(
         store_id=route.store_id,

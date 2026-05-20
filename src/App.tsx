@@ -341,7 +341,6 @@ function StoreApp() {
           setHomeStatusMessage(null)
           setScreen('photoReport')
         }}
-        onOpenPhotoReportRouteTest={() => setScreen('photoReportRouteTest')}
         onOpenStoreTasks={() => {
           setStoreTaskMode('messages')
           setScreen('storeTasks')

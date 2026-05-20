@@ -9,7 +9,6 @@ type HomePageProps = {
   onOpenAttendance: () => void
   onOpenPlanograms: () => void
   onOpenPhotoReport: () => void
-  onOpenPhotoReportRouteTest: () => void
   onOpenStoreTasks: () => void
   onOpenSettings: () => void
   incomingMessageCount: number
@@ -32,7 +31,6 @@ function HomePage({
   onOpenAttendance,
   onOpenPlanograms,
   onOpenPhotoReport,
-  onOpenPhotoReportRouteTest,
   onOpenStoreTasks,
   onOpenSettings,
   incomingMessageCount,
@@ -115,10 +113,6 @@ function HomePage({
         ))}
       </section>
 
-      <button type="button" className="route-test-card" onClick={onOpenPhotoReportRouteTest}>
-        <span>Тест контуру фотозвіту</span>
-        <small>Перевірка каналу photo-reports</small>
-      </button>
     </main>
   )
 }

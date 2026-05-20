@@ -395,11 +395,7 @@ function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProp
 
   const setFinalStatus = async () => {
     setFinalSuccess(true)
-    setStatusMessage(
-      partialPhotoReportTestMode
-        ? `Надіслано: ${uploadedCount} фото. Це тестовий режим. Повний контроль фотозвіту тимчасово вимкнений.`
-        : 'Фотозвіт надіслано. Дякуємо. Можна закривати додаток.',
-    )
+    setStatusMessage('Фотозвіт успішно виконаний!')
     Object.values(photos).forEach((photo) => URL.revokeObjectURL(photo.previewUrl))
     setPhotos({})
     setReportId(null)
@@ -463,9 +459,6 @@ function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProp
         <strong>Фото зроблено: {doneCount} / {requiredItems.length}</strong>
         <span>{partialPhotoReportTestMode ? `Надіслано: ${uploadedCount} фото` : `Надіслано: ${uploadedCount} / ${requiredItems.length}`}</span>
         <span>{partialPhotoReportTestMode ? `Залишилось надіслати: ${pendingSelectedCount}` : `Залишилось: ${remainingCount}`}</span>
-        {partialPhotoReportTestMode && (
-          <em>Це тестовий режим. Можна надіслати неповний фотозвіт.</em>
-        )}
         {doneCount === requiredItems.length && remainingCount > 0 && (
           <em>Не закривайте додаток до завершення. Фото збережені на телефоні.</em>
         )}

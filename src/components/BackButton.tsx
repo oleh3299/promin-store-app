@@ -10,6 +10,8 @@ function canNavigateBrowserHistory() {
 }
 
 function BackButton({ label = 'Назад', onBack, className }: BackButtonProps) {
+  const cleanLabel = label.replace(/^(?:(?:←|->|в†ђ)\s*)+/u, '')
+
   const handleClick = () => {
     if (canNavigateBrowserHistory()) {
       window.history.back()
@@ -22,7 +24,7 @@ function BackButton({ label = 'Назад', onBack, className }: BackButtonProps
   return (
     <button className={className ? `back-button ${className}` : 'back-button'} onClick={handleClick} type="button">
       <span aria-hidden="true">←</span>
-      {label}
+      {cleanLabel}
     </button>
   )
 }

@@ -261,8 +261,8 @@ h1 {
 
 .terminal-action-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
 }
 
 .terminal-action-card {
@@ -270,10 +270,10 @@ h1 {
   align-content: center;
   gap: 5px;
   width: 100%;
-  min-height: 88px;
+  min-height: 72px;
   border: 1px solid rgba(16, 32, 24, 0.08);
   border-radius: 18px;
-  padding: 16px;
+  padding: 14px 16px;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 8px 18px rgba(16, 32, 24, 0.06);
   color: #102018;

@@ -1347,14 +1347,50 @@ textarea {
 
 .photo-report-status {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   scroll-margin-top: calc(18px + env(safe-area-inset-top));
+}
+
+.photo-report-status strong {
+  color: #102018;
+  font-size: 20px;
+  line-height: 1.2;
 }
 
 .photo-report-status span {
   color: #66736b;
   font-size: 13px;
   font-weight: 800;
+}
+
+.photo-report-progress-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eee8;
+}
+
+.photo-report-progress-track span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: #2c7a43;
+  transition: width 160ms ease;
+}
+
+.photo-report-progress-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.photo-report-progress-grid span {
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #f4f7f3;
+  color: #405148;
+  font-size: 14px;
 }
 
 .photo-report-submit-hint {
@@ -1389,13 +1425,66 @@ textarea {
 
 .photo-report-list {
   display: grid;
-  gap: 14px;
+  gap: 10px;
+}
+
+.photo-report-group {
+  display: grid;
+  gap: 12px;
+}
+
+.photo-report-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 64px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.photo-report-group-header span {
+  display: grid;
+  gap: 4px;
+}
+
+.photo-report-group-header strong {
+  color: #102018;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.photo-report-group-header small {
+  color: #66736b;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.photo-report-group-header b {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 9px 12px;
+  background: #eef8f0;
+  color: #183c27;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.photo-report-group-items {
+  display: grid;
+  gap: 10px;
 }
 
 .photo-report-item {
   display: grid;
   gap: 12px;
   min-width: 0;
+  border-radius: 16px;
+  padding: 12px;
+  background: #f7faf6;
 }
 
 .photo-report-item-copy {
@@ -1406,7 +1495,7 @@ textarea {
 
 .photo-report-item h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }

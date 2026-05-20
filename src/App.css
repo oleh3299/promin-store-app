@@ -22,6 +22,14 @@ button {
   font: inherit;
 }
 
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(215, 183, 95, 0.7);
+  outline-offset: 3px;
+}
+
 .app-shell {
   width: 100%;
   max-width: 520px;
@@ -272,6 +280,14 @@ h1 {
   text-align: left;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.terminal-action-card:active {
+  transform: translateY(1px);
+}
+
+.terminal-action-card:focus-visible {
+  border-color: rgba(15, 61, 46, 0.28);
 }
 
 .terminal-action-card.is-primary {
@@ -666,16 +682,28 @@ h1 {
 
 .message-box {
   margin: 12px 0;
+  min-height: 56px;
   padding: 14px 16px;
-  border-radius: 18px;
+  border: 1px solid rgba(107, 75, 18, 0.12);
+  border-radius: 16px;
   background: #fff7dc;
   color: #4a3712;
+  font-size: 16px;
   font-weight: 800;
+  line-height: 1.35;
+  white-space: pre-line;
 }
 
 .message-box.success {
+  border-color: rgba(20, 92, 49, 0.16);
   background: #e6f6eb;
   color: #145c31;
+}
+
+.message-box.error {
+  border-color: rgba(155, 44, 44, 0.16);
+  background: #fff0e8;
+  color: #8a1f1f;
 }
 
 .action-grid {
@@ -725,18 +753,29 @@ h1 {
 .confirm-button {
   width: 100%;
   border: 0;
-  border-radius: 18px;
-  padding: 15px 16px;
+  min-height: 60px;
+  border-radius: 16px;
+  padding: 16px 18px;
   margin-top: 10px;
   background: #183c27;
   color: #fff;
+  font-size: 17px;
   font-weight: 900;
+  line-height: 1.15;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .wide-button.secondary {
+  border: 1px solid rgba(16, 32, 24, 0.1);
   background: #e8eee8;
   color: #183c27;
+}
+
+.wide-button.danger,
+.confirm-button.danger {
+  background: #9b2c2c;
+  color: #fff;
 }
 
 .confirm-button {
@@ -744,8 +783,19 @@ h1 {
   color: #102018;
 }
 
+.wide-button:active,
+.confirm-button:active {
+  transform: translateY(1px);
+}
+
+.wide-button:disabled,
 .confirm-button:disabled {
-  opacity: 0.45;
+  border-color: transparent;
+  background: #dfe6de;
+  color: #7a867d;
+  cursor: not-allowed;
+  opacity: 1;
+  transform: none;
 }
 
 input,
@@ -755,7 +805,7 @@ textarea {
   margin-top: 10px;
   padding: 16px;
   border: 1px solid rgba(16, 32, 24, 0.14);
-  border-radius: 18px;
+  border-radius: 16px;
   font-size: 18px;
   font: inherit;
 }
@@ -850,8 +900,8 @@ textarea {
   display: grid;
   gap: 4px;
   margin-top: 14px;
-  padding: 14px;
-  border-radius: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
   background: #eef8f0;
 }
 
@@ -861,20 +911,26 @@ textarea {
 }
 
 .position-button {
+  min-height: 58px;
   border: 1px solid rgba(16, 32, 24, 0.1);
-  border-radius: 18px;
-  padding: 15px;
+  border-radius: 16px;
+  padding: 15px 16px;
   background: #f4f7f3;
   color: #102018;
   font-weight: 800;
   text-align: left;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .position-button.selected {
   border-color: #2c7a43;
   background: #e4f4e8;
   color: #1f7a42;
+}
+
+.position-button:active {
+  transform: translateY(1px);
 }
 
 .employee-dashboard {
@@ -1279,11 +1335,13 @@ textarea {
   display: block;
   box-sizing: border-box;
   width: 100%;
-  border-radius: 18px;
-  padding: 15px 16px;
+  min-height: 60px;
+  border-radius: 16px;
+  padding: 17px 18px;
   background: #183c27;
   color: #fff;
   font-weight: 900;
+  line-height: 1.15;
   text-align: center;
 }
 
@@ -1776,20 +1834,26 @@ textarea {
 }
 
 .route-button {
+  min-height: 58px;
   border: 1px solid rgba(16, 32, 24, 0.1);
-  border-radius: 18px;
-  padding: 15px;
+  border-radius: 16px;
+  padding: 15px 16px;
   background: #f4f7f3;
   color: #102018;
   font-weight: 800;
   text-align: left;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .route-button.selected {
   border-color: #2c7a43;
   background: #e4f4e8;
   color: #1f7a42;
+}
+
+.route-button:active {
+  transform: translateY(1px);
 }
 
 .route-summary {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { getPhotoReportTemplate, getStoreRequestActiveEmployees, submitPhotoReportItem } from '../api/client'
 import type { ActiveStoreEmployee, PhotoReportTemplateItem } from '../api/types'
 import type { Translation } from '../i18n/translations'
@@ -8,6 +8,7 @@ type PhotoReportPageProps = {
   device: DeviceState
   t: Translation
   onBack: () => void
+  onCompleted?: (message: string) => void
 }
 
 type UploadStatus = 'pending' | 'uploading' | 'uploaded' | 'failed'
@@ -123,7 +124,7 @@ async function clearStoredDraft(device: DeviceState) {
   await runStore(metaStoreName, 'readwrite', (store) => store.delete(metaKey(device)))
 }
 
-function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
+function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProps) {
   const [items, setItems] = useState<PhotoReportTemplateItem[]>([])
   const [photos, setPhotos] = useState<Record<number, PhotoState>>({})
   const [reportId, setReportId] = useState<number | null>(null)
@@ -134,6 +135,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
   const [statusMessage, setStatusMessage] = useState('')
   const [finalSuccess, setFinalSuccess] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const statusBlockRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -220,6 +222,12 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
   const partialPhotoReportTestMode = true
   const canSubmit = pendingSelectedCount > 0 && !employeeRequired && !isSubmitting
 
+  const scrollToUploadStatus = () => {
+    window.requestAnimationFrame(() => {
+      statusBlockRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
   const updatePhotoStatus = async (itemId: number, status: UploadStatus) => {
     setPhotos((currentPhotos) => {
       const currentPhoto = currentPhotos[itemId]
@@ -274,6 +282,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
   const submitReport = async () => {
     if (!device.deviceToken || isSubmitting) return
+    scrollToUploadStatus()
     if (hasMissingRequiredPhotos && !partialPhotoReportTestMode) {
       setStatusMessage(t.photoReport.requiredMissing)
       return
@@ -283,7 +292,8 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       return
     }
     if (!navigator.onLine) {
-      setStatusMessage('Інтернет зник. Фото не втрачено. Залиште додаток відкритим або повторіть відправку, коли буде інтернет.')
+      setStatusMessage('Інтернет зник. Фото не втрачено.\nНадіслано: 0 з 0\nЗалишилось: 0')
+      scrollToUploadStatus()
       return
     }
 
@@ -293,19 +303,26 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     })
 
     if (pendingItems.length === 0) {
-      setFinalStatus()
+      await setFinalStatus()
       return
     }
 
+    const uploadTotal = pendingItems.length
     setIsSubmitting(true)
-    setStatusMessage('Готуємо фото...')
+    setStatusMessage(`Надсилаємо фото...\nНадіслано: 0 з ${uploadTotal}\nЗалишилось: ${uploadTotal}`)
+    scrollToUploadStatus()
     let currentReportId = reportId
+    let uploadedInThisRun = 0
+    let stoppedWithError = false
 
     try {
-      let uploadedInThisRun = 0
       for (let index = 0; index < pendingItems.length; index += 1) {
         if (!navigator.onLine) {
-          setStatusMessage('Інтернет зник. Фото не втрачено. Залиште додаток відкритим або повторіть відправку, коли буде інтернет.')
+          stoppedWithError = true
+          setStatusMessage(
+            `Інтернет зник. Фото не втрачено.\nНадіслано: ${uploadedInThisRun} з ${uploadTotal}\nЗалишилось: ${uploadTotal - uploadedInThisRun}`,
+          )
+          scrollToUploadStatus()
           break
         }
 
@@ -314,7 +331,9 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
         if (!photo || photo.status === 'uploaded') continue
 
         await updatePhotoStatus(item.id, 'uploading')
-        setStatusMessage(`Надсилаємо ${uploadedCount + index + 1} з ${requiredItems.length}...`)
+        setStatusMessage(
+          `Надсилаємо фото...\nНадіслано: ${uploadedInThisRun} з ${uploadTotal}\nЗалишилось: ${uploadTotal - uploadedInThisRun}`,
+        )
 
         const formData = new FormData()
         formData.append('item_id', String(item.id))
@@ -328,8 +347,12 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
         const response = await submitPhotoReportItem(device.deviceToken, formData)
         if (!response.ok || response.report_id === null) {
+          stoppedWithError = true
           await updatePhotoStatus(item.id, 'failed')
-          setStatusMessage(response.message ?? 'Не вдалося надіслати це фото. Фото не втрачено.')
+          setStatusMessage(
+            `${response.message ?? 'Інтернет зник. Фото не втрачено.'}\nНадіслано: ${uploadedInThisRun} з ${uploadTotal}\nЗалишилось: ${uploadTotal - uploadedInThisRun}`,
+          )
+          scrollToUploadStatus()
           break
         }
 
@@ -338,13 +361,28 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
         await saveStoredMeta(device, response.report_id, selectedEmployeeId)
         await updatePhotoStatus(item.id, 'uploaded')
         uploadedInThisRun += 1
+        setStatusMessage(
+          `Надсилаємо фото...\nНадіслано: ${uploadedInThisRun} з ${uploadTotal}\nЗалишилось: ${uploadTotal - uploadedInThisRun}`,
+        )
       }
-      if (partialPhotoReportTestMode && uploadedInThisRun > 0) {
-        setStatusMessage(`Надіслано: ${uploadedInThisRun} фото. Це тестовий режим. Повний контроль фотозвіту тимчасово вимкнений.`)
+
+      if (!stoppedWithError && uploadedInThisRun === uploadTotal) {
+        Object.values(photos).forEach((photo) => URL.revokeObjectURL(photo.previewUrl))
+        await clearStoredDraft(device)
+        setPhotos({})
+        setReportId(null)
+        setStatusMessage('Фотозвіт успішно виконаний!')
+        onCompleted?.('Фотозвіт успішно виконаний!')
+        if (!onCompleted) {
+          onBack()
+        }
       }
     } catch (error) {
       console.error('photoReportItemSubmitFailed', { error })
-      setStatusMessage('Інтернет зник. Фото не втрачено. Залиште додаток відкритим або повторіть відправку, коли буде інтернет.')
+      setStatusMessage(
+        `Інтернет зник. Фото не втрачено.\nНадіслано: ${uploadedInThisRun} з ${uploadTotal}\nЗалишилось: ${uploadTotal - uploadedInThisRun}`,
+      )
+      scrollToUploadStatus()
       const uploadingItem = Object.entries(photos).find(([, photo]) => photo.status === 'uploading')
       if (uploadingItem) {
         await updatePhotoStatus(Number(uploadingItem[0]), 'failed')
@@ -422,7 +460,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
       {statusMessage && <div className={finalSuccess ? 'message-box success' : 'message-box'}>{statusMessage}</div>}
 
-      <section className="panel photo-report-status upload-status-panel">
+      <section ref={statusBlockRef} className="panel photo-report-status upload-status-panel">
         <strong>Фото зроблено: {doneCount} / {requiredItems.length}</strong>
         <span>{partialPhotoReportTestMode ? `Надіслано: ${uploadedCount} фото` : `Надіслано: ${uploadedCount} / ${requiredItems.length}`}</span>
         <span>{partialPhotoReportTestMode ? `Залишилось надіслати: ${pendingSelectedCount}` : `Залишилось: ${remainingCount}`}</span>
@@ -492,8 +530,11 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
         })}
       </section>
 
+      <p className="photo-report-submit-hint">
+        {isSubmitting ? 'Йде відправка. Не закривайте додаток.' : 'Після натискання дочекайтесь завершення відправки.'}
+      </p>
       <button className="confirm-button" disabled={!canSubmit || isLoading} onClick={() => void submitReport()}>
-        {isSubmitting ? 'Надсилання...' : remainingCount < requiredItems.length ? 'Надіслати залишок' : t.photoReport.send}
+        {isSubmitting ? 'Надсилаємо...' : remainingCount < requiredItems.length ? 'Надіслати залишок' : t.photoReport.send}
       </button>
     </main>
   )

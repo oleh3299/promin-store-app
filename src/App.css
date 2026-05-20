@@ -1238,12 +1238,27 @@ textarea {
 .photo-report-status {
   display: grid;
   gap: 8px;
+  scroll-margin-top: calc(18px + env(safe-area-inset-top));
 }
 
 .photo-report-status span {
   color: #66736b;
   font-size: 13px;
   font-weight: 800;
+}
+
+.photo-report-submit-hint {
+  margin: 4px 0 10px;
+  color: #405148;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.home-success-message {
+  margin-top: 0;
+  font-size: 17px;
+  text-align: center;
 }
 
 .photo-report-rules {

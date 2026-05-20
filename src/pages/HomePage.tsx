@@ -13,6 +13,7 @@ type HomePageProps = {
   onOpenStoreTasks: () => void
   onOpenSettings: () => void
   incomingMessageCount: number
+  statusMessage?: string | null
 }
 
 type OperationItem = {
@@ -35,6 +36,7 @@ function HomePage({
   onOpenStoreTasks,
   onOpenSettings,
   incomingMessageCount,
+  statusMessage,
 }: HomePageProps) {
   const operationItems: OperationItem[] = [
     {
@@ -72,6 +74,8 @@ function HomePage({
 
   return (
     <main className="app-shell terminal-home-shell">
+      {statusMessage && <div className="message-box success home-success-message">{statusMessage}</div>}
+
       <section className="terminal-home-header">
         <div className="terminal-home-topbar">
           <p className="app-kicker">Promin Store</p>

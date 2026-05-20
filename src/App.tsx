@@ -73,6 +73,7 @@ function StoreApp() {
   const [loginPending, setLoginPending] = useState(false)
   const [deviceBlocked, setDeviceBlocked] = useState(false)
   const [incomingMessageCount, setIncomingMessageCount] = useState(0)
+  const [homeStatusMessage, setHomeStatusMessage] = useState<string | null>(null)
   const [storeTaskMode, setStoreTaskMode] = useState<'messages' | 'photoReport'>('messages')
   const [notificationStatus, setNotificationStatus] = useState(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
@@ -280,7 +281,17 @@ function StoreApp() {
   } else if (screen === 'invoice') {
     content = <InvoicePage device={device} t={t} onBack={() => setScreen('home')} />
   } else if (screen === 'photoReport') {
-    content = <PhotoReportPage device={device} t={t} onBack={() => setScreen('home')} />
+    content = (
+      <PhotoReportPage
+        device={device}
+        t={t}
+        onBack={() => setScreen('home')}
+        onCompleted={(message) => {
+          setHomeStatusMessage(message)
+          setScreen('home')
+        }}
+      />
+    )
   } else if (screen === 'photoReportRouteTest') {
     content = <PhotoReportRouteTestPage device={device} onBack={() => setScreen('home')} />
   } else if (screen === 'planograms') {
@@ -318,6 +329,7 @@ function StoreApp() {
         storeName={device.storeName}
         t={t}
         incomingMessageCount={incomingMessageCount}
+        statusMessage={homeStatusMessage}
         onOpenStoreRequests={() => {
           setStoreRequestEntry('default')
           setScreen('storeRequests')
@@ -325,7 +337,10 @@ function StoreApp() {
         onOpenInvoice={() => setScreen('invoice')}
         onOpenAttendance={() => setScreen('attendance')}
         onOpenPlanograms={() => setScreen('planograms')}
-        onOpenPhotoReport={() => setScreen('photoReport')}
+        onOpenPhotoReport={() => {
+          setHomeStatusMessage(null)
+          setScreen('photoReport')
+        }}
         onOpenPhotoReportRouteTest={() => setScreen('photoReportRouteTest')}
         onOpenStoreTasks={() => {
           setStoreTaskMode('messages')

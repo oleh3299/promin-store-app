@@ -27,6 +27,17 @@ class PhotoReportUploadResponse(BaseModel):
     message: str | None = None
 
 
+class PhotoReportItemUploadResponse(BaseModel):
+    ok: bool
+    report_id: int | None = None
+    item_id: int | None = None
+    items_done: int | None = None
+    items_total: int | None = None
+    status: str | None = None
+    error: str | None = None
+    message: str | None = None
+
+
 class PhotoReportAdminRead(BaseModel):
     id: int
     store_id: int

@@ -146,6 +146,10 @@ export type PhotoReportUploadResponse = {
   message: string | null
 }
 
+export type PhotoReportItemUploadResponse = PhotoReportUploadResponse & {
+  item_id: number | null
+}
+
 export type PlanogramItem = {
   id: number
   category_name: string

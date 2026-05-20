@@ -72,6 +72,15 @@ class PhotoReportUploadResult:
     status: str
 
 
+@dataclass
+class PhotoReportItemUploadResult:
+    report_id: int
+    item_id: int
+    items_done: int
+    items_total: int
+    status: str
+
+
 def ensure_photo_report_template(db: Session, store_id: int) -> list[PhotoReportTemplate]:
     templates = list(
         db.scalars(
@@ -321,3 +330,141 @@ def create_photo_report(
             },
         )
         raise StoreRequestError("delivery_failed", "Не вдалося надіслати фотоотчет") from exc
+
+
+
+def count_required_report_items(db: Session, report_id: int, required_ids: set[int]) -> int:
+    if not required_ids:
+        return 0
+
+    sent_template_ids = set(
+        db.scalars(
+            select(PhotoReportItem.template_id).where(
+                PhotoReportItem.report_id == report_id,
+                PhotoReportItem.status == "sent",
+                PhotoReportItem.template_id.in_(required_ids),
+            ),
+        ),
+    )
+    return len(sent_template_ids)
+
+
+def upload_photo_report_item(
+    db: Session,
+    device: Device,
+    employee_id: int | None,
+    report_id: int | None,
+    item_id: int,
+    filename: str | None,
+    content_type: str,
+    file_bytes: bytes,
+) -> PhotoReportItemUploadResult:
+    if device.store_id is None:
+        raise StoreRequestError("device_store_required", "Device is not linked to a store")
+
+    if content_type not in ALLOWED_INVOICE_CONTENT_TYPES:
+        raise StoreRequestError("invalid_file_type", "Only JPEG, PNG, or WEBP are supported")
+    if len(file_bytes) > MAX_INVOICE_FILE_SIZE:
+        raise StoreRequestError("file_too_large", "Photo is too large")
+
+    store = db.get(Store, device.store_id)
+    if store is None:
+        raise StoreRequestError("store_not_found", "Store not found")
+
+    templates = ensure_photo_report_template(db, device.store_id)
+    templates_by_id = {template.id: template for template in templates}
+    template = templates_by_id.get(item_id)
+    if template is None:
+        raise StoreRequestError("invalid_items", "Invalid photo report item")
+
+    required_ids = {template.id for template in templates if template.is_required}
+    resolved_employee_id = resolve_employee_id(db, device.store_id, employee_id)
+    employee = db.get(Employee, resolved_employee_id) if resolved_employee_id is not None else None
+    now = datetime.now(timezone.utc)
+
+    report = db.get(PhotoReport, report_id) if report_id is not None else None
+    if report_id is not None and (report is None or report.store_id != device.store_id or report.device_id != device.id):
+        raise StoreRequestError("report_not_found", "Photo report not found")
+
+    if report is None:
+        report = PhotoReport(
+            store_id=device.store_id,
+            device_id=device.id,
+            employee_id=resolved_employee_id,
+            items_done=0,
+            items_total=len(required_ids),
+            status="failed",
+            created_at=now,
+        )
+        db.add(report)
+        db.commit()
+        db.refresh(report)
+
+    existing_item = db.scalar(
+        select(PhotoReportItem).where(
+            PhotoReportItem.report_id == report.id,
+            PhotoReportItem.template_id == template.id,
+            PhotoReportItem.status == "sent",
+        ),
+    )
+    if existing_item is not None:
+        items_done = count_required_report_items(db, report.id, required_ids)
+        report.items_done = items_done
+        if items_done >= len(required_ids):
+            report.status = "sent"
+            report.sent_at = datetime.now(timezone.utc)
+        db.add(report)
+        db.commit()
+        return PhotoReportItemUploadResult(report.id, template.id, items_done, len(required_ids), report.status)
+
+    rocket = RocketChatService()
+    room_id = resolve_photo_report_room_id(rocket, store)
+    message = build_photo_report_message(store, now, template.item_name, employee)
+    try:
+        result = rocket.upload_file(
+            room_id,
+            safe_invoice_filename(filename, content_type),
+            content_type,
+            file_bytes,
+            message,
+            template.item_name,
+        )
+    except RocketChatError as exc:
+        db.add(
+            PhotoReportItem(
+                report_id=report.id,
+                template_id=template.id,
+                title=template.item_name,
+                rocket_room_id=room_id,
+                status="failed",
+                error_text=str(exc),
+                created_at=now,
+            ),
+        )
+        db.commit()
+        raise StoreRequestError("delivery_failed", "Could not send photo") from exc
+
+    db.add(
+        PhotoReportItem(
+            report_id=report.id,
+            template_id=template.id,
+            title=template.item_name,
+            rocket_room_id=room_id,
+            rocket_file_id=result.file_id,
+            rocket_message_id=result.message_id,
+            status="sent",
+            created_at=now,
+            sent_at=datetime.now(timezone.utc),
+        ),
+    )
+    items_done = count_required_report_items(db, report.id, required_ids)
+    report.items_done = items_done
+    if items_done >= len(required_ids):
+        report.status = "sent"
+        report.sent_at = datetime.now(timezone.utc)
+    else:
+        report.status = "failed"
+    db.add(report)
+    db.commit()
+
+    return PhotoReportItemUploadResult(report.id, template.id, items_done, len(required_ids), report.status)

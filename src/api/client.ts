@@ -7,6 +7,7 @@ import type {
   EmployeeRead,
   InvoiceTodayResponse,
   InvoiceUploadResponse,
+  PhotoReportItemUploadResponse,
   PhotoReportRouteTestResponse,
   PlanogramListResponse,
   PhotoReportTemplateResponse,
@@ -267,6 +268,17 @@ export function submitPhotoReport(deviceToken: string, formData: FormData) {
   })
   return apiRequest<PhotoReportUploadResponse>(
     '/api/photo-reports',
+    {
+      method: 'POST',
+      body: formData,
+    },
+    { deviceToken },
+  )
+}
+
+export function submitPhotoReportItem(deviceToken: string, formData: FormData) {
+  return apiRequest<PhotoReportItemUploadResponse>(
+    '/api/photo-reports/item',
     {
       method: 'POST',
       body: formData,

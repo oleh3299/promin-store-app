@@ -555,6 +555,11 @@ h1 {
   font-weight: 800;
 }
 
+.message-box.success {
+  background: #e6f6eb;
+  color: #145c31;
+}
+
 .action-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1225,6 +1230,30 @@ textarea {
 .photo-report-added {
   color: #1f7a42;
   font-size: 13px;
+  font-weight: 900;
+}
+
+.photo-report-added.status-uploading {
+  color: #7a5a12;
+}
+
+.photo-report-added.status-uploaded {
+  color: #145c31;
+}
+
+.photo-report-added.status-failed {
+  color: #9b2c2c;
+}
+
+.upload-status-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.upload-status-panel em {
+  color: #7a5a12;
+  font-size: 14px;
+  font-style: normal;
   font-weight: 900;
 }
 

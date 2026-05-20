@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  ApiError,
-  getPhotoReportTemplate,
-  getStoreRequestActiveEmployees,
-  submitPhotoReport,
-} from '../api/client'
+import { getPhotoReportTemplate, getStoreRequestActiveEmployees, submitPhotoReportItem } from '../api/client'
 import type { ActiveStoreEmployee, PhotoReportTemplateItem } from '../api/types'
 import type { Translation } from '../i18n/translations'
 import type { DeviceState } from '../types/attendance'
@@ -15,26 +10,129 @@ type PhotoReportPageProps = {
   onBack: () => void
 }
 
+type UploadStatus = 'pending' | 'uploading' | 'uploaded' | 'failed'
+
 type PhotoState = {
   file: File
   previewUrl: string
+  status: UploadStatus
+}
+
+type StoredPhotoRecord = {
+  key: string
+  itemId: number
+  file: File
+  status: UploadStatus
+}
+
+type StoredPhotoMeta = {
+  key: string
+  reportId: number | null
+  employeeId: number | null
 }
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxPhotoSize = 10 * 1024 * 1024
-const serverUnavailableMessage = 'Немає зв’язку з сервером'
-const networkErrorMessage = 'Помилка мережі. Перевірте інтернет і спробуйте ще раз.'
-const payloadTooLargeMessage = 'Занадто великий обсяг фото. Спробуйте зробити фото меншого розміру.'
-const preparePhotoErrorMessage = 'Не вдалося підготувати фото. Спробуйте додати фото ще раз.'
+const dbName = 'promin-photo-report'
+const photoStoreName = 'photos'
+const metaStoreName = 'meta'
+
+function openPhotoReportDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1)
+    request.onupgradeneeded = () => {
+      const db = request.result
+      if (!db.objectStoreNames.contains(photoStoreName)) {
+        db.createObjectStore(photoStoreName, { keyPath: 'key' })
+      }
+      if (!db.objectStoreNames.contains(metaStoreName)) {
+        db.createObjectStore(metaStoreName, { keyPath: 'key' })
+      }
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+function runStore<T>(
+  storeName: string,
+  mode: IDBTransactionMode,
+  runner: (store: IDBObjectStore) => IDBRequest<T>,
+): Promise<T> {
+  return openPhotoReportDb().then(
+    (db) =>
+      new Promise<T>((resolve, reject) => {
+        const tx = db.transaction(storeName, mode)
+        const request = runner(tx.objectStore(storeName))
+        request.onsuccess = () => resolve(request.result)
+        request.onerror = () => reject(request.error)
+        tx.oncomplete = () => db.close()
+        tx.onerror = () => {
+          db.close()
+          reject(tx.error)
+        }
+      }),
+  )
+}
+
+function draftPrefix(device: DeviceState) {
+  return `device-${device.id ?? (device.deviceUuid || 'unknown')}`
+}
+
+function photoKey(device: DeviceState, itemId: number) {
+  return `${draftPrefix(device)}:item-${itemId}`
+}
+
+function metaKey(device: DeviceState) {
+  return `${draftPrefix(device)}:meta`
+}
+
+async function saveStoredPhoto(device: DeviceState, itemId: number, file: File, status: UploadStatus) {
+  await runStore(photoStoreName, 'readwrite', (store) =>
+    store.put({ key: photoKey(device, itemId), itemId, file, status }),
+  )
+}
+
+async function saveStoredPhotoStatus(device: DeviceState, itemId: number, status: UploadStatus) {
+  const existing = await runStore<StoredPhotoRecord | undefined>(photoStoreName, 'readonly', (store) =>
+    store.get(photoKey(device, itemId)),
+  )
+  if (!existing) return
+  await runStore(photoStoreName, 'readwrite', (store) => store.put({ ...existing, status }))
+}
+
+async function loadStoredPhotos(device: DeviceState) {
+  const records = await runStore<StoredPhotoRecord[]>(photoStoreName, 'readonly', (store) => store.getAll())
+  const prefix = `${draftPrefix(device)}:item-`
+  return records.filter((record) => record.key.startsWith(prefix))
+}
+
+async function saveStoredMeta(device: DeviceState, reportId: number | null, employeeId: number | null) {
+  await runStore(metaStoreName, 'readwrite', (store) =>
+    store.put({ key: metaKey(device), reportId, employeeId }),
+  )
+}
+
+async function loadStoredMeta(device: DeviceState) {
+  return runStore<StoredPhotoMeta | undefined>(metaStoreName, 'readonly', (store) => store.get(metaKey(device)))
+}
+
+async function clearStoredDraft(device: DeviceState) {
+  const records = await loadStoredPhotos(device)
+  await Promise.all(records.map((record) => runStore(photoStoreName, 'readwrite', (store) => store.delete(record.key))))
+  await runStore(metaStoreName, 'readwrite', (store) => store.delete(metaKey(device)))
+}
 
 function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
   const [items, setItems] = useState<PhotoReportTemplateItem[]>([])
   const [photos, setPhotos] = useState<Record<number, PhotoState>>({})
+  const [reportId, setReportId] = useState<number | null>(null)
   const [employees, setEmployees] = useState<ActiveStoreEmployee[]>([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [finalSuccess, setFinalSuccess] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -46,20 +144,39 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       }
 
       try {
-        const [templateResponse, employeesResponse] = await Promise.all([
+        const [templateResponse, employeesResponse, storedPhotos, storedMeta] = await Promise.all([
           getPhotoReportTemplate(device.deviceToken),
           getStoreRequestActiveEmployees(device.deviceToken),
+          loadStoredPhotos(device),
+          loadStoredMeta(device),
         ])
         if (cancelled) return
+
         setItems(templateResponse.items)
         setEmployees(employeesResponse.items)
         setSelectedEmployeeId(
-          employeesResponse.items.length === 1 ? employeesResponse.items[0].employee_id : null,
+          storedMeta?.employeeId ??
+            (employeesResponse.items.length === 1 ? employeesResponse.items[0].employee_id : null),
         )
+        setReportId(storedMeta?.reportId ?? null)
+        if (storedPhotos.length > 0) {
+          const restoredPhotos = Object.fromEntries(
+            storedPhotos.map((record) => [
+              record.itemId,
+              {
+                file: record.file,
+                previewUrl: URL.createObjectURL(record.file),
+                status: record.status === 'uploading' ? 'failed' : record.status,
+              },
+            ]),
+          )
+          setPhotos(restoredPhotos)
+          setStatusMessage('Є незавершений фотозвіт. Фото не втрачено.')
+        }
       } catch (error) {
         console.error('photoReportLoadFailed', { error })
         if (!cancelled) {
-          setStatusMessage(error instanceof ApiError ? t.photoReport.genericError : serverUnavailableMessage)
+          setStatusMessage('Не вдалося завантажити фотозвіт. Перевірте зв’язок із сервером.')
         }
       } finally {
         if (!cancelled) {
@@ -73,7 +190,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     return () => {
       cancelled = true
     }
-  }, [device.deviceToken, t.photoReport.genericError])
+  }, [device, t.photoReport.genericError])
 
   useEffect(
     () => () => {
@@ -82,18 +199,34 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     [photos],
   )
 
+  useEffect(() => {
+    void saveStoredMeta(device, reportId, selectedEmployeeId)
+  }, [device, reportId, selectedEmployeeId])
+
   const selectedEmployee = useMemo(
     () => employees.find((employee) => employee.employee_id === selectedEmployeeId) ?? null,
     [employees, selectedEmployeeId],
   )
   const requiredItems = useMemo(() => items.filter((item) => item.is_required), [items])
   const doneCount = requiredItems.filter((item) => photos[item.id]).length
+  const uploadedCount = requiredItems.filter((item) => photos[item.id]?.status === 'uploaded').length
+  const remainingCount = Math.max(requiredItems.length - uploadedCount, 0)
   const employeeRequired = employees.length > 1 && selectedEmployeeId === null
   const hasMissingRequiredPhotos = requiredItems.some((item) => !photos[item.id])
   const canSubmit = !hasMissingRequiredPhotos && requiredItems.length > 0 && !employeeRequired && !isSubmitting
 
-  const setItemPhoto = (itemId: number, nextFile: File | undefined) => {
+  const updatePhotoStatus = async (itemId: number, status: UploadStatus) => {
+    setPhotos((currentPhotos) => {
+      const currentPhoto = currentPhotos[itemId]
+      if (!currentPhoto) return currentPhotos
+      return { ...currentPhotos, [itemId]: { ...currentPhoto, status } }
+    })
+    await saveStoredPhotoStatus(device, itemId, status)
+  }
+
+  const setItemPhoto = async (itemId: number, nextFile: File | undefined) => {
     setStatusMessage('')
+    setFinalSuccess(false)
     if (!nextFile) return
 
     if (!allowedImageTypes.includes(nextFile.type)) {
@@ -106,6 +239,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       return
     }
 
+    await saveStoredPhoto(device, itemId, nextFile, 'pending')
     setPhotos((currentPhotos) => {
       const currentPhoto = currentPhotos[itemId]
       if (currentPhoto) {
@@ -117,6 +251,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
         [itemId]: {
           file: nextFile,
           previewUrl: URL.createObjectURL(nextFile),
+          status: 'pending',
         },
       }
     })
@@ -133,99 +268,86 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       return
     }
     if (!navigator.onLine) {
-      setStatusMessage(serverUnavailableMessage)
+      setStatusMessage('Інтернет зник. Фото не втрачено. Залиште додаток відкритим або повторіть відправку, коли буде інтернет.')
       return
     }
 
-    const itemsWithPhotos = items.filter((item) => photos[item.id])
-    const totalBytes = itemsWithPhotos.reduce((sum, item) => sum + photos[item.id].file.size, 0)
-    let formData: FormData
+    const pendingItems = items.filter((item) => {
+      const photo = photos[item.id]
+      return photo && photo.status !== 'uploaded'
+    })
 
-    try {
-      formData = new FormData()
-      formData.append('item_ids', JSON.stringify(itemsWithPhotos.map((item) => item.id)))
-      if (selectedEmployeeId !== null) {
-        formData.append('employee_id', String(selectedEmployeeId))
-      }
-      itemsWithPhotos.forEach((item) => {
-        formData.append('files', photos[item.id].file)
-      })
-    } catch (error) {
-      console.error('photoReportSubmitPrepareFailed', {
-        error,
-        itemsCount: itemsWithPhotos.length,
-        filesCount: itemsWithPhotos.length,
-        totalBytes,
-      })
-      setStatusMessage(preparePhotoErrorMessage)
+    if (pendingItems.length === 0) {
+      setFinalStatus()
       return
     }
 
     setIsSubmitting(true)
-    setStatusMessage(t.photoReport.sending)
+    setStatusMessage('Готуємо фото...')
+    let currentReportId = reportId
+
     try {
-      console.log('photoReportSubmitStarted', {
-        itemsCount: itemsWithPhotos.length,
-        filesCount: itemsWithPhotos.length,
-        totalBytes,
-        selectedEmployee: selectedEmployeeId !== null,
-      })
-      const response = await submitPhotoReport(device.deviceToken, formData)
-      if (response.ok) {
-        setStatusMessage(t.photoReport.sent)
-        setPhotos((currentPhotos) => {
-          Object.values(currentPhotos).forEach((photo) => URL.revokeObjectURL(photo.previewUrl))
-          return {}
-        })
-        return
-      }
+      for (let index = 0; index < pendingItems.length; index += 1) {
+        if (!navigator.onLine) {
+          setStatusMessage('Інтернет зник. Фото не втрачено. Залиште додаток відкритим або повторіть відправку, коли буде інтернет.')
+          break
+        }
 
-      if (response.error === 'employee_required') {
-        setStatusMessage(t.photoReport.employeeRequired)
-        return
-      }
-      if (response.error === 'incomplete_report') {
-        setStatusMessage(t.photoReport.incomplete)
-        return
-      }
-      if (response.error === 'invalid_file_type') {
-        setStatusMessage(t.photoReport.invalidFileType)
-        return
-      }
-      if (response.error === 'file_too_large') {
-        setStatusMessage(t.photoReport.fileTooLarge)
-        return
-      }
+        const item = pendingItems[index]
+        const photo = photos[item.id]
+        if (!photo || photo.status === 'uploaded') continue
 
-      setStatusMessage(response.message ?? t.photoReport.genericError)
+        await updatePhotoStatus(item.id, 'uploading')
+        setStatusMessage(`Надсилаємо ${uploadedCount + index + 1} з ${requiredItems.length}...`)
+
+        const formData = new FormData()
+        formData.append('item_id', String(item.id))
+        if (currentReportId !== null) {
+          formData.append('report_id', String(currentReportId))
+        }
+        if (selectedEmployeeId !== null) {
+          formData.append('employee_id', String(selectedEmployeeId))
+        }
+        formData.append('file', photo.file)
+
+        const response = await submitPhotoReportItem(device.deviceToken, formData)
+        if (!response.ok || response.report_id === null) {
+          await updatePhotoStatus(item.id, 'failed')
+          setStatusMessage(response.message ?? 'Не вдалося надіслати це фото. Фото не втрачено.')
+          break
+        }
+
+        currentReportId = response.report_id
+        setReportId(response.report_id)
+        await saveStoredMeta(device, response.report_id, selectedEmployeeId)
+        await updatePhotoStatus(item.id, 'uploaded')
+      }
     } catch (error) {
-      console.error('photoReportSubmitFailed', {
-        error,
-        itemsCount: itemsWithPhotos.length,
-        filesCount: itemsWithPhotos.length,
-        totalBytes,
-      })
-
-      if (error instanceof ApiError && error.status === 413) {
-        setStatusMessage(payloadTooLargeMessage)
-        return
+      console.error('photoReportItemSubmitFailed', { error })
+      setStatusMessage('Інтернет зник. Фото не втрачено. Залиште додаток відкритим або повторіть відправку, коли буде інтернет.')
+      const uploadingItem = Object.entries(photos).find(([, photo]) => photo.status === 'uploading')
+      if (uploadingItem) {
+        await updatePhotoStatus(Number(uploadingItem[0]), 'failed')
       }
-
-      if (error instanceof TypeError) {
-        setStatusMessage(networkErrorMessage)
-        return
-      }
-
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        setStatusMessage(networkErrorMessage)
-        return
-      }
-
-      setStatusMessage(t.photoReport.genericError)
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  const setFinalStatus = async () => {
+    setFinalSuccess(true)
+    setStatusMessage('Фотозвіт надіслано. Дякуємо. Можна закривати додаток.')
+    Object.values(photos).forEach((photo) => URL.revokeObjectURL(photo.previewUrl))
+    setPhotos({})
+    setReportId(null)
+    await clearStoredDraft(device)
+  }
+
+  useEffect(() => {
+    if (!isSubmitting && requiredItems.length > 0 && uploadedCount === requiredItems.length && Object.keys(photos).length > 0) {
+      void setFinalStatus()
+    }
+  }, [isSubmitting, requiredItems.length, uploadedCount])
 
   return (
     <main className="app-shell">
@@ -239,11 +361,15 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
         <p className="app-subtitle">{t.photoReport.subtitle}</p>
       </section>
 
-      {statusMessage && <div className="message-box">{statusMessage}</div>}
+      {statusMessage && <div className={finalSuccess ? 'message-box success' : 'message-box'}>{statusMessage}</div>}
 
-      <section className="panel photo-report-status">
-        <strong>{t.photoReport.progress(doneCount, requiredItems.length)}</strong>
-        {hasMissingRequiredPhotos && !isLoading && <span>{t.photoReport.requiredMissing}</span>}
+      <section className="panel photo-report-status upload-status-panel">
+        <strong>Фото зроблено: {doneCount} / {requiredItems.length}</strong>
+        <span>Надіслано: {uploadedCount} / {requiredItems.length}</span>
+        <span>Залишилось: {remainingCount}</span>
+        {doneCount === requiredItems.length && remainingCount > 0 && (
+          <em>Не закривайте додаток до завершення. Фото збережені на телефоні.</em>
+        )}
       </section>
 
       <section className="panel photo-report-rules">
@@ -289,14 +415,14 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
                   <img alt={item.item_name} src={photo.previewUrl} />
                 </div>
               )}
-              {photo && <span className="photo-report-added">{t.photoReport.photoAdded}</span>}
+              {photo && <span className={`photo-report-added status-${photo.status}`}>{photo.status === 'uploaded' ? 'Надіслано' : photo.status === 'uploading' ? 'Надсилаємо' : photo.status === 'failed' ? 'Не надіслано' : t.photoReport.photoAdded}</span>}
               <label className="file-picker">
                 <strong>{photo ? t.photoReport.changePhoto : t.photoReport.takePhoto}</strong>
                 <input
                   accept="image/jpeg,image/png,image/webp"
                   capture="environment"
                   type="file"
-                  onChange={(event) => setItemPhoto(item.id, event.target.files?.[0])}
+                  onChange={(event) => void setItemPhoto(item.id, event.target.files?.[0])}
                 />
               </label>
             </div>
@@ -305,7 +431,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
       </section>
 
       <button className="confirm-button" disabled={!canSubmit || isLoading} onClick={() => void submitReport()}>
-        {isSubmitting ? t.photoReport.sending : t.photoReport.send}
+        {isSubmitting ? 'Надсилання...' : remainingCount < requiredItems.length ? 'Надіслати залишок' : t.photoReport.send}
       </button>
     </main>
   )

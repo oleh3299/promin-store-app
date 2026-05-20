@@ -76,6 +76,13 @@ def is_task_overdue(task: StoreTask) -> bool:
     return due_at is not None and due_at < datetime.now(LOCAL_TIMEZONE)
 
 
+def is_photo_report_relaxed_test_task(task: StoreTask) -> bool:
+    # TODO/FIXME: TEMPORARY TEST MODE FOR ROCKET CHAT PHOTO REPORT FLOW.
+    # This allows testing Rocket.Chat channel/webhook flow without requiring
+    # completion photos for store task responses in the photo_report category.
+    return task.category == "photo_report"
+
+
 def task_to_read(task: StoreTask) -> StoreTaskRead:
     return StoreTaskRead(
         id=task.id,
@@ -263,7 +270,8 @@ def submit_store_task(
         raise StoreTaskError("device_store_required", "Device is not linked to a store")
 
     clean_comment = comment.strip() if comment else None
-    if task.requires_photo and not file_bytes:
+    photo_report_relaxed_test_mode = is_photo_report_relaxed_test_task(task)
+    if task.requires_photo and not file_bytes and not photo_report_relaxed_test_mode:
         raise StoreTaskError("file_required", "Add a photo")
     if task.requires_comment and not clean_comment:
         raise StoreTaskError("comment_required", "Add a comment")
@@ -295,7 +303,13 @@ def submit_store_task(
 
     task.completed_by_employee_id = resolved_employee_id
     task.completed_at = now
-    task.status = "submitted" if task.requires_verification else "completed"
+    task.status = (
+        "completed"
+        if photo_report_relaxed_test_mode
+        else "submitted"
+        if task.requires_verification
+        else "completed"
+    )
     add_task_event(
         db,
         task,

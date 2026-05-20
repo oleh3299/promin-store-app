@@ -38,6 +38,8 @@ class PhotoReport(Base):
     items_done: Mapped[int] = mapped_column(Integer, nullable=False)
     items_total: Mapped[int] = mapped_column(Integer, nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False)
+    rocket_room_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    rocket_parent_message_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

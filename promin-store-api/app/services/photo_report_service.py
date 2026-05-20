@@ -179,6 +179,111 @@ def build_photo_report_message(
     )
 
 
+def build_photo_report_parent_message(
+    store: Store,
+    report_date: datetime,
+    employee: Employee | None,
+    items_done: int,
+    items_total: int,
+    completed: bool = False,
+) -> str:
+    employee_label = employee.full_name if employee is not None else "РЅРµ РІРєР°Р·Р°РЅРѕ"
+    status_line = (
+        f"Р¤РѕС‚РѕР·РІС–С‚ Р·Р°РІРµСЂС€РµРЅРѕ\nРќР°РґС–СЃР»Р°РЅРѕ: {items_done} С„РѕС‚Рѕ"
+        if completed
+        else (
+            f"РќР°РґС–СЃР»Р°РЅРѕ С„РѕС‚Рѕ: {items_done} / {items_total}\n"
+            "РўРµСЃС‚РѕРІРёР№ СЂРµР¶РёРј: РЅРµРїРѕРІРЅРёР№ С„РѕС‚РѕР·РІС–С‚ РґРѕР·РІРѕР»РµРЅРѕ"
+        )
+    )
+    return "\n".join(
+        [
+            "Р’РµС‡С–СЂРЅС–Р№ С„РѕС‚РѕР·РІС–С‚",
+            f"РњР°РіР°Р·РёРЅ: {store.name} / {store.code}",
+            f"Р”Р°С‚Р°: {format_report_date(report_date)}",
+            f"РЎРїС–РІСЂРѕР±С–С‚РЅРёРє: {employee_label}",
+            "",
+            status_line,
+        ],
+    )
+
+
+def build_photo_report_thread_message(item_index: int, items_total: int, item_title: str) -> str:
+    return f"[{item_index}/{items_total}]\n{item_title}"
+
+
+def photo_report_item_index(templates: list[PhotoReportTemplate], template: PhotoReportTemplate) -> int:
+    sorted_templates = sorted(templates, key=lambda item: (item.sort_order, item.id))
+    for index, current_template in enumerate(sorted_templates, start=1):
+        if current_template.id == template.id:
+            return index
+    return template.sort_order
+
+
+def ensure_photo_report_parent_message(
+    db: Session,
+    rocket: RocketChatService,
+    report: PhotoReport,
+    store: Store,
+    employee: Employee | None,
+    room_id: str,
+    report_date: datetime,
+) -> str:
+    if report.rocket_parent_message_id:
+        return report.rocket_parent_message_id
+
+    result = rocket.send_message(
+        room_id,
+        build_photo_report_parent_message(store, report_date, employee, report.items_done, report.items_total),
+    )
+    if not result.message_id:
+        raise RocketChatError("Rocket.Chat parent message id missing")
+
+    report.rocket_room_id = room_id
+    report.rocket_parent_message_id = result.message_id
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    return result.message_id
+
+
+def update_photo_report_parent_message(
+    rocket: RocketChatService,
+    report: PhotoReport,
+    store: Store,
+    employee: Employee | None,
+    items_done: int,
+    completed: bool,
+) -> None:
+    if not report.rocket_room_id or not report.rocket_parent_message_id:
+        return
+
+    try:
+        rocket.update_message(
+            report.rocket_room_id,
+            report.rocket_parent_message_id,
+            build_photo_report_parent_message(
+                store,
+                report.created_at,
+                employee,
+                items_done,
+                report.items_total,
+                completed=completed,
+            ),
+        )
+    except RocketChatError as exc:
+        logger.warning(
+            "photo_report_parent_update_failed",
+            extra={
+                "report_id": report.id,
+                "store_id": report.store_id,
+                "rocket_room_id": report.rocket_room_id,
+                "rocket_parent_message_id": report.rocket_parent_message_id,
+                "error": str(exc),
+            },
+        )
+
+
 def parse_item_ids(item_ids_json: str) -> list[int]:
     try:
         raw_item_ids = json.loads(item_ids_json)
@@ -245,6 +350,7 @@ def create_photo_report(
         items_done=0,
         items_total=len(required_ids),
         status="failed",
+        rocket_room_id=room_id,
         created_at=now,
     )
     db.add(report)
@@ -253,9 +359,11 @@ def create_photo_report(
 
     items_done = 0
     try:
+        parent_message_id = ensure_photo_report_parent_message(db, rocket, report, store, employee, room_id, now)
         for item_id, (filename, content_type, file_bytes) in zip(item_ids, files, strict=True):
             template = templates_by_id[item_id]
-            message = build_photo_report_message(store, now, template.item_name, employee)
+            item_index = photo_report_item_index(templates, template)
+            message = build_photo_report_thread_message(item_index, len(required_ids), template.item_name)
             result = rocket.upload_file(
                 room_id,
                 safe_invoice_filename(filename, content_type),
@@ -263,6 +371,7 @@ def create_photo_report(
                 file_bytes,
                 message,
                 template.item_name,
+                thread_message_id=parent_message_id,
             )
             db.add(
                 PhotoReportItem(
@@ -278,6 +387,17 @@ def create_photo_report(
                 ),
             )
             items_done += 1
+            report.items_done = sum(1 for sent_item_id in item_ids[:items_done] if templates_by_id[sent_item_id].is_required)
+            db.add(report)
+            db.commit()
+            update_photo_report_parent_message(
+                rocket,
+                report,
+                store,
+                employee,
+                report.items_done,
+                completed=False,
+            )
 
         required_done = sum(1 for item_id in item_ids if templates_by_id[item_id].is_required)
         report.items_done = required_done
@@ -285,6 +405,14 @@ def create_photo_report(
         report.sent_at = datetime.now(timezone.utc)
         db.add(report)
         db.commit()
+        update_photo_report_parent_message(
+            rocket,
+            report,
+            store,
+            employee,
+            required_done,
+            completed=True,
+        )
         logger.info(
             "photo_report_sent",
             extra={
@@ -419,7 +547,14 @@ def upload_photo_report_item(
 
     rocket = RocketChatService()
     room_id = resolve_photo_report_room_id(rocket, store)
-    message = build_photo_report_message(store, now, template.item_name, employee)
+    if not report.rocket_room_id:
+        report.rocket_room_id = room_id
+        db.add(report)
+        db.commit()
+        db.refresh(report)
+    parent_message_id = ensure_photo_report_parent_message(db, rocket, report, store, employee, room_id, report.created_at)
+    item_index = photo_report_item_index(templates, template)
+    message = build_photo_report_thread_message(item_index, len(required_ids), template.item_name)
     try:
         result = rocket.upload_file(
             room_id,
@@ -428,6 +563,7 @@ def upload_photo_report_item(
             file_bytes,
             message,
             template.item_name,
+            thread_message_id=parent_message_id,
         )
     except RocketChatError as exc:
         db.add(
@@ -466,5 +602,13 @@ def upload_photo_report_item(
         report.status = "failed"
     db.add(report)
     db.commit()
+    update_photo_report_parent_message(
+        rocket,
+        report,
+        store,
+        employee,
+        items_done,
+        completed=items_done >= len(required_ids),
+    )
 
     return PhotoReportItemUploadResult(report.id, template.id, items_done, len(required_ids), report.status)

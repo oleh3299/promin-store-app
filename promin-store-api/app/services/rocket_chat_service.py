@@ -91,6 +91,43 @@ class RocketChatService:
         message_id = message.get("_id") if isinstance(message, dict) else None
         return RocketChatSendResult(message_id=message_id)
 
+    def update_message(self, room_id: str, message_id: str, text: str) -> RocketChatSendResult:
+        if not self.user_id or not self.auth_token:
+            raise RocketChatError("Rocket.Chat credentials are not configured")
+
+        payload = json.dumps({"roomId": room_id, "msgId": message_id, "text": text}).encode("utf-8")
+        update_request = request.Request(
+            f"{self.base_url}/api/v1/chat.update",
+            data=payload,
+            headers={
+                "X-Auth-Token": self.auth_token,
+                "X-User-Id": self.user_id,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+
+        try:
+            with request.urlopen(update_request, timeout=self.timeout) as response:
+                response_body = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            raise RocketChatError(f"Rocket.Chat HTTP {exc.code}") from exc
+        except error.URLError as exc:
+            raise RocketChatError(f"Rocket.Chat request failed: {exc.reason}") from exc
+        except TimeoutError as exc:
+            raise RocketChatError("Rocket.Chat request timed out") from exc
+
+        try:
+            data = json.loads(response_body)
+        except json.JSONDecodeError as exc:
+            raise RocketChatError("Rocket.Chat returned invalid JSON") from exc
+
+        if not data.get("success"):
+            error_message = data.get("error") or data.get("message") or "Rocket.Chat update failed"
+            raise RocketChatError(str(error_message))
+
+        return RocketChatSendResult(message_id=message_id)
+
     def get_room_id_by_name(self, room_name: str) -> str:
         if not self.user_id or not self.auth_token:
             raise RocketChatError("Rocket.Chat credentials are not configured")

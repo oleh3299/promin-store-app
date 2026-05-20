@@ -56,8 +56,12 @@ const DEVICE_BLOCKED_MESSAGE =
 
 function StoreApp() {
   const [initialState] = useState(loadAppPersistence)
+  const initialOpenTarget =
+    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('open')
   const [screen, setScreen] = useState<Screen>(
-    operationalScreens.includes(initialState.screen) ? initialState.screen : 'home',
+    initialOpenTarget === 'messages' || initialOpenTarget === 'photo-tasks'
+      ? 'storeTasks'
+      : operationalScreens.includes(initialState.screen) ? initialState.screen : 'home',
   )
   const [storeRequestEntry, setStoreRequestEntry] =
     useState<StoreRequestEntry>('default')
@@ -73,8 +77,11 @@ function StoreApp() {
   const [loginPending, setLoginPending] = useState(false)
   const [deviceBlocked, setDeviceBlocked] = useState(false)
   const [incomingMessageCount, setIncomingMessageCount] = useState(0)
+  const [incomingPhotoTaskCount, setIncomingPhotoTaskCount] = useState(0)
   const [homeStatusMessage, setHomeStatusMessage] = useState<string | null>(null)
-  const [storeTaskMode, setStoreTaskMode] = useState<'messages' | 'photoReport'>('messages')
+  const [storeTaskMode, setStoreTaskMode] = useState<'messages' | 'photoReport'>(
+    initialOpenTarget === 'photo-tasks' ? 'photoReport' : 'messages',
+  )
   const [notificationStatus, setNotificationStatus] = useState(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
@@ -117,8 +124,10 @@ function StoreApp() {
     try {
       const response = await getStoreTasks(device.deviceToken, 'open,new')
       setIncomingMessageCount(response.items.filter((task) => task.source === 'rocket_chat' && task.category !== 'photo_report').length)
+      setIncomingPhotoTaskCount(response.items.filter((task) => task.source === 'rocket_chat' && task.category === 'photo_report').length)
     } catch {
       setIncomingMessageCount(0)
+      setIncomingPhotoTaskCount(0)
     }
   }, [device.deviceToken])
 
@@ -302,6 +311,7 @@ function StoreApp() {
     content = (
       <SettingsPage
         notificationStatus={notificationStatus}
+        deviceToken={device.deviceToken}
         t={t}
         onNotificationStatusChange={setNotificationStatus}
         onBack={() => setScreen('home')}
@@ -329,6 +339,7 @@ function StoreApp() {
         storeName={device.storeName}
         t={t}
         incomingMessageCount={incomingMessageCount}
+        incomingPhotoTaskCount={incomingPhotoTaskCount}
         statusMessage={homeStatusMessage}
         onOpenStoreRequests={() => {
           setStoreRequestEntry('default')
@@ -343,6 +354,10 @@ function StoreApp() {
         }}
         onOpenStoreTasks={() => {
           setStoreTaskMode('messages')
+          setScreen('storeTasks')
+        }}
+        onOpenPhotoTasks={() => {
+          setStoreTaskMode('photoReport')
           setScreen('storeTasks')
         }}
         onOpenSettings={() => setScreen('settings')}

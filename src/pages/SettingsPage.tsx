@@ -1,13 +1,14 @@
 import type { Translation } from '../i18n/translations'
 import BackButton from '../components/BackButton'
 import {
+  enablePushNotifications,
   isStandaloneMode,
-  requestNotificationPermission,
   showTestNotification,
 } from '../lib/pwa'
 
 type SettingsPageProps = {
   notificationStatus: string
+  deviceToken: string | null
   t: Translation
   onNotificationStatusChange: (status: string) => void
   onBack: () => void
@@ -16,6 +17,7 @@ type SettingsPageProps = {
 
 function SettingsPage({
   notificationStatus,
+  deviceToken,
   t,
   onNotificationStatusChange,
   onBack,
@@ -49,7 +51,12 @@ function SettingsPage({
         <button
           className="wide-button"
           onClick={async () => {
-            const result = await requestNotificationPermission()
+            if (!deviceToken) {
+              onNotificationStatusChange('device_required')
+              return
+            }
+
+            const result = await enablePushNotifications(deviceToken)
             onNotificationStatusChange(result)
           }}
         >

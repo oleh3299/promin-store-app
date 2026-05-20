@@ -290,3 +290,14 @@ export type HRCandidateSendResponse = {
   error: string | null
   message: string | null
 }
+
+export type PushPublicKeyResponse = {
+  public_key: string | null
+}
+
+export type PushSubscriptionResponse = {
+  id: number
+  device_id: number
+  endpoint: string
+  user_agent: string | null
+}

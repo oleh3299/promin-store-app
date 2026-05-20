@@ -84,6 +84,7 @@ const categoryLabels: Record<string, string> = {
 }
 
 function taskCategoryLabel(task: StoreTaskItem) {
+  if (task.source === 'rocket_chat' && task.category === 'photo_report') return 'Адміністрація'
   if (task.category === 'photo_report') return 'Фотозвіт'
   if (task.category === 'accounting') return 'Бухгалтерія'
   if (task.source_route_key === 'it') return 'Технічна служба'
@@ -429,8 +430,8 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
       {!selectedTask && <BackButton onBack={onBack} />}
 
       <section className="app-header vertical">
-        <p className="app-kicker">{mode === 'photoReport' ? 'Фотозвіт' : 'Офіс'}</p>
-        <h1>{selectedTask ? selectedTask.title : mode === 'photoReport' ? 'Фотозвіт магазину' : 'Повідомлення'}</h1>
+        <p className="app-kicker">{mode === 'photoReport' ? 'Фото-завдання' : 'Офіс'}</p>
+        <h1>{selectedTask ? selectedTask.title : mode === 'photoReport' ? 'Фото-завдання' : 'Повідомлення'}</h1>
         {!selectedTask && (
           <p className="app-subtitle">
             {mode === 'messages'

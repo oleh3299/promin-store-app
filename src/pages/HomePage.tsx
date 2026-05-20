@@ -10,8 +10,10 @@ type HomePageProps = {
   onOpenPlanograms: () => void
   onOpenPhotoReport: () => void
   onOpenStoreTasks: () => void
+  onOpenPhotoTasks: () => void
   onOpenSettings: () => void
   incomingMessageCount: number
+  incomingPhotoTaskCount: number
   statusMessage?: string | null
 }
 
@@ -33,8 +35,10 @@ function HomePage({
   onOpenPlanograms,
   onOpenPhotoReport,
   onOpenStoreTasks,
+  onOpenPhotoTasks,
   onOpenSettings,
   incomingMessageCount,
+  incomingPhotoTaskCount,
   statusMessage,
 }: HomePageProps) {
   const operationItems: OperationItem[] = [
@@ -55,6 +59,13 @@ function HomePage({
       subtitle: 'Зробити фото магазину',
       action: onOpenPhotoReport,
       priority: 'primary',
+    },
+    {
+      title: 'Фото-завдання',
+      subtitle: 'Доручення по фото',
+      action: onOpenPhotoTasks,
+      badgeCount: incomingPhotoTaskCount,
+      priority: incomingPhotoTaskCount > 0 ? 'primary' : 'standard',
     },
     {
       title: 'Планограми',

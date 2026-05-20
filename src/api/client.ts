@@ -17,6 +17,8 @@ import type {
   StoreTaskActionResponse,
   StoreTaskDetail,
   StoreTaskListResponse,
+  PushPublicKeyResponse,
+  PushSubscriptionResponse,
   HRCandidate,
   HRCandidateListResponse,
   HRCandidatePayload,
@@ -316,6 +318,29 @@ export function getStoreTask(deviceToken: string, taskId: number) {
   return apiRequest<StoreTaskDetail>(
     `/api/store-tasks/${taskId}`,
     {},
+    { deviceToken },
+  )
+}
+
+export function getPushPublicKey() {
+  return apiRequest<PushPublicKeyResponse>('/api/push/public-key')
+}
+
+export function registerPushSubscription(
+  deviceToken: string,
+  payload: {
+    endpoint: string
+    p256dh: string
+    auth: string
+    user_agent?: string | null
+  },
+) {
+  return apiRequest<PushSubscriptionResponse>(
+    '/api/push/register',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
     { deviceToken },
   )
 }

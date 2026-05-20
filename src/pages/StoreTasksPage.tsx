@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import BackButton from '../components/BackButton'
 import {
   getStoreRequestActiveEmployees,
   getStoreTask,
@@ -405,17 +406,9 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
 
   return (
     <main className="app-shell daily-tasks-page">
-      {selectedTask && (
-        <button className="back-button" onClick={() => setSelectedTask(null)}>
-          Назад
-        </button>
-      )}
+      {selectedTask && <BackButton onBack={() => setSelectedTask(null)} />}
 
-      {!selectedTask && (
-        <button className="back-button" onClick={onBack}>
-          Назад
-        </button>
-      )}
+      {!selectedTask && <BackButton onBack={onBack} />}
 
       <section className="app-header vertical">
         <p className="app-kicker">{mode === 'photoReport' ? 'Фотозвіт' : 'Повідомлення'}</p>

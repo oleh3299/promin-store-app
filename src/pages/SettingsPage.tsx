@@ -1,4 +1,5 @@
 import type { Translation } from '../i18n/translations'
+import BackButton from '../components/BackButton'
 import {
   isStandaloneMode,
   requestNotificationPermission,
@@ -22,9 +23,7 @@ function SettingsPage({
 }: SettingsPageProps) {
   return (
     <main className="app-shell">
-      <button className="back-button" onClick={onBack}>
-        {t.settings.back}
-      </button>
+      <BackButton label={t.settings.back} onBack={onBack} />
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.settings.kicker}</p>

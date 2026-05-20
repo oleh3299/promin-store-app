@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ApiError, sendPhotoReportRouteTest } from '../api/client'
 import type { DeviceState } from '../types/attendance'
+import BackButton from '../components/BackButton'
 
 type PhotoReportRouteTestPageProps = {
   device: DeviceState
@@ -50,9 +51,7 @@ function PhotoReportRouteTestPage({ device, onBack }: PhotoReportRouteTestPagePr
 
   return (
     <main className="app-shell">
-      <button className="back-button" onClick={onBack}>
-        Назад
-      </button>
+      <BackButton onBack={onBack} />
 
       <section className="app-header vertical">
         <p className="app-kicker">Діагностика</p>

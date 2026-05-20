@@ -1,5 +1,6 @@
 import type { Translation } from '../i18n/translations'
 import type { AuthState, DeviceState, SyncState } from '../types/attendance'
+import BackButton from '../components/BackButton'
 
 type DiagnosticsPageProps = {
   auth: AuthState
@@ -34,9 +35,7 @@ function DiagnosticsPage({
 }: DiagnosticsPageProps) {
   return (
     <main className="app-shell">
-      <button className="back-button" onClick={onBack}>
-        {t.diagnostics.back}
-      </button>
+      <BackButton label={t.diagnostics.back} onBack={onBack} />
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.diagnostics.kicker}</p>

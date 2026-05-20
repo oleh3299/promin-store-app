@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import BackButton from '../components/BackButton'
 import {
   API_BASE_URL,
   ApiError,
@@ -337,9 +338,7 @@ function AttendancePage({
 
   return (
     <main className="app-shell">
-      <button className="back-button" onClick={onBack}>
-        {t.attendance.back}
-      </button>
+      <BackButton label={t.attendance.back} onBack={onBack} />
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.attendance.kicker}</p>

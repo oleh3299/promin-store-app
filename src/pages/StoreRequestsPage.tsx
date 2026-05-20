@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import BackButton from '../components/BackButton'
 import {
   ApiError,
   createStoreRequest,
@@ -183,9 +184,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
 
   return (
     <main className="app-shell">
-      <button className="back-button" onClick={onBack}>
-        {t.storeRequests.back}
-      </button>
+      <BackButton label={t.storeRequests.back} onBack={onBack} />
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.storeRequests.kicker}</p>

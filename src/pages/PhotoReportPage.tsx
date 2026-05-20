@@ -3,6 +3,7 @@ import { getPhotoReportTemplate, getStoreRequestActiveEmployees, submitPhotoRepo
 import type { ActiveStoreEmployee, PhotoReportTemplateItem } from '../api/types'
 import type { Translation } from '../i18n/translations'
 import type { DeviceState } from '../types/attendance'
+import BackButton from '../components/BackButton'
 
 type PhotoReportPageProps = {
   device: DeviceState
@@ -420,9 +421,7 @@ function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProp
   return (
     <main className="app-shell">
       <div className="page-top-actions">
-        <button className="back-button" onClick={onBack}>
-          {t.photoReport.back}
-        </button>
+        <BackButton label={t.photoReport.back} onBack={onBack} />
         <button
           aria-label="Почати фотозвіт заново"
           className="photo-report-reset-button"

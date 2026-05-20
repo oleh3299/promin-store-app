@@ -538,12 +538,34 @@ h1 {
 }
 
 .back-button {
-  border: 0;
-  background: transparent;
-  color: #2c7a43;
-  font-weight: 800;
-  padding: 8px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 92px;
+  min-height: 44px;
+  width: fit-content;
+  border: 1px solid rgba(15, 61, 46, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #0f3d2e;
+  box-shadow: 0 10px 24px rgba(13, 45, 34, 0.08);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0 15px;
   cursor: pointer;
+  touch-action: manipulation;
+}
+
+.back-button span {
+  font-size: 19px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.back-button:active {
+  transform: translateY(1px);
 }
 
 .page-top-actions {

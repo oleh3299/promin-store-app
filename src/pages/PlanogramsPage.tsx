@@ -3,6 +3,7 @@ import { API_BASE_URL, ApiError, getPlanograms } from '../api/client'
 import type { PlanogramItem } from '../api/types'
 import type { Translation } from '../i18n/translations'
 import type { DeviceState } from '../types/attendance'
+import BackButton from '../components/BackButton'
 
 type PlanogramsPageProps = {
   device: DeviceState
@@ -104,9 +105,7 @@ function PlanogramsPage({ device, t, onBack }: PlanogramsPageProps) {
 
   return (
     <main className="app-shell">
-      <button className="back-button" onClick={onBack}>
-        {t.planograms.back}
-      </button>
+      <BackButton label={t.planograms.back} onBack={onBack} />
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.planograms.kicker}</p>

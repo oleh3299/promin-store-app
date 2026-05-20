@@ -33,28 +33,11 @@ type StoredPhotoMeta = {
   employeeId: number | null
 }
 
-type PhotoReportGroup = {
-  name: string
-  items: PhotoReportTemplateItem[]
-}
-
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxPhotoSize = 10 * 1024 * 1024
 const dbName = 'promin-photo-report'
 const photoStoreName = 'photos'
 const metaStoreName = 'meta'
-const photoReportGroupOrder = ['Каса', 'Холодильники', 'Зал', 'Фасад', 'Цінники', 'Викладка', 'Інше']
-
-function inferPhotoReportGroup(item: PhotoReportTemplateItem) {
-  const source = `${item.item_key} ${item.item_name} ${item.title} ${item.description ?? ''}`.toLowerCase()
-  if (source.includes('кас')) return 'Каса'
-  if (source.includes('холод') || source.includes('мороз') || source.includes('вітрин')) return 'Холодильники'
-  if (source.includes('фасад') || source.includes('вхід') || source.includes('вивіск')) return 'Фасад'
-  if (source.includes('цін') || source.includes('акц')) return 'Цінники'
-  if (source.includes('виклад') || source.includes('полиц') || source.includes('стелаж')) return 'Викладка'
-  if (source.includes('зал')) return 'Зал'
-  return 'Інше'
-}
 
 function shortPhotoTitle(item: PhotoReportTemplateItem) {
   const baseTitle = item.title || item.item_name
@@ -167,7 +150,6 @@ function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProp
   const [statusMessage, setStatusMessage] = useState('')
   const [finalSuccess, setFinalSuccess] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
   const statusBlockRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -255,38 +237,6 @@ function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProp
   const partialPhotoReportTestMode = true
   const canSubmit = pendingSelectedCount > 0 && !employeeRequired && !isSubmitting
   const progressPercent = requiredItems.length > 0 ? Math.round((doneCount / requiredItems.length) * 100) : 0
-  const groupedItems = useMemo<PhotoReportGroup[]>(() => {
-    const groups = new Map<string, PhotoReportTemplateItem[]>()
-    items.forEach((item) => {
-      const groupName = inferPhotoReportGroup(item)
-      groups.set(groupName, [...(groups.get(groupName) ?? []), item])
-    })
-
-    return Array.from(groups.entries())
-      .map(([name, groupItems]) => ({
-        name,
-        items: groupItems.sort((left, right) => left.sort_order - right.sort_order),
-      }))
-      .sort((left, right) => photoReportGroupOrder.indexOf(left.name) - photoReportGroupOrder.indexOf(right.name))
-  }, [items])
-
-  useEffect(() => {
-    if (expandedGroups.size > 0 || groupedItems.length === 0) return
-    const firstIncompleteGroup = groupedItems.find((group) => group.items.some((item) => !photos[item.id]))
-    setExpandedGroups(new Set([firstIncompleteGroup?.name ?? groupedItems[0].name]))
-  }, [expandedGroups.size, groupedItems, photos])
-
-  const toggleGroup = (groupName: string) => {
-    setExpandedGroups((current) => {
-      const next = new Set(current)
-      if (next.has(groupName)) {
-        next.delete(groupName)
-      } else {
-        next.add(groupName)
-      }
-      return next
-    })
-  }
 
   const scrollToUploadStatus = () => {
     window.requestAnimationFrame(() => {
@@ -564,30 +514,10 @@ function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProp
       </section>
 
       <section className="photo-report-list">
-        {groupedItems.map((group) => {
-          const isExpanded = expandedGroups.has(group.name)
-          const groupDoneCount = group.items.filter((item) => photos[item.id]).length
+        {items.map((item) => {
+          const photo = photos[item.id]
           return (
-            <article className="panel photo-report-group" key={group.name}>
-              <button
-                aria-expanded={isExpanded}
-                className="photo-report-group-header"
-                onClick={() => toggleGroup(group.name)}
-                type="button"
-              >
-                <span>
-                  <strong>{group.name}</strong>
-                  <small>{groupDoneCount} / {group.items.length} фото</small>
-                </span>
-                <b>{isExpanded ? 'Згорнути' : 'Відкрити'}</b>
-              </button>
-
-              {isExpanded && (
-                <div className="photo-report-group-items">
-                  {group.items.map((item) => {
-                    const photo = photos[item.id]
-          return (
-            <div className="photo-report-item" key={item.id}>
+            <div className="panel photo-report-item" key={item.id}>
               <div className="photo-report-item-copy">
                 <h2>{shortPhotoTitle(item)}</h2>
                 <p>{shortPhotoDescription(item)}</p>
@@ -608,11 +538,6 @@ function PhotoReportPage({ device, t, onBack, onCompleted }: PhotoReportPageProp
                 />
               </label>
             </div>
-          )
-                  })}
-                </div>
-              )}
-            </article>
           )
         })}
       </section>

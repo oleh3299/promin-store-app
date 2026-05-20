@@ -1,5 +1,5 @@
 import type { Translation } from '../i18n/translations'
-import { getPushPublicKey, registerPushSubscription } from '../api/client'
+import { getPushPublicKey, registerPushSubscription, sendPushTest } from '../api/client'
 
 export function isStandaloneMode() {
   return (
@@ -68,6 +68,14 @@ export async function enablePushNotifications(deviceToken: string) {
   })
 
   return 'granted'
+}
+
+export async function sendBackendTestNotification(deviceToken: string) {
+  const response = await sendPushTest(deviceToken)
+  if (!response.ok) {
+    throw new Error(response.reason || 'push_test_failed')
+  }
+  return response
 }
 
 export function showTestNotification(messages: Translation['pwa']) {

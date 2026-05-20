@@ -19,3 +19,9 @@ class PushSubscriptionRead(BaseModel):
 
 class PushPublicKeyResponse(BaseModel):
     public_key: str | None
+
+
+class PushTestResponse(BaseModel):
+    ok: bool
+    sent_count: int
+    reason: str | None = None

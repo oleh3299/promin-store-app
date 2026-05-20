@@ -19,6 +19,7 @@ import type {
   StoreTaskListResponse,
   PushPublicKeyResponse,
   PushSubscriptionResponse,
+  PushTestResponse,
   HRCandidate,
   HRCandidateListResponse,
   HRCandidatePayload,
@@ -341,6 +342,14 @@ export function registerPushSubscription(
       method: 'POST',
       body: JSON.stringify(payload),
     },
+    { deviceToken },
+  )
+}
+
+export function sendPushTest(deviceToken: string) {
+  return apiRequest<PushTestResponse>(
+    '/api/push/test',
+    { method: 'POST' },
     { deviceToken },
   )
 }

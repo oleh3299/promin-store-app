@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     vapid_public_key: str | None = None
     vapid_private_key: str | None = None
     vapid_subject: str = "mailto:admin@prominuz.org"
+    vapid_claims_subject: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",

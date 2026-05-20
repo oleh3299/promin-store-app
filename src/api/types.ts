@@ -301,3 +301,9 @@ export type PushSubscriptionResponse = {
   endpoint: string
   user_agent: string | null
 }
+
+export type PushTestResponse = {
+  ok: boolean
+  sent_count: number
+  reason: string | null
+}

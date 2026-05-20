@@ -3,7 +3,7 @@ import BackButton from '../components/BackButton'
 import {
   enablePushNotifications,
   isStandaloneMode,
-  showTestNotification,
+  sendBackendTestNotification,
 } from '../lib/pwa'
 
 type SettingsPageProps = {
@@ -65,7 +65,19 @@ function SettingsPage({
 
         <button
           className="wide-button secondary"
-          onClick={() => showTestNotification(t.pwa)}
+          onClick={async () => {
+            if (!deviceToken) {
+              onNotificationStatusChange('device_required')
+              return
+            }
+
+            try {
+              await sendBackendTestNotification(deviceToken)
+              onNotificationStatusChange('Тестове сповіщення надіслано')
+            } catch {
+              onNotificationStatusChange('Не вдалося надіслати тест')
+            }
+          }}
         >
           {t.settings.testNotification}
         </button>

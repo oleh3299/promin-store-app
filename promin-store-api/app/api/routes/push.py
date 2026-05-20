@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import Device, PushSubscription
-from app.schemas.push import PushPublicKeyResponse, PushRegisterRequest, PushSubscriptionRead
+from app.schemas.push import PushPublicKeyResponse, PushRegisterRequest, PushSubscriptionRead, PushTestResponse
 from app.security import get_current_device
+from app.services.push_service import send_test_push_to_device
 
 router = APIRouter(prefix="/push", tags=["push"])
 
@@ -49,3 +50,12 @@ def register_push_subscription(
     db.commit()
     db.refresh(subscription)
     return subscription
+
+
+@router.post("/test", response_model=PushTestResponse)
+def send_test_push(
+    db: Session = Depends(get_db),
+    current_device: Device = Depends(get_current_device),
+) -> PushTestResponse:
+    sent_count, reason = send_test_push_to_device(db, current_device)
+    return PushTestResponse(ok=sent_count > 0, sent_count=sent_count, reason=reason)

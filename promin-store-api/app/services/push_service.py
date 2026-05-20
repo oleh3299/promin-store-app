@@ -53,34 +53,26 @@ def store_task_push_payload(task: StoreTask) -> dict[str, Any]:
     }
 
 
-def send_store_task_push(db: Session, task: StoreTask) -> int:
-    if task.store_id is None:
-        logger.info("store_task_push_skipped", extra={"reason": "missing_store_id", "task_id": task.id})
-        return 0
-
+def _vapid_skip_reason() -> str | None:
     settings = get_settings()
     if not settings.vapid_private_key or not settings.vapid_public_key:
-        logger.info("store_task_push_skipped", extra={"reason": "vapid_not_configured", "task_id": task.id, "store_id": task.store_id})
-        return 0
+        return "vapid_not_configured"
     if webpush is None:
-        logger.info("store_task_push_skipped", extra={"reason": "pywebpush_not_installed", "task_id": task.id, "store_id": task.store_id})
-        return 0
+        return "pywebpush_not_installed"
+    return None
 
-    subscriptions = db.scalars(
-        select(PushSubscription)
-        .join(Device, PushSubscription.device_id == Device.id)
-        .where(
-            Device.store_id == task.store_id,
-            Device.is_active.is_(True),
-            Device.status == DeviceStatus.active,
-        ),
-    ).all()
 
-    if not subscriptions:
-        logger.info("store_task_push_skipped", extra={"reason": "no_subscriptions", "task_id": task.id, "store_id": task.store_id})
-        return 0
-
-    payload = json.dumps(store_task_push_payload(task), ensure_ascii=False)
+def _send_web_push_payload(
+    db: Session,
+    subscriptions: list[PushSubscription],
+    payload: dict[str, Any],
+    *,
+    log_name: str,
+    log_context: dict[str, Any],
+) -> int:
+    settings = get_settings()
+    subject = settings.vapid_claims_subject or settings.vapid_subject
+    data = json.dumps(payload, ensure_ascii=False)
     sent_count = 0
     stale_subscriptions: list[PushSubscription] = []
 
@@ -94,9 +86,9 @@ def send_store_task_push(db: Session, task: StoreTask) -> int:
                         "auth": subscription.auth,
                     },
                 },
-                data=payload,
+                data=data,
                 vapid_private_key=settings.vapid_private_key,
-                vapid_claims={"sub": settings.vapid_subject},
+                vapid_claims={"sub": subject},
             )
             sent_count += 1
         except WebPushException as exc:
@@ -104,20 +96,20 @@ def send_store_task_push(db: Session, task: StoreTask) -> int:
             if status_code in {404, 410}:
                 stale_subscriptions.append(subscription)
             logger.warning(
-                "store_task_push_failed",
+                f"{log_name}_failed",
                 extra={
-                    "task_id": task.id,
-                    "store_id": task.store_id,
+                    **log_context,
+                    "reason": "subscription_send_failed",
                     "subscription_id": subscription.id,
                     "status_code": status_code,
                 },
             )
         except Exception:
             logger.exception(
-                "store_task_push_failed",
+                f"{log_name}_failed",
                 extra={
-                    "task_id": task.id,
-                    "store_id": task.store_id,
+                    **log_context,
+                    "reason": "subscription_send_failed",
                     "subscription_id": subscription.id,
                     "status_code": None,
                 },
@@ -128,8 +120,84 @@ def send_store_task_push(db: Session, task: StoreTask) -> int:
     if stale_subscriptions:
         db.commit()
 
+    return sent_count
+
+
+def send_test_push_to_device(db: Session, device: Device) -> tuple[int, str | None]:
+    log_context = {"device_id": device.id, "store_id": device.store_id}
+    if not device.is_active or device.status != DeviceStatus.active:
+        logger.info("push_test_skipped", extra={**log_context, "reason": "device_not_active", "subscriptions_count": 0})
+        return 0, "device_not_active"
+
+    skip_reason = _vapid_skip_reason()
+    if skip_reason:
+        logger.info("push_test_skipped", extra={**log_context, "reason": skip_reason, "subscriptions_count": 0})
+        return 0, skip_reason
+
+    subscriptions = db.scalars(
+        select(PushSubscription).where(PushSubscription.device_id == device.id),
+    ).all()
+    subscriptions_count = len(subscriptions)
+    logger.info("push_test_attempt", extra={**log_context, "subscriptions_count": subscriptions_count})
+
+    if not subscriptions:
+        logger.info("push_test_skipped", extra={**log_context, "reason": "no_subscriptions", "subscriptions_count": subscriptions_count})
+        return 0, "no_subscriptions"
+
+    sent_count = _send_web_push_payload(
+        db,
+        subscriptions,
+        {
+            "title": "Promin Store",
+            "body": "Тестове сповіщення надіслано",
+            "target_screen": "messages",
+            "url": "/?open=messages",
+        },
+        log_name="push_test",
+        log_context={**log_context, "subscriptions_count": subscriptions_count},
+    )
+    logger.info("push_test_sent", extra={**log_context, "subscriptions_count": subscriptions_count, "count": sent_count})
+    return sent_count, None if sent_count > 0 else "subscription_send_failed"
+
+
+def send_store_task_push(db: Session, task: StoreTask) -> int:
+    log_context = {"task_id": task.id, "store_id": task.store_id}
+    if task.store_id is None:
+        logger.info("store_task_push_skipped", extra={**log_context, "reason": "missing_store_id", "subscriptions_count": 0})
+        return 0
+
+    skip_reason = _vapid_skip_reason()
+    if skip_reason:
+        logger.info("store_task_push_skipped", extra={**log_context, "reason": skip_reason, "subscriptions_count": 0})
+        return 0
+
+    subscriptions = db.scalars(
+        select(PushSubscription)
+        .join(Device, PushSubscription.device_id == Device.id)
+        .where(
+            Device.store_id == task.store_id,
+            Device.is_active.is_(True),
+            Device.status == DeviceStatus.active,
+        ),
+    ).all()
+
+    subscriptions_count = len(subscriptions)
+    logger.info("store_task_push_attempt", extra={**log_context, "subscriptions_count": subscriptions_count})
+
+    if not subscriptions:
+        logger.info("store_task_push_skipped", extra={**log_context, "reason": "no_subscriptions", "subscriptions_count": subscriptions_count})
+        return 0
+
+    sent_count = _send_web_push_payload(
+        db,
+        subscriptions,
+        store_task_push_payload(task),
+        log_name="store_task_push",
+        log_context={**log_context, "subscriptions_count": subscriptions_count},
+    )
+
     logger.info(
         "store_task_push_sent",
-        extra={"task_id": task.id, "store_id": task.store_id, "count": sent_count},
+        extra={**log_context, "subscriptions_count": subscriptions_count, "count": sent_count},
     )
     return sent_count

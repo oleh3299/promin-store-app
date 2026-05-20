@@ -20,6 +20,7 @@ type OperationItem = {
   subtitle: string
   action: () => void
   badgeCount?: number
+  priority?: 'primary' | 'standard' | 'quiet'
 }
 
 function HomePage({
@@ -38,35 +39,41 @@ function HomePage({
 }: HomePageProps) {
   const operationItems: OperationItem[] = [
     {
-      title: 'Відправити накладну',
-      subtitle: 'Фото накладної в бухгалтерію',
+      title: 'Накладна',
+      subtitle: 'Сфотографувати і надіслати',
       action: onOpenInvoice,
+      priority: 'primary',
     },
     {
       title: 'Табель',
-      subtitle: 'Прихід, вихід, скан штрихкоду',
+      subtitle: 'Прихід / вихід',
       action: onOpenAttendance,
-    },
-    {
-      title: 'Планограми',
-      subtitle: 'Актуальна викладка магазину',
-      action: onOpenPlanograms,
+      priority: 'primary',
     },
     {
       title: 'Фотозвіт',
-      subtitle: 'Фото перевірки та викладки магазину',
+      subtitle: 'Зробити фото магазину',
       action: onOpenPhotoReport,
+      priority: 'primary',
+    },
+    {
+      title: 'Планограми',
+      subtitle: 'Переглянути викладку',
+      action: onOpenPlanograms,
+      priority: 'standard',
     },
     {
       title: 'Повідомлення',
-      subtitle: 'Нові повідомлення від бухгалтерії, технічної служби, адміністрації',
+      subtitle: 'Від офісу',
       action: onOpenStoreTasks,
       badgeCount: incomingMessageCount,
+      priority: incomingMessageCount > 0 ? 'primary' : 'standard',
     },
     {
-      title: "Зв'язок",
-      subtitle: 'Каси, принтери, техніка та інші звернення',
+      title: 'Допомога',
+      subtitle: 'Каса, техніка, питання',
       action: onOpenStoreRequests,
+      priority: 'quiet',
     },
   ]
 
@@ -76,7 +83,7 @@ function HomePage({
 
       <section className="terminal-home-header">
         <div className="terminal-home-topbar">
-          <p className="app-kicker">Promin Store</p>
+          <p className="app-kicker">PROMIN STORE</p>
           <button
             type="button"
             className="home-settings-button"
@@ -98,7 +105,7 @@ function HomePage({
 
       <section className="terminal-action-grid" aria-label="Основні операції магазину">
         {operationItems.map((item) => (
-          <button key={item.title} type="button" className="terminal-action-card" onClick={item.action}>
+          <button key={item.title} type="button" className={`terminal-action-card ${item.priority === 'primary' ? 'is-primary' : item.priority === 'quiet' ? 'is-quiet' : ''}`} onClick={item.action}>
             <span>
               {item.title}
               {item.badgeCount ? (

@@ -28,7 +28,7 @@ button {
   min-height: 100vh;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 20px 20px var(--bottom-nav-clearance);
+  padding: 16px 16px var(--bottom-nav-clearance);
   scroll-padding-bottom: var(--bottom-nav-clearance);
   background:
     radial-gradient(circle at top right, rgba(198, 166, 83, 0.25), transparent 32%),
@@ -206,11 +206,13 @@ h1 {
 .terminal-home-shell {
   display: grid;
   align-content: start;
-  gap: 20px;
+  gap: 12px;
 }
 
 .terminal-home-header {
-  padding: calc(18px + env(safe-area-inset-top)) 0 4px;
+  display: grid;
+  gap: 7px;
+  padding: calc(6px + env(safe-area-inset-top)) 0 2px;
 }
 
 .terminal-home-topbar {
@@ -222,45 +224,67 @@ h1 {
 }
 
 .terminal-home-header h1 {
-  font-size: 30px;
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.08;
 }
 
 .terminal-home-header p {
-  margin: 10px 0 0;
+  margin: 0;
   color: #405148;
-  font-size: 17px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 750;
   line-height: 1.35;
 }
 
 .terminal-home-header strong {
   display: inline-flex;
-  margin-top: 14px;
-  border-radius: 999px;
-  padding: 10px 14px;
-  background: #183c27;
-  color: #fff;
+  align-items: center;
+  width: fit-content;
+  min-height: 36px;
+  margin-top: 2px;
+  border-radius: 14px;
+  padding: 8px 12px;
+  background: #e8f4eb;
+  color: #1f6d38;
   font-size: 15px;
+  font-weight: 900;
 }
 
 .terminal-action-grid {
   display: grid;
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .terminal-action-card {
   display: grid;
-  gap: 6px;
+  align-content: center;
+  gap: 5px;
   width: 100%;
-  min-height: 104px;
+  min-height: 88px;
   border: 1px solid rgba(16, 32, 24, 0.08);
-  border-radius: 22px;
-  padding: 20px;
+  border-radius: 18px;
+  padding: 16px;
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 10px 24px rgba(16, 32, 24, 0.07);
+  box-shadow: 0 8px 18px rgba(16, 32, 24, 0.06);
   color: #102018;
   text-align: left;
   cursor: pointer;
+  touch-action: manipulation;
+}
+
+.terminal-action-card.is-primary {
+  grid-column: 1 / -1;
+  min-height: 74px;
+  border-color: rgba(15, 61, 46, 0.14);
+  background: #ffffff;
+}
+
+.terminal-action-card.is-quiet {
+  min-height: 72px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: none;
 }
 
 .terminal-action-card span {
@@ -268,8 +292,13 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 21px;
+  font-size: 19px;
   font-weight: 900;
+  line-height: 1.15;
+}
+
+.terminal-action-card.is-primary span {
+  font-size: 21px;
 }
 
 .home-card-badge {
@@ -320,8 +349,9 @@ h1 {
 
 .terminal-action-card small {
   color: #657269;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.25;
 }
 
 .route-test-card {

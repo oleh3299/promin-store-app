@@ -7,6 +7,7 @@ export type Screen =
   | 'storeRequests'
   | 'invoice'
   | 'photoReport'
+  | 'photoReportRouteTest'
   | 'planograms'
   | 'storeTasks'
   | 'scanner'

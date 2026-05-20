@@ -8,11 +8,11 @@ type HomePageProps = {
   onOpenInvoice: () => void
   onOpenAttendance: () => void
   onOpenPlanograms: () => void
-  onOpenPhotoReportTasks: () => void
+  onOpenPhotoReport: () => void
+  onOpenPhotoReportRouteTest: () => void
   onOpenStoreTasks: () => void
   onOpenSettings: () => void
   incomingMessageCount: number
-  photoReportTaskCount: number
 }
 
 type OperationItem = {
@@ -30,11 +30,11 @@ function HomePage({
   onOpenInvoice,
   onOpenAttendance,
   onOpenPlanograms,
-  onOpenPhotoReportTasks,
+  onOpenPhotoReport,
+  onOpenPhotoReportRouteTest,
   onOpenStoreTasks,
   onOpenSettings,
   incomingMessageCount,
-  photoReportTaskCount,
 }: HomePageProps) {
   const operationItems: OperationItem[] = [
     {
@@ -55,8 +55,7 @@ function HomePage({
     {
       title: 'Фотозвіт',
       subtitle: 'Фото перевірки та викладки магазину',
-      action: onOpenPhotoReportTasks,
-      badgeCount: photoReportTaskCount,
+      action: onOpenPhotoReport,
     },
     {
       title: 'Повідомлення',
@@ -111,6 +110,11 @@ function HomePage({
           </button>
         ))}
       </section>
+
+      <button type="button" className="route-test-card" onClick={onOpenPhotoReportRouteTest}>
+        <span>Тест контуру фотозвіту</span>
+        <small>Перевірка каналу photo-reports</small>
+      </button>
     </main>
   )
 }

@@ -324,6 +324,31 @@ h1 {
   font-weight: 700;
 }
 
+.route-test-card {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: 68px;
+  border: 1px dashed rgba(24, 60, 39, 0.24);
+  border-radius: 18px;
+  padding: 15px 18px;
+  background: rgba(255, 255, 255, 0.62);
+  color: #183c27;
+  text-align: left;
+  cursor: pointer;
+}
+
+.route-test-card span {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.route-test-card small {
+  color: #657269;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .home-status-card {
   align-items: stretch;
 }

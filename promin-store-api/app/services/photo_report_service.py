@@ -386,8 +386,9 @@ def create_photo_report(
                     sent_at=datetime.now(timezone.utc),
                 ),
             )
-            items_done += 1
-            report.items_done = sum(1 for sent_item_id in item_ids[:items_done] if templates_by_id[sent_item_id].is_required)
+            db.commit()
+            items_done = count_required_report_items(db, report.id, set(required_ids))
+            report.items_done = items_done
             db.add(report)
             db.commit()
             update_photo_report_parent_message(
@@ -543,6 +544,14 @@ def upload_photo_report_item(
             report.sent_at = datetime.now(timezone.utc)
         db.add(report)
         db.commit()
+        update_photo_report_parent_message(
+            RocketChatService(),
+            report,
+            store,
+            employee,
+            items_done,
+            completed=items_done >= len(required_ids),
+        )
         return PhotoReportItemUploadResult(report.id, template.id, items_done, len(required_ids), report.status)
 
     rocket = RocketChatService()
@@ -593,6 +602,7 @@ def upload_photo_report_item(
             sent_at=datetime.now(timezone.utc),
         ),
     )
+    db.commit()
     items_done = count_required_report_items(db, report.id, required_ids)
     report.items_done = items_done
     if items_done >= len(required_ids):

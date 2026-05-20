@@ -31,6 +31,8 @@ type FeedItem = {
   priority: StoreTaskItem['priority']
   actionLabel: 'Виконати' | 'Переглянути' | 'Підтвердити' | 'Відповісти'
   category: StoreTaskItem['category']
+  categoryLabel: string
+  senderName?: string | null
   isRocketMessage: boolean
   taskId?: number
 }
@@ -96,14 +98,7 @@ function taskFeedType(task: StoreTaskItem): FeedType {
 }
 
 function taskFeedDescription(task: StoreTaskItem) {
-  const description = task.description ?? task.department_name ?? 'Операційне завдання магазину'
-  if (task.source !== 'rocket_chat') {
-    return description
-  }
-
-  const category = taskCategoryLabel(task)
-  const sender = task.source_user_name ? ` · ${task.source_user_name}` : ''
-  return `${category}${sender}\n${description}`
+  return task.description ?? task.department_name ?? 'Операційне завдання магазину'
 }
 
 const tabs: { key: FeedTab; label: string }[] = [
@@ -155,6 +150,19 @@ function taskFeedStatus(task: StoreTaskItem): FeedStatus {
   return 'active'
 }
 
+function messageStatusLabel(item: FeedItem) {
+  if (item.rawStatus === 'completed' || item.rawStatus === 'verified') return 'Виконано'
+  if (item.rawStatus === 'in_progress' || item.rawStatus === 'submitted') return 'Прочитано'
+  return 'Нове'
+}
+
+function taskStatusLabel(item: FeedItem) {
+  if (item.status === 'overdue') return 'Прострочено'
+  if (item.status === 'done') return 'Виконано'
+  if (item.status === 'review') return 'На перевірці'
+  return 'Активно'
+}
+
 function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
   const [tasks, setTasks] = useState<StoreTaskItem[]>([])
   const [selectedTask, setSelectedTask] = useState<StoreTaskDetail | null>(null)
@@ -182,11 +190,11 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
       )
       setTasks(response.items)
     } catch {
-      setStatusMessage('Не вдалося завантажити завдання')
+      setStatusMessage(mode === 'messages' ? 'Не вдалося оновити.\nПеревірте інтернет і спробуйте ще раз.' : 'Не вдалося завантажити завдання')
     } finally {
       setIsLoading(false)
     }
-  }, [device.deviceToken])
+  }, [device.deviceToken, mode])
 
   const loadEmployees = useCallback(async () => {
     if (!device.deviceToken) {
@@ -221,6 +229,8 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
       priority: task.priority,
       actionLabel: taskActionLabel(task),
       category: task.category,
+      categoryLabel: taskCategoryLabel(task),
+      senderName: task.source_user_name,
       isRocketMessage: task.source === 'rocket_chat',
       taskId: task.id,
     }))
@@ -246,6 +256,10 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
   )
 
   const filteredFeedItems = useMemo(() => {
+    if (mode === 'messages') {
+      return scopedFeedItems
+    }
+
     if (activeTab === 'tasks') {
       return scopedFeedItems.filter((item) => item.type !== 'Повідомлення' && item.type !== 'Пуш')
     }
@@ -262,7 +276,7 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
     }
 
     return scopedFeedItems
-  }, [activeTab, scopedFeedItems])
+  }, [activeTab, mode, scopedFeedItems])
 
   const employeeRequired = employees.length > 1 && selectedEmployeeId === null
   const canSubmit =
@@ -330,9 +344,9 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
         await loadTasks()
         return
       }
-      setStatusMessage(response.message ?? 'Не вдалося почати завдання')
+      setStatusMessage(response.message ?? 'Не вдалося оновити.\nПеревірте інтернет і спробуйте ще раз.')
     } catch {
-      setStatusMessage('Не вдалося почати завдання')
+      setStatusMessage('Не вдалося оновити.\nПеревірте інтернет і спробуйте ще раз.')
     } finally {
       setIsSubmitting(false)
     }
@@ -374,9 +388,13 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
       const response = await submitStoreTask(device.deviceToken, selectedTask.id, formData)
       if (response.ok && response.task) {
         setStatusMessage(
-          response.task.status === 'completed'
-            ? 'Завдання виконано'
-            : 'Завдання відправлено на перевірку',
+          selectedTask.source === 'rocket_chat' && comment.trim()
+            ? 'Відповідь надіслано'
+            : selectedTask.source === 'rocket_chat'
+              ? 'Завдання позначено як виконане'
+              : response.task.status === 'completed'
+                ? 'Завдання виконано'
+                : 'Завдання відправлено на перевірку',
         )
         setSelectedTask(null)
         setFile(null)
@@ -396,9 +414,9 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
         setStatusMessage('Додайте коментар')
         return
       }
-      setStatusMessage(response.message ?? 'Не вдалося надіслати виконання')
+      setStatusMessage(response.message ?? 'Не вдалося оновити.\nПеревірте інтернет і спробуйте ще раз.')
     } catch {
-      setStatusMessage('Не вдалося надіслати виконання')
+      setStatusMessage('Не вдалося оновити.\nПеревірте інтернет і спробуйте ще раз.')
     } finally {
       setIsSubmitting(false)
     }
@@ -411,11 +429,13 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
       {!selectedTask && <BackButton onBack={onBack} />}
 
       <section className="app-header vertical">
-        <p className="app-kicker">{mode === 'photoReport' ? 'Фотозвіт' : 'Повідомлення'}</p>
-        <h1>{selectedTask ? selectedTask.title : mode === 'photoReport' ? 'Фотозвіт магазину' : 'Повідомлення магазину'}</h1>
+        <p className="app-kicker">{mode === 'photoReport' ? 'Фотозвіт' : 'Офіс'}</p>
+        <h1>{selectedTask ? selectedTask.title : mode === 'photoReport' ? 'Фотозвіт магазину' : 'Повідомлення'}</h1>
         {!selectedTask && (
           <p className="app-subtitle">
-            {device.storeName ?? 'Поточний магазин'} · {fullDateFormatter.format(new Date())}
+            {mode === 'messages'
+              ? 'Завдання та повідомлення від офісу'
+              : `${device.storeName ?? 'Поточний магазин'} · ${fullDateFormatter.format(new Date())}`}
           </p>
         )}
       </section>
@@ -424,7 +444,8 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
 
       {!selectedTask && (
         <>
-          <section className="daily-summary">
+          {mode !== 'messages' && (
+            <section className="daily-summary">
             <div>
               <strong>{summary.active}</strong>
               <span>Активні</span>
@@ -438,8 +459,10 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
               <span>Виконані</span>
             </div>
           </section>
+          )}
 
-          <section className="feed-tabs" aria-label="Фільтри завдань">
+          {mode !== 'messages' && (
+            <section className="feed-tabs" aria-label="Фільтри завдань">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
@@ -451,22 +474,24 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
               </button>
             ))}
           </section>
+          )}
 
           {!isLoading && filteredFeedItems.length === 0 && (
             <section className="panel">
-              <p className="empty-state">У цьому фільтрі поки немає елементів.</p>
+              <p className="empty-state">{mode === 'messages' ? 'Нових повідомлень немає' : 'У цьому фільтрі поки немає елементів.'}</p>
             </section>
           )}
 
           <section className="daily-feed">
             {filteredFeedItems.map((item) => (
-              <article className="panel feed-card" key={item.id}>
+              <article className={mode === 'messages' && (item.rawStatus === 'open' || item.rawStatus === 'new') ? 'panel feed-card message-feed-card unread' : mode === 'messages' ? 'panel feed-card message-feed-card' : 'panel feed-card'} key={item.id}>
                 <div className="feed-card-top">
-                  <span className="feed-type">{item.type}</span>
-                  <span className={`feed-status status-${item.status}`}>{item.status === 'overdue' ? 'Прострочено' : item.status === 'done' ? 'Виконано' : item.status === 'review' ? 'На перевірці' : 'Активно'}</span>
+                  <span className="feed-type">{mode === 'messages' ? item.categoryLabel : item.type}</span>
+                  <span className={`feed-status status-${item.status}`}>{mode === 'messages' ? messageStatusLabel(item) : taskStatusLabel(item)}</span>
                 </div>
-                <strong>{item.title}</strong>
-                <p>{item.description}</p>
+                <strong>{mode === 'messages' ? item.description : item.title}</strong>
+                {mode === 'messages' && item.senderName && <small>Від: {item.senderName}</small>}
+                {mode !== 'messages' && <p>{item.description}</p>}
                 <div className="feed-meta">
                   <span>{item.time}</span>
                   <span>{priorityLabels[item.priority]}</span>
@@ -543,7 +568,7 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
           ) : null}
 
           <button className="confirm-button" disabled={!canSubmit} onClick={() => void handleSubmit()}>
-            {isSubmitting ? 'Надсилання' : selectedTask.source === 'rocket_chat' ? 'Виконано' : 'Надіслати виконання'}
+            {isSubmitting ? 'Надсилаємо...' : selectedTask.source === 'rocket_chat' ? 'Виконано' : 'Надіслати виконання'}
           </button>
         </section>
       )}

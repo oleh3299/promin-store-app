@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import RocketRoute, StoreTask, StoreTaskEvent
+from app.services.push_service import send_store_task_push
 
 
 logger = logging.getLogger(__name__)
@@ -178,6 +179,7 @@ def create_store_task_from_rocket_webhook(db: Session, payload: dict[str, Any]) 
     )
     db.commit()
     db.refresh(task)
+    send_store_task_push(db, task)
     logger.info(
         "rocket_store_message_created",
         extra={

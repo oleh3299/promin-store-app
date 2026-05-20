@@ -1,12 +1,18 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.config import Settings, get_settings
 from app.db import get_db
 from app.models import Device, PushSubscription
-from app.schemas.push import PushRegisterRequest, PushSubscriptionRead
+from app.schemas.push import PushPublicKeyResponse, PushRegisterRequest, PushSubscriptionRead
 from app.security import get_current_device
 
 router = APIRouter(prefix="/push", tags=["push"])
+
+
+@router.get("/public-key", response_model=PushPublicKeyResponse)
+def get_push_public_key(settings: Settings = Depends(get_settings)) -> PushPublicKeyResponse:
+    return PushPublicKeyResponse(public_key=settings.vapid_public_key)
 
 
 @router.post("/register", response_model=PushSubscriptionRead)
@@ -15,6 +21,23 @@ def register_push_subscription(
     db: Session = Depends(get_db),
     current_device: Device = Depends(get_current_device),
 ) -> PushSubscription:
+    existing = (
+        db.query(PushSubscription)
+        .filter(
+            PushSubscription.device_id == current_device.id,
+            PushSubscription.endpoint == payload.endpoint,
+        )
+        .one_or_none()
+    )
+    if existing is not None:
+        existing.p256dh = payload.p256dh
+        existing.auth = payload.auth
+        existing.user_agent = payload.user_agent
+        db.add(existing)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
     subscription = PushSubscription(
         device_id=current_device.id,
         endpoint=payload.endpoint,

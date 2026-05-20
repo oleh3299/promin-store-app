@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     rocket_chat_bot_username: str = "promin-store-bot"
     rocket_chat_timeout_seconds: float = 8.0
     rocket_chat_webhook_token: str | None = None
+    vapid_public_key: str | None = None
+    vapid_private_key: str | None = None
+    vapid_subject: str = "mailto:admin@prominuz.org"
 
     model_config = SettingsConfigDict(
         env_file=".env",

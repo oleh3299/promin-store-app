@@ -15,3 +15,7 @@ class PushSubscriptionRead(BaseModel):
     user_agent: str | None
 
     model_config = {"from_attributes": True}
+
+
+class PushPublicKeyResponse(BaseModel):
+    public_key: str | None

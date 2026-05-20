@@ -30,11 +30,11 @@ const maxStoreRequestFileSize = 10 * 1024 * 1024
 const SERVER_UNAVAILABLE_MESSAGE = 'Немає зв’язку з сервером'
 
 function getInitialRouteKey(entry: StoreRequestEntry): StoreRequestRouteKey {
-  return entry === 'urgentIt' ? 'it' : 'accounting'
+  return entry === 'urgentTechnical' ? 'it' : 'accounting'
 }
 
 function getInitialRequestType(entry: StoreRequestEntry, routeKey: StoreRequestRouteKey): string | null {
-  if (entry === 'urgentIt') return 'urgent_it'
+  if (entry === 'urgentTechnical') return 'urgent_it'
   if (routeKey === 'it') return 'it_problem'
   if (routeKey === 'accounting') return 'accounting'
   if (routeKey === 'manager') return 'manager'
@@ -53,8 +53,8 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [file, setFile] = useState<File | null>(null)
-  const isUrgentIt = entry === 'urgentIt'
-  const messagePlaceholder = routeKey === 'it' ? t.storeRequests.itMessagePlaceholder : 'Коротко опишіть питання'
+  const isUrgentTechnical = entry === 'urgentTechnical'
+  const messagePlaceholder = routeKey === 'it' ? 'Каси, принтери, техніка' : 'Коротко опишіть питання'
 
   useEffect(() => {
     const nextRouteKey = getInitialRouteKey(entry)
@@ -195,7 +195,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
       {statusMessage && <div className="message-box">{statusMessage}</div>}
 
       <section className="panel store-request-form">
-        {isUrgentIt ? (
+        {isUrgentTechnical ? (
           <div className="route-summary">
             <span>{t.storeRequests.requestType}</span>
             <strong>{t.storeRequests.it}</strong>

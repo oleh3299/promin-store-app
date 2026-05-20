@@ -11,6 +11,7 @@ import type { DeviceState } from '../types/attendance'
 
 type StoreTasksPageProps = {
   device: DeviceState
+  mode: 'messages' | 'photoReport'
   onBack: () => void
 }
 
@@ -28,6 +29,7 @@ type FeedItem = {
   rawStatus: StoreTaskStatus
   priority: StoreTaskItem['priority']
   actionLabel: 'Виконати' | 'Переглянути' | 'Підтвердити' | 'Відповісти'
+  category: StoreTaskItem['category']
   isRocketMessage: boolean
   taskId?: number
 }
@@ -74,11 +76,21 @@ const priorityLabels: Record<StoreTaskItem['priority'], string> = {
 
 const categoryLabels: Record<string, string> = {
   accounting: 'Бухгалтерія',
-  photo_report: 'Фотоотчіт',
+  photo_report: 'Фотозвіт',
   general: 'Адміністрація',
 }
 
+function taskCategoryLabel(task: StoreTaskItem) {
+  if (task.category === 'photo_report') return 'Фотозвіт'
+  if (task.category === 'accounting') return 'Бухгалтерія'
+  if (task.source_route_key === 'it') return 'Технічна служба'
+  return task.category ? categoryLabels[task.category] ?? task.category : 'Адміністрація'
+}
+
 function taskFeedType(task: StoreTaskItem): FeedType {
+  if (task.category === 'photo_report') {
+    return 'Фотозвіт'
+  }
   return task.source === 'rocket_chat' ? 'Повідомлення' : 'Завдання'
 }
 
@@ -88,7 +100,7 @@ function taskFeedDescription(task: StoreTaskItem) {
     return description
   }
 
-  const category = task.category ? categoryLabels[task.category] ?? task.category : 'Адміністрація'
+  const category = taskCategoryLabel(task)
   const sender = task.source_user_name ? ` · ${task.source_user_name}` : ''
   return `${category}${sender}\n${description}`
 }
@@ -142,12 +154,12 @@ function taskFeedStatus(task: StoreTaskItem): FeedStatus {
   return 'active'
 }
 
-function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
+function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
   const [tasks, setTasks] = useState<StoreTaskItem[]>([])
   const [selectedTask, setSelectedTask] = useState<StoreTaskDetail | null>(null)
   const [employees, setEmployees] = useState<ActiveStoreEmployee[]>([])
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null)
-  const [activeTab, setActiveTab] = useState<FeedTab>('messages')
+  const [activeTab, setActiveTab] = useState<FeedTab>(mode === 'photoReport' ? 'all' : 'messages')
   const [file, setFile] = useState<File | null>(null)
   const [comment, setComment] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
@@ -207,6 +219,7 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
       rawStatus: task.status,
       priority: task.priority,
       actionLabel: taskActionLabel(task),
+      category: task.category,
       isRocketMessage: task.source === 'rocket_chat',
       taskId: task.id,
     }))
@@ -214,33 +227,41 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
     return taskItems
   }, [tasks])
 
+  const scopedFeedItems = useMemo(
+    () =>
+      mode === 'photoReport'
+        ? feedItems.filter((item) => item.category === 'photo_report')
+        : feedItems.filter((item) => item.isRocketMessage && item.category !== 'photo_report'),
+    [feedItems, mode],
+  )
+
   const summary = useMemo(
     () => ({
-      active: feedItems.filter((item) => item.status === 'active' || item.status === 'review').length,
-      overdue: feedItems.filter((item) => item.status === 'overdue').length,
-      done: feedItems.filter((item) => item.status === 'done').length,
+      active: scopedFeedItems.filter((item) => item.status === 'active' || item.status === 'review').length,
+      overdue: scopedFeedItems.filter((item) => item.status === 'overdue').length,
+      done: scopedFeedItems.filter((item) => item.status === 'done').length,
     }),
-    [feedItems],
+    [scopedFeedItems],
   )
 
   const filteredFeedItems = useMemo(() => {
     if (activeTab === 'tasks') {
-      return feedItems.filter((item) => item.type !== 'Повідомлення' && item.type !== 'Пуш')
+      return scopedFeedItems.filter((item) => item.type !== 'Повідомлення' && item.type !== 'Пуш')
     }
     if (activeTab === 'messages') {
-      return feedItems.filter(
-        (item) => item.isRocketMessage && (item.rawStatus === 'open' || item.rawStatus === 'new'),
+      return scopedFeedItems.filter(
+        (item) => item.isRocketMessage && item.category !== 'photo_report' && (item.rawStatus === 'open' || item.rawStatus === 'new'),
       )
     }
     if (activeTab === 'urgent') {
-      return feedItems.filter((item) => item.priority === 'urgent' || item.priority === 'high' || item.status === 'overdue')
+      return scopedFeedItems.filter((item) => item.priority === 'urgent' || item.priority === 'high' || item.status === 'overdue')
     }
     if (activeTab === 'done') {
-      return feedItems.filter((item) => item.status === 'done')
+      return scopedFeedItems.filter((item) => item.status === 'done')
     }
 
-    return feedItems
-  }, [activeTab, feedItems])
+    return scopedFeedItems
+  }, [activeTab, scopedFeedItems])
 
   const employeeRequired = employees.length > 1 && selectedEmployeeId === null
   const canSubmit =
@@ -318,7 +339,7 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
 
   const handleSubmit = async () => {
     if (!device.deviceToken || !selectedTask || isSubmitting) return
-    if (selectedTask.requires_photo && !file) {
+    if (selectedTask.requires_photo && selectedTask.category !== 'photo_report' && !file) {
       setStatusMessage('Додайте фото')
       return
     }
@@ -397,8 +418,8 @@ function StoreTasksPage({ device, onBack }: StoreTasksPageProps) {
       )}
 
       <section className="app-header vertical">
-        <p className="app-kicker">Завдання</p>
-        <h1>{selectedTask ? selectedTask.title : 'Завдання на день'}</h1>
+        <p className="app-kicker">{mode === 'photoReport' ? 'Фотозвіт' : 'Повідомлення'}</p>
+        <h1>{selectedTask ? selectedTask.title : mode === 'photoReport' ? 'Фотозвіт магазину' : 'Повідомлення магазину'}</h1>
         {!selectedTask && (
           <p className="app-subtitle">
             {device.storeName ?? 'Поточний магазин'} · {fullDateFormatter.format(new Date())}

@@ -8,9 +8,11 @@ type HomePageProps = {
   onOpenInvoice: () => void
   onOpenAttendance: () => void
   onOpenPlanograms: () => void
+  onOpenPhotoReportTasks: () => void
   onOpenStoreTasks: () => void
   onOpenSettings: () => void
   incomingMessageCount: number
+  photoReportTaskCount: number
 }
 
 type OperationItem = {
@@ -28,9 +30,11 @@ function HomePage({
   onOpenInvoice,
   onOpenAttendance,
   onOpenPlanograms,
+  onOpenPhotoReportTasks,
   onOpenStoreTasks,
   onOpenSettings,
   incomingMessageCount,
+  photoReportTaskCount,
 }: HomePageProps) {
   const operationItems: OperationItem[] = [
     {
@@ -49,14 +53,20 @@ function HomePage({
       action: onOpenPlanograms,
     },
     {
+      title: 'Фотозвіт',
+      subtitle: 'Фото перевірки та викладки магазину',
+      action: onOpenPhotoReportTasks,
+      badgeCount: photoReportTaskCount,
+    },
+    {
       title: 'Повідомлення',
-      subtitle: 'Нові повідомлення від бухгалтерії, IT, адміністрації',
+      subtitle: 'Нові повідомлення від бухгалтерії, технічної служби, адміністрації',
       action: onOpenStoreTasks,
       badgeCount: incomingMessageCount,
     },
     {
       title: "Зв'язок",
-      subtitle: 'Бухгалтерія, технічна служба, адміністрація',
+      subtitle: 'Каси, принтери, техніка та інші звернення',
       action: onOpenStoreRequests,
     },
   ]
@@ -64,7 +74,20 @@ function HomePage({
   return (
     <main className="app-shell terminal-home-shell">
       <section className="terminal-home-header">
-        <p className="app-kicker">Promin Store</p>
+        <div className="terminal-home-topbar">
+          <p className="app-kicker">Promin Store</p>
+          <button
+            type="button"
+            className="home-settings-button"
+            aria-label="Налаштування"
+            onClick={onOpenSettings}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+              <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.04.04a2.05 2.05 0 0 1-2.9 2.9l-.04-.04A1.7 1.7 0 0 0 15 19.43a1.7 1.7 0 0 0-1 .5 1.7 1.7 0 0 0-.5 1.2V21a2.05 2.05 0 0 1-4.1 0v-.07a1.7 1.7 0 0 0-.5-1.2 1.7 1.7 0 0 0-1-.5 1.7 1.7 0 0 0-1.87.34l-.04.04a2.05 2.05 0 1 1-2.9-2.9l.04-.04A1.7 1.7 0 0 0 3.47 15a1.7 1.7 0 0 0-.5-1 1.7 1.7 0 0 0-1.2-.5H1.7a2.05 2.05 0 0 1 0-4.1h.07a1.7 1.7 0 0 0 1.2-.5 1.7 1.7 0 0 0 .5-1 1.7 1.7 0 0 0-.34-1.87l-.04-.04a2.05 2.05 0 1 1 2.9-2.9l.04.04A1.7 1.7 0 0 0 7.9 3.47a1.7 1.7 0 0 0 1-.5 1.7 1.7 0 0 0 .5-1.2V1.7a2.05 2.05 0 0 1 4.1 0v.07a1.7 1.7 0 0 0 .5 1.2 1.7 1.7 0 0 0 1 .5 1.7 1.7 0 0 0 1.87-.34l.04-.04a2.05 2.05 0 0 1 2.9 2.9l-.04.04A1.7 1.7 0 0 0 19.43 7.9a1.7 1.7 0 0 0 .5 1 1.7 1.7 0 0 0 1.2.5h.07a2.05 2.05 0 0 1 0 4.1h-.07a1.7 1.7 0 0 0-1.2.5 1.7 1.7 0 0 0-.53 1Z" />
+            </svg>
+          </button>
+        </div>
         <h1>Робоче місце магазину</h1>
         <p>{storeName ?? 'Магазин не визначено'}</p>
         <strong>
@@ -88,18 +111,6 @@ function HomePage({
           </button>
         ))}
       </section>
-
-      <button
-        type="button"
-        className="home-settings-button"
-        aria-label="Налаштування"
-        onClick={onOpenSettings}
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
-          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.04.04a2.05 2.05 0 0 1-2.9 2.9l-.04-.04A1.7 1.7 0 0 0 15 19.43a1.7 1.7 0 0 0-1 .5 1.7 1.7 0 0 0-.5 1.2V21a2.05 2.05 0 0 1-4.1 0v-.07a1.7 1.7 0 0 0-.5-1.2 1.7 1.7 0 0 0-1-.5 1.7 1.7 0 0 0-1.87.34l-.04.04a2.05 2.05 0 1 1-2.9-2.9l.04-.04A1.7 1.7 0 0 0 3.47 15a1.7 1.7 0 0 0-.5-1 1.7 1.7 0 0 0-1.2-.5H1.7a2.05 2.05 0 0 1 0-4.1h.07a1.7 1.7 0 0 0 1.2-.5 1.7 1.7 0 0 0 .5-1 1.7 1.7 0 0 0-.34-1.87l-.04-.04a2.05 2.05 0 1 1 2.9-2.9l.04.04A1.7 1.7 0 0 0 7.9 3.47a1.7 1.7 0 0 0 1-.5 1.7 1.7 0 0 0 .5-1.2V1.7a2.05 2.05 0 0 1 4.1 0v.07a1.7 1.7 0 0 0 .5 1.2 1.7 1.7 0 0 0 1 .5 1.7 1.7 0 0 0 1.87-.34l.04-.04a2.05 2.05 0 0 1 2.9 2.9l-.04.04A1.7 1.7 0 0 0 19.43 7.9a1.7 1.7 0 0 0 .5 1 1.7 1.7 0 0 0 1.2.5h.07a2.05 2.05 0 0 1 0 4.1h-.07a1.7 1.7 0 0 0-1.2.5 1.7 1.7 0 0 0-.53 1Z" />
-        </svg>
-      </button>
     </main>
   )
 }

@@ -210,7 +210,15 @@ h1 {
 }
 
 .terminal-home-header {
-  padding: 24px 0 4px;
+  padding: calc(18px + env(safe-area-inset-top)) 0 4px;
+}
+
+.terminal-home-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 44px;
 }
 
 .terminal-home-header h1 {
@@ -286,10 +294,7 @@ h1 {
 }
 
 .home-settings-button {
-  position: fixed;
-  right: max(18px, calc((100vw - 520px) / 2 + 18px));
-  bottom: calc(18px + env(safe-area-inset-bottom));
-  z-index: 70;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
   width: 44px;
@@ -298,7 +303,7 @@ h1 {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
   color: #183c27;
-  box-shadow: 0 12px 28px rgba(16, 32, 24, 0.14);
+  box-shadow: 0 8px 20px rgba(16, 32, 24, 0.08);
   cursor: pointer;
   backdrop-filter: blur(12px);
 }

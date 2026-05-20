@@ -12,7 +12,7 @@ export type Screen =
   | 'scanner'
   | 'profile'
 
-export type StoreRequestEntry = 'default' | 'urgentIt'
+export type StoreRequestEntry = 'default' | 'urgentTechnical'
 
 export type AttendanceMode = 'checkin' | 'checkout' | null
 

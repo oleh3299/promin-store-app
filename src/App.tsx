@@ -20,6 +20,7 @@ import HomePage from './pages/HomePage'
 import InvoicePage from './pages/InvoicePage'
 import LoginPage from './pages/LoginPage'
 import PlanogramsPage from './pages/PlanogramsPage'
+import PhotoReportPage from './pages/PhotoReportPage'
 import DiagnosticsPage from './pages/DiagnosticsPage'
 import SettingsPage from './pages/SettingsPage'
 import StoreRequestsPage from './pages/StoreRequestsPage'
@@ -40,6 +41,7 @@ const operationalScreens: Screen[] = [
   'attendance',
   'storeRequests',
   'invoice',
+  'photoReport',
   'planograms',
   'storeTasks',
   'settings',
@@ -69,6 +71,8 @@ function StoreApp() {
   const [loginPending, setLoginPending] = useState(false)
   const [deviceBlocked, setDeviceBlocked] = useState(false)
   const [incomingMessageCount, setIncomingMessageCount] = useState(0)
+  const [photoReportTaskCount, setPhotoReportTaskCount] = useState(0)
+  const [storeTaskMode, setStoreTaskMode] = useState<'messages' | 'photoReport'>('messages')
   const [notificationStatus, setNotificationStatus] = useState(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
@@ -110,13 +114,11 @@ function StoreApp() {
 
     try {
       const response = await getStoreTasks(device.deviceToken, 'open,new')
-      setIncomingMessageCount(
-        response.items.filter(
-          (task) => task.source === 'rocket_chat' && (task.status === 'open' || task.status === 'new'),
-        ).length,
-      )
+      setIncomingMessageCount(response.items.filter((task) => task.source === 'rocket_chat' && task.category !== 'photo_report').length)
+      setPhotoReportTaskCount(response.items.filter((task) => task.category === 'photo_report').length)
     } catch {
       setIncomingMessageCount(0)
+      setPhotoReportTaskCount(0)
     }
   }, [device.deviceToken])
 
@@ -278,10 +280,12 @@ function StoreApp() {
     )
   } else if (screen === 'invoice') {
     content = <InvoicePage device={device} t={t} onBack={() => setScreen('home')} />
+  } else if (screen === 'photoReport') {
+    content = <PhotoReportPage device={device} t={t} onBack={() => setScreen('home')} />
   } else if (screen === 'planograms') {
     content = <PlanogramsPage device={device} t={t} onBack={() => setScreen('home')} />
   } else if (screen === 'storeTasks') {
-    content = <StoreTasksPage device={device} onBack={() => setScreen('home')} />
+    content = <StoreTasksPage device={device} mode={storeTaskMode} onBack={() => setScreen('home')} />
   } else if (screen === 'settings') {
     content = (
       <SettingsPage
@@ -313,6 +317,7 @@ function StoreApp() {
         storeName={device.storeName}
         t={t}
         incomingMessageCount={incomingMessageCount}
+        photoReportTaskCount={photoReportTaskCount}
         onOpenStoreRequests={() => {
           setStoreRequestEntry('default')
           setScreen('storeRequests')
@@ -320,7 +325,14 @@ function StoreApp() {
         onOpenInvoice={() => setScreen('invoice')}
         onOpenAttendance={() => setScreen('attendance')}
         onOpenPlanograms={() => setScreen('planograms')}
-        onOpenStoreTasks={() => setScreen('storeTasks')}
+        onOpenPhotoReportTasks={() => {
+          setStoreTaskMode('photoReport')
+          setScreen('storeTasks')
+        }}
+        onOpenStoreTasks={() => {
+          setStoreTaskMode('messages')
+          setScreen('storeTasks')
+        }}
         onOpenSettings={() => setScreen('settings')}
       />
     )

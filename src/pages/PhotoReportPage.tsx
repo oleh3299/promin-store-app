@@ -211,9 +211,13 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
   const doneCount = requiredItems.filter((item) => photos[item.id]).length
   const uploadedCount = requiredItems.filter((item) => photos[item.id]?.status === 'uploaded').length
   const remainingCount = Math.max(requiredItems.length - uploadedCount, 0)
+  const pendingSelectedCount = Object.values(photos).filter((photo) => photo.status !== 'uploaded').length
   const employeeRequired = employees.length > 1 && selectedEmployeeId === null
   const hasMissingRequiredPhotos = requiredItems.some((item) => !photos[item.id])
-  const canSubmit = !hasMissingRequiredPhotos && requiredItems.length > 0 && !employeeRequired && !isSubmitting
+  // TODO/FIXME: TEMPORARY TEST MODE: allow partial photo report submit.
+  // Keep required item calculation visible, but do not block upload while channel testing is in progress.
+  const partialPhotoReportTestMode = true
+  const canSubmit = pendingSelectedCount > 0 && !employeeRequired && !isSubmitting
 
   const updatePhotoStatus = async (itemId: number, status: UploadStatus) => {
     setPhotos((currentPhotos) => {
@@ -259,7 +263,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
   const submitReport = async () => {
     if (!device.deviceToken || isSubmitting) return
-    if (hasMissingRequiredPhotos) {
+    if (hasMissingRequiredPhotos && !partialPhotoReportTestMode) {
       setStatusMessage(t.photoReport.requiredMissing)
       return
     }
@@ -287,6 +291,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     let currentReportId = reportId
 
     try {
+      let uploadedInThisRun = 0
       for (let index = 0; index < pendingItems.length; index += 1) {
         if (!navigator.onLine) {
           setStatusMessage('Інтернет зник. Фото не втрачено. Залиште додаток відкритим або повторіть відправку, коли буде інтернет.')
@@ -321,6 +326,10 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
         setReportId(response.report_id)
         await saveStoredMeta(device, response.report_id, selectedEmployeeId)
         await updatePhotoStatus(item.id, 'uploaded')
+        uploadedInThisRun += 1
+      }
+      if (partialPhotoReportTestMode && uploadedInThisRun > 0) {
+        setStatusMessage(`Надіслано: ${uploadedInThisRun} фото. Це тестовий режим. Повний контроль фотозвіту тимчасово вимкнений.`)
       }
     } catch (error) {
       console.error('photoReportItemSubmitFailed', { error })
@@ -336,7 +345,11 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
   const setFinalStatus = async () => {
     setFinalSuccess(true)
-    setStatusMessage('Фотозвіт надіслано. Дякуємо. Можна закривати додаток.')
+    setStatusMessage(
+      partialPhotoReportTestMode
+        ? `Надіслано: ${uploadedCount} фото. Це тестовий режим. Повний контроль фотозвіту тимчасово вимкнений.`
+        : 'Фотозвіт надіслано. Дякуємо. Можна закривати додаток.',
+    )
     Object.values(photos).forEach((photo) => URL.revokeObjectURL(photo.previewUrl))
     setPhotos({})
     setReportId(null)
@@ -344,10 +357,16 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
   }
 
   useEffect(() => {
-    if (!isSubmitting && requiredItems.length > 0 && uploadedCount === requiredItems.length && Object.keys(photos).length > 0) {
+    if (
+      !partialPhotoReportTestMode &&
+      !isSubmitting &&
+      requiredItems.length > 0 &&
+      uploadedCount === requiredItems.length &&
+      Object.keys(photos).length > 0
+    ) {
       void setFinalStatus()
     }
-  }, [isSubmitting, requiredItems.length, uploadedCount])
+  }, [isSubmitting, partialPhotoReportTestMode, requiredItems.length, uploadedCount, photos])
 
   return (
     <main className="app-shell">
@@ -365,8 +384,11 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
       <section className="panel photo-report-status upload-status-panel">
         <strong>Фото зроблено: {doneCount} / {requiredItems.length}</strong>
-        <span>Надіслано: {uploadedCount} / {requiredItems.length}</span>
-        <span>Залишилось: {remainingCount}</span>
+        <span>{partialPhotoReportTestMode ? `Надіслано: ${uploadedCount} фото` : `Надіслано: ${uploadedCount} / ${requiredItems.length}`}</span>
+        <span>{partialPhotoReportTestMode ? `Залишилось надіслати: ${pendingSelectedCount}` : `Залишилось: ${remainingCount}`}</span>
+        {partialPhotoReportTestMode && (
+          <em>Це тестовий режим. Можна надіслати неповний фотозвіт.</em>
+        )}
         {doneCount === requiredItems.length && remainingCount > 0 && (
           <em>Не закривайте додаток до завершення. Фото збережені на телефоні.</em>
         )}

@@ -1834,6 +1834,8 @@ textarea {
 }
 
 .route-button {
+  display: grid;
+  gap: 4px;
   min-height: 58px;
   border: 1px solid rgba(16, 32, 24, 0.1);
   border-radius: 16px;
@@ -1846,10 +1848,27 @@ textarea {
   touch-action: manipulation;
 }
 
+.route-button strong {
+  color: inherit;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.route-button span {
+  color: #5f6d65;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
 .route-button.selected {
   border-color: #2c7a43;
   background: #e4f4e8;
   color: #1f7a42;
+}
+
+.route-button.selected span {
+  color: #2f6b43;
 }
 
 .route-button:active {

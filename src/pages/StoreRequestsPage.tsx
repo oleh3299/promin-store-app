@@ -20,15 +20,45 @@ type StoreRequestsPageProps = {
   onBack: () => void
 }
 
-const routeOptions: Array<{ key: StoreRequestRouteKey; label: string }> = [
-  { key: 'accounting', label: 'Бухгалтерія' },
-  { key: 'it', label: 'Технічна служба' },
-  { key: 'manager', label: 'Адміністрація' },
+const routeOptions: Array<{ key: StoreRequestRouteKey; label: string; description: string; requestType: string }> = [
+  {
+    key: 'it',
+    label: 'Проблема з касою',
+    description: 'Каса, чек, оплата, зміна',
+    requestType: 'cash_register',
+  },
+  {
+    key: 'it',
+    label: 'Проблема з принтером',
+    description: 'Принтер чеків, етикеток або друк',
+    requestType: 'printer',
+  },
+  {
+    key: 'accounting',
+    label: 'Питання по накладній',
+    description: 'Документ, постачальник, сума, товар',
+    requestType: 'invoice_question',
+  },
+  {
+    key: 'manager',
+    label: 'Потрібна допомога адміністрації',
+    description: 'Організаційне питання',
+    requestType: 'manager',
+  },
+  {
+    key: 'manager',
+    label: 'Інше питання',
+    description: 'Якщо не підходить жоден варіант',
+    requestType: 'other',
+  },
 ]
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp']
 const maxStoreRequestFileSize = 10 * 1024 * 1024
-const SERVER_UNAVAILABLE_MESSAGE = 'Немає зв’язку з сервером'
+const REQUEST_SENT_MESSAGE = 'Звернення надіслано.\nОфіс отримав повідомлення.'
+const REQUEST_ERROR_MESSAGE = 'Не вдалося надіслати.\nПеревірте інтернет і спробуйте ще раз.'
+const SERVER_UNAVAILABLE_MESSAGE = REQUEST_ERROR_MESSAGE
+const HELP_MESSAGE_PLACEHOLDER = 'Наприклад: не друкує чек, не відкривається зміна, помилка в накладній'
 
 function getInitialRouteKey(entry: StoreRequestEntry): StoreRequestRouteKey {
   return entry === 'urgentTechnical' ? 'it' : 'accounting'
@@ -55,7 +85,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
   const [statusMessage, setStatusMessage] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const isUrgentTechnical = entry === 'urgentTechnical'
-  const messagePlaceholder = routeKey === 'it' ? 'Каси, принтери, техніка' : 'Коротко опишіть питання'
+  const messagePlaceholder = HELP_MESSAGE_PLACEHOLDER
 
   useEffect(() => {
     const nextRouteKey = getInitialRouteKey(entry)
@@ -159,7 +189,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
       if (response.ok) {
         setMessage('')
         setFile(null)
-        setStatusMessage(t.storeRequests.sent)
+        setStatusMessage(REQUEST_SENT_MESSAGE)
         return
       }
 
@@ -173,10 +203,10 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
         return
       }
 
-      setStatusMessage(response.message ?? t.storeRequests.genericError)
+      setStatusMessage(response.message ?? REQUEST_ERROR_MESSAGE)
     } catch (error) {
       console.error('Store request submit failed', { error })
-      setStatusMessage(error instanceof ApiError ? t.storeRequests.genericError : SERVER_UNAVAILABLE_MESSAGE)
+      setStatusMessage(error instanceof ApiError ? REQUEST_ERROR_MESSAGE : SERVER_UNAVAILABLE_MESSAGE)
     } finally {
       setIsSubmitting(false)
     }
@@ -187,8 +217,9 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
       <BackButton label={t.storeRequests.back} onBack={onBack} />
 
       <section className="app-header vertical">
-        <p className="app-kicker">{t.storeRequests.kicker}</p>
-        <h1>Зв'язок</h1>
+        <p className="app-kicker">Звернення</p>
+        <h1>Допомога</h1>
+        <p className="app-subtitle">Оберіть, з чим потрібна допомога</p>
       </section>
 
       {statusMessage && <div className="message-box">{statusMessage}</div>}
@@ -197,7 +228,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
         {isUrgentTechnical ? (
           <div className="route-summary">
             <span>{t.storeRequests.requestType}</span>
-            <strong>{t.storeRequests.it}</strong>
+            <strong>Проблема з касою або технікою</strong>
           </div>
         ) : (
           <div className="request-route-grid">
@@ -208,11 +239,12 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
                 type="button"
                 onClick={() => {
                   setRouteKey(option.key)
-                  setRequestType(getInitialRequestType('default', option.key))
+                  setRequestType(option.requestType)
                   setStatusMessage('')
                 }}
               >
-                {option.label}
+                <strong>{option.label}</strong>
+                <span>{option.description}</span>
               </button>
             ))}
           </div>
@@ -241,7 +273,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
         </div>
 
         <label>
-          <span>Повідомлення</span>
+          <span>Опишіть коротко, що сталося</span>
           <textarea
             value={message}
             placeholder={messagePlaceholder}
@@ -262,7 +294,7 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
         </label>
 
         <button className="confirm-button" disabled={!canSubmit} onClick={() => void submitRequest()}>
-          {isSubmitting ? t.storeRequests.sending : t.storeRequests.send}
+          {isSubmitting ? 'Надсилаємо звернення...' : 'Надіслати звернення'}
         </button>
       </section>
     </main>

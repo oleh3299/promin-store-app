@@ -546,6 +546,72 @@ h1 {
   cursor: pointer;
 }
 
+.page-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: env(safe-area-inset-top);
+}
+
+.photo-report-reset-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(15, 61, 46, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #0f3d2e;
+  box-shadow: 0 10px 24px rgba(13, 45, 34, 0.08);
+  cursor: pointer;
+}
+
+.photo-report-reset-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.photo-report-reset-button svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.photo-report-reset-confirm {
+  border-color: rgba(185, 28, 28, 0.16);
+}
+
+.photo-report-reset-confirm p {
+  margin: 8px 0 14px;
+  color: #5d6a62;
+}
+
+.photo-report-reset-confirm div {
+  display: flex;
+  gap: 10px;
+}
+
+.photo-report-reset-confirm button {
+  min-height: 44px;
+  flex: 1;
+  border: 0;
+  border-radius: 14px;
+  background: #edf3ec;
+  color: #173f31;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.photo-report-reset-confirm button:last-child {
+  background: #0f3d2e;
+  color: #fff;
+}
+
 .message-box {
   margin: 12px 0;
   padding: 14px 16px;

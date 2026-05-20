@@ -56,14 +56,14 @@ class RocketChatService:
         if thread_message_id:
             payload_data["tmid"] = thread_message_id
 
-        payload = json.dumps(payload_data).encode("utf-8")
+        payload = json.dumps(payload_data, ensure_ascii=False).encode("utf-8")
         post_request = request.Request(
             f"{self.base_url}/api/v1/chat.postMessage",
             data=payload,
             headers={
                 "X-Auth-Token": self.auth_token,
                 "X-User-Id": self.user_id,
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
             },
             method="POST",
         )
@@ -95,14 +95,14 @@ class RocketChatService:
         if not self.user_id or not self.auth_token:
             raise RocketChatError("Rocket.Chat credentials are not configured")
 
-        payload = json.dumps({"roomId": room_id, "msgId": message_id, "text": text}).encode("utf-8")
+        payload = json.dumps({"roomId": room_id, "msgId": message_id, "text": text}, ensure_ascii=False).encode("utf-8")
         update_request = request.Request(
             f"{self.base_url}/api/v1/chat.update",
             data=payload,
             headers={
                 "X-Auth-Token": self.auth_token,
                 "X-User-Id": self.user_id,
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=utf-8",
             },
             method="POST",
         )

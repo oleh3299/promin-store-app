@@ -187,21 +187,21 @@ def build_photo_report_parent_message(
     items_total: int,
     completed: bool = False,
 ) -> str:
-    employee_label = employee.full_name if employee is not None else "РЅРµ РІРєР°Р·Р°РЅРѕ"
+    employee_label = employee.full_name if employee is not None else "не вказано"
     status_line = (
-        f"Р¤РѕС‚РѕР·РІС–С‚ Р·Р°РІРµСЂС€РµРЅРѕ\nРќР°РґС–СЃР»Р°РЅРѕ: {items_done} С„РѕС‚Рѕ"
+        f"Фотозвіт завершено\nНадіслано: {items_done} фото"
         if completed
         else (
-            f"РќР°РґС–СЃР»Р°РЅРѕ С„РѕС‚Рѕ: {items_done} / {items_total}\n"
-            "РўРµСЃС‚РѕРІРёР№ СЂРµР¶РёРј: РЅРµРїРѕРІРЅРёР№ С„РѕС‚РѕР·РІС–С‚ РґРѕР·РІРѕР»РµРЅРѕ"
+            f"Надіслано фото: {items_done} / {items_total}\n"
+            "Тестовий режим: неповний фотозвіт дозволено"
         )
     )
     return "\n".join(
         [
-            "Р’РµС‡С–СЂРЅС–Р№ С„РѕС‚РѕР·РІС–С‚",
-            f"РњР°РіР°Р·РёРЅ: {store.name} / {store.code}",
-            f"Р”Р°С‚Р°: {format_report_date(report_date)}",
-            f"РЎРїС–РІСЂРѕР±С–С‚РЅРёРє: {employee_label}",
+            "Вечірній фотозвіт",
+            f"Магазин: {store.name} / {store.code}",
+            f"Дата: {format_report_date(report_date)}",
+            f"Співробітник: {employee_label}",
             "",
             status_line,
         ],

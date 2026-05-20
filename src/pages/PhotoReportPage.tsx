@@ -133,6 +133,7 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [finalSuccess, setFinalSuccess] = useState(false)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -261,6 +262,16 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
     })
   }
 
+  const resetLocalPhotoReport = async () => {
+    Object.values(photos).forEach((photo) => URL.revokeObjectURL(photo.previewUrl))
+    await clearStoredDraft(device)
+    setPhotos({})
+    setReportId(null)
+    setStatusMessage('')
+    setFinalSuccess(false)
+    setShowResetConfirm(false)
+  }
+
   const submitReport = async () => {
     if (!device.deviceToken || isSubmitting) return
     if (hasMissingRequiredPhotos && !partialPhotoReportTestMode) {
@@ -370,15 +381,44 @@ function PhotoReportPage({ device, t, onBack }: PhotoReportPageProps) {
 
   return (
     <main className="app-shell">
-      <button className="back-button" onClick={onBack}>
-        {t.photoReport.back}
-      </button>
+      <div className="page-top-actions">
+        <button className="back-button" onClick={onBack}>
+          {t.photoReport.back}
+        </button>
+        <button
+          aria-label="Почати фотозвіт заново"
+          className="photo-report-reset-button"
+          disabled={isSubmitting}
+          onClick={() => setShowResetConfirm(true)}
+          type="button"
+        >
+          <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+            <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+            <path d="M20 4v6h-6" />
+          </svg>
+        </button>
+      </div>
 
       <section className="app-header vertical">
         <p className="app-kicker">{t.photoReport.kicker}</p>
         <h1>{t.photoReport.title}</h1>
         <p className="app-subtitle">{t.photoReport.subtitle}</p>
       </section>
+
+      {showResetConfirm && (
+        <section className="panel photo-report-reset-confirm">
+          <strong>Почати фотозвіт заново?</strong>
+          <p>Усі незбережені локальні фото буде видалено.</p>
+          <div>
+            <button type="button" onClick={() => setShowResetConfirm(false)}>
+              Скасувати
+            </button>
+            <button type="button" onClick={() => void resetLocalPhotoReport()}>
+              Почати заново
+            </button>
+          </div>
+        </section>
+      )}
 
       {statusMessage && <div className={finalSuccess ? 'message-box success' : 'message-box'}>{statusMessage}</div>}
 

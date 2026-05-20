@@ -7,6 +7,7 @@ import type {
   EmployeeRead,
   InvoiceTodayResponse,
   InvoiceUploadResponse,
+  PhotoReportRouteTestResponse,
   PlanogramListResponse,
   PhotoReportTemplateResponse,
   PhotoReportUploadResponse,
@@ -270,6 +271,14 @@ export function submitPhotoReport(deviceToken: string, formData: FormData) {
       method: 'POST',
       body: formData,
     },
+    { deviceToken },
+  )
+}
+
+export function sendPhotoReportRouteTest(deviceToken: string) {
+  return apiRequest<PhotoReportRouteTestResponse>(
+    '/api/rocket-routes/photo-report/test',
+    { method: 'POST' },
     { deviceToken },
   )
 }

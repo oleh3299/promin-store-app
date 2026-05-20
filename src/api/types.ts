@@ -91,6 +91,13 @@ export type StoreRequestResponse = {
   message: string | null
 }
 
+export type PhotoReportRouteTestResponse = {
+  ok: boolean
+  sent: boolean
+  room_name: string | null
+  room_id: string
+}
+
 export type InvoiceRequestType = 'incoming' | 'return' | 'writeoff' | 'assembly'
 
 export type InvoiceUploadResponse = {

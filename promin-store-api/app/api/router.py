@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.routes import attendance, auth, devices, employees, hr, integration, invoices, photo_reports, planograms, push, rocket_chat_integration, store_requests, store_tasks, stores
+from app.api.routes import attendance, auth, devices, employees, hr, integration, invoices, photo_reports, planograms, push, rocket_chat_integration, rocket_routes, store_requests, store_tasks, stores
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth.router)
@@ -12,6 +12,7 @@ api_router.include_router(attendance.router)
 api_router.include_router(push.router)
 api_router.include_router(integration.router)
 api_router.include_router(rocket_chat_integration.router)
+api_router.include_router(rocket_routes.router)
 api_router.include_router(store_requests.router)
 api_router.include_router(store_tasks.router)
 api_router.include_router(invoices.router)

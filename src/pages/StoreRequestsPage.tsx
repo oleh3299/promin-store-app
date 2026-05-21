@@ -234,8 +234,8 @@ function StoreRequestsPage({ device, entry, t, onBack }: StoreRequestsPageProps)
           <div className="request-route-grid">
             {routeOptions.map((option) => (
               <button
-                key={option.key}
-                className={routeKey === option.key ? 'route-button selected' : 'route-button'}
+                key={option.requestType}
+                className={requestType === option.requestType ? 'route-button selected' : 'route-button'}
                 type="button"
                 onClick={() => {
                   setRouteKey(option.key)

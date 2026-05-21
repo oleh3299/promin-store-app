@@ -77,8 +77,9 @@ When Rocket.Chat webhook creates a store task:
 For `category='photo_report'`:
 
 - title: administration.
-- target screen: `photo_tasks`.
-- URL: `/?open=photo-tasks`.
+- target screen: `messages`.
+- URL: `/?open=messages`.
+- the PWA displays it in the unified inbox with a photo-check label.
 
 For `category='accounting'`:
 

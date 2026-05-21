@@ -93,7 +93,7 @@ function taskCategoryLabel(task: StoreTaskItem) {
 
 function taskFeedType(task: StoreTaskItem): FeedType {
   if (task.category === 'photo_report') {
-    return 'Фотозвіт'
+    return 'Фото-перевірка'
   }
   return task.source === 'rocket_chat' ? 'Повідомлення' : 'Завдання'
 }
@@ -243,7 +243,7 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
     () =>
       mode === 'photoReport'
         ? feedItems.filter((item) => item.category === 'photo_report')
-        : feedItems.filter((item) => item.isRocketMessage && item.category !== 'photo_report'),
+        : feedItems.filter((item) => item.isRocketMessage),
     [feedItems, mode],
   )
 
@@ -266,7 +266,7 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
     }
     if (activeTab === 'messages') {
       return scopedFeedItems.filter(
-        (item) => item.isRocketMessage && item.category !== 'photo_report' && (item.rawStatus === 'open' || item.rawStatus === 'new'),
+        (item) => item.isRocketMessage && (item.rawStatus === 'open' || item.rawStatus === 'new'),
       )
     }
     if (activeTab === 'urgent') {
@@ -491,6 +491,7 @@ function StoreTasksPage({ device, mode, onBack }: StoreTasksPageProps) {
                   <span className={`feed-status status-${item.status}`}>{mode === 'messages' ? messageStatusLabel(item) : taskStatusLabel(item)}</span>
                 </div>
                 <strong>{mode === 'messages' ? item.description : item.title}</strong>
+                {mode === 'messages' && item.category === 'photo_report' && <small>Фото-перевірка</small>}
                 {mode === 'messages' && item.senderName && <small>Від: {item.senderName}</small>}
                 {mode !== 'messages' && <p>{item.description}</p>}
                 <div className="feed-meta">

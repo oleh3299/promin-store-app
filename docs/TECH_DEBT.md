@@ -14,18 +14,18 @@ The production "Evening Photo Report" is a dedicated module with:
 - IndexedDB queue
 - Rocket.Chat grouped thread upload
 
-At the same time, Rocket.Chat `photo_report` messages create `store_tasks.category='photo_report'`.
+At the same time, Rocket.Chat `photo_report` messages create `store_tasks.category='photo_report'` and are shown inside the unified `Повідомлення` inbox.
 
 Risk:
 
-- Operators may confuse production photo report with photo tasks.
+- Operators may confuse production photo report with photo-check tasks if labels are weak.
 - Future developers may route photo report UX through store tasks by mistake.
 
 Recommendation:
 
 - Keep documentation and UI labels strict.
 - Use "Фотозвіт" only for the production report.
-- Use "Фото-завдання" only for incoming Rocket.Chat tasks, preferably reachable from push/deep link or a controlled screen.
+- Label incoming photo-check work clearly inside `Повідомлення`.
 
 ### 2. Temporary Partial Photo Report Mode
 
@@ -120,12 +120,11 @@ Current labels/concepts:
 
 - `Повідомлення`: incoming office messages/tasks.
 - `Зв'язок`/`Допомога`: outgoing request from store to office.
-- `Фото-завдання`: incoming photo-related task.
 - `Фотозвіт`: production evening report.
 
 Risk:
 
-- Store staff can confuse incoming work with outgoing help.
+- Store staff can confuse incoming work with outgoing help or production photo reports.
 - Developers can route messages into the wrong UI.
 
 Recommendation:

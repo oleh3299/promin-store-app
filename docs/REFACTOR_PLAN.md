@@ -19,9 +19,9 @@ Scope:
 
 - Home entries open expected screens.
 - `Фотозвіт` opens `PhotoReportPage`.
-- `Повідомлення` opens regular incoming messages.
+- `Повідомлення` opens the unified incoming inbox, including photo-check tasks.
 - Push URL `/?open=messages` opens messages mode.
-- Push URL `/?open=photo-tasks` opens photo task mode.
+- Legacy push URL `/?open=photo-tasks`, if present on an old device, should not create a separate Home navigation flow.
 
 No behavior changes.
 

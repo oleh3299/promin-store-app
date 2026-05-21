@@ -78,9 +78,7 @@ function StoreApp() {
   const [deviceBlocked, setDeviceBlocked] = useState(false)
   const [incomingMessageCount, setIncomingMessageCount] = useState(0)
   const [homeStatusMessage, setHomeStatusMessage] = useState<string | null>(null)
-  const [storeTaskMode, setStoreTaskMode] = useState<'messages' | 'photoReport'>(
-    initialOpenTarget === 'photo-tasks' ? 'photoReport' : 'messages',
-  )
+  const [storeTaskMode, setStoreTaskMode] = useState<'messages' | 'photoReport'>('messages')
   const [notificationStatus, setNotificationStatus] = useState(
     typeof Notification === 'undefined' ? 'unsupported' : Notification.permission,
   )
@@ -122,7 +120,7 @@ function StoreApp() {
 
     try {
       const response = await getStoreTasks(device.deviceToken, 'open,new')
-      setIncomingMessageCount(response.items.filter((task) => task.source === 'rocket_chat' && task.category !== 'photo_report').length)
+      setIncomingMessageCount(response.items.filter((task) => task.source === 'rocket_chat').length)
     } catch {
       setIncomingMessageCount(0)
     }

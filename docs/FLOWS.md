@@ -92,9 +92,9 @@ Flow:
 2. Webhook receives the message.
 3. `rocket_routes.room_id` resolves the store.
 4. `rocket_routes.route_key='photo_report'` maps to `store_tasks.category='photo_report'`.
-5. PWA does not mix these tasks into regular `Повідомлення`.
-6. Push payload targets `/?open=photo-tasks`.
-7. `StoreTasksPage` can open in photo task mode when launched by push URL.
+5. PWA shows these tasks inside the unified `Повідомлення` inbox.
+6. Cards keep the sender label `Адміністрація` and show a secondary photo-check label.
+7. Push payload targets `/?open=messages`.
 
 Important files:
 
@@ -122,9 +122,7 @@ Real push flow:
 5. `pywebpush` sends payload.
 6. `public/push-sw.js` receives push.
 7. Service worker shows notification.
-8. Notification click opens:
-   - `/?open=messages`
-   - or `/?open=photo-tasks`
+8. Notification click opens `/?open=messages` for incoming Rocket.Chat store tasks.
 
 Test flow:
 

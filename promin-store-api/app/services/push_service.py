@@ -25,8 +25,8 @@ def store_task_push_payload(task: StoreTask) -> dict[str, Any]:
         return {
             "title": "Адміністрація",
             "body": "Нове фото-завдання",
-            "target_screen": "photo_tasks",
-            "url": "/?open=photo-tasks",
+            "target_screen": "messages",
+            "url": "/?open=messages",
             "task_id": task.id,
         }
 

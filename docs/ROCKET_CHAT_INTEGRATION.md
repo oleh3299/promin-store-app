@@ -101,6 +101,12 @@ If a tagged message comes from `photo-reports_*` and the route has `route_key='p
 
 PWA should treat this as a photo task, not as the production evening photo report.
 
+Current UI decision:
+
+- Photo tasks are displayed inside the unified `Повідомлення` inbox.
+- They are labelled as administration/photo-check work.
+- There is no separate Home card for photo tasks.
+
 ## Replies From Store
 
 When a store submits a Rocket.Chat-originated store task:
